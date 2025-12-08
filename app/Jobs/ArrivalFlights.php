@@ -164,7 +164,9 @@ class ArrivalFlights implements ShouldQueue
             }
         }
 
-        dd($arrivalAircraft);
+        Log::info('ArrivalFlights result', $arrivalAircraft);
+
+        // dd($arrivalAircraft);
 
     }
 

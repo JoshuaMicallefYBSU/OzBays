@@ -19,16 +19,16 @@ class PagesController extends Controller
         $ypph = 0;
 
         foreach($flight as $f){
-            if($f->arr == "YBBN"){
+            if($f->arr == "YBBN" && $f->online !== null){
                 $ybbn++;
             }
-            if($f->arr == "YSSY"){
+            if($f->arr == "YSSY" && $f->online !== null){
                 $yssy++;
             }
-            if($f->arr == "YMML"){
+            if($f->arr == "YMML" && $f->online !== null){
                 $ymml++;
             }
-            if($f->arr == "YPPH"){
+            if($f->arr == "YPPH" && $f->online !== null){
                 $ypph++;
             }
         }
