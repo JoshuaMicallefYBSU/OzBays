@@ -3,6 +3,14 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta property="og:title" content="ozBays">
+        <meta property="og:description"
+            content="Automatic bay assignments for Brisbane, Sydney, Melbourne & Perth International Airports on the VATSIM Network.">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image"
+      content="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d">
+
 
         <title>{{ config('app.name', 'OzBays') }}</title>
 
@@ -32,6 +40,16 @@
                 </div>
 
             </main>
+            {{-- <br>
+            <img src="https://cdn.discordapp.com/attachments/1436569037240008704/1447339877497831486/ext.png?ex=693743cd&is=6935f24d&hm=ffe0cf110e30ab41b4a991328140aa461e77c6b1d7d532f69b44cdcf1dbfa6d9"
+                 class="object-contain"
+                 style="padding: 10px; width: 20%;"
+                 alt=""
+            > --}}
+        </div>
+
+        <div class="">
+            
         </div>
     </body>
 </html>

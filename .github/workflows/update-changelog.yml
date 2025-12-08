@@ -1,4 +1,4 @@
-name: 🚀 QFA100 Site - Server Upload
+name: 🚀 ozBays - Server Upload
 on: 
   push:
     branches:
