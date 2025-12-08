@@ -1,0 +1,21 @@
+name: 🚀 QFA100 Site - Server Upload
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  web-deploy:
+    name: 🎉 Deploy Program
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v2
+    
+    - name: 📂 Sync GitHub & Server Files
+      uses: SamKirkland/FTP-Deploy-Action@4.3.3
+      with:
+        server: sg2plzcpnl486124.prod.sin2.secureserver.net
+        username: github@joshuamicallef.xyz
+        password: ${{ secrets.FTP_PASSWORD }}
+        timeout: 120000
+        server-dir: ozbays.xyz/
