@@ -8,11 +8,12 @@
             content="Automatic bay assignments for Brisbane, Sydney, Melbourne & Perth International Airports on the VATSIM Network.">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:image"
-      content="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d">
+        <meta property="og:image" content="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d">
+      <link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d">
 
 
-        <title>{{ config('app.name', 'OzBays') }}</title>
+
+        <title>{{ config('app.name', 'OzBays - Coming Soon') }}</title>
 
         <!-- Styles / Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
