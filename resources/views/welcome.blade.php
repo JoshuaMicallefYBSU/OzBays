@@ -39,6 +39,7 @@
                         <li class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">- Melbourne: {{$ymml}}</li>
                         <li class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">- Perth: {{$ypph}}</li>
                     </ul>
+                    <a href="/map" class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">View the Map</a>
                 </div>
                 <div class="bg-[#fff2f2] dark:bg-[#424242] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden flex items-center justify-center">
                     <img

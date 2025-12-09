@@ -78,9 +78,9 @@ class FlightData implements ShouldQueue
                     'callsign'  => $pilot->callsign,
                     'cid'       => $pilot->cid,
                     'hdg'       => $pilot->heading,
-                    'dep'       => $pilot->flight_plan->departure ?? null,
-                    'arr'       => $pilot->flight_plan->arrival ?? null,
-                    'ac'        => $pilot->flight_plan->aircraft_short ?? null,
+                    'dep' => data_get($pilot, 'flight_plan.departure') ?: null,
+                    'arr' => data_get($pilot, 'flight_plan.arrival') ?: null,
+                    'ac'  => data_get($pilot, 'flight_plan.aircraft_short') ?: null,
                     'lat'       => $pilot->latitude,
                     'lon'       => $pilot->longitude,
                     'speed'     => $pilot->groundspeed,
@@ -100,7 +100,7 @@ class FlightData implements ShouldQueue
                 $distanceToArrival = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports[$pilot->flight_plan->arrival]['lat'], $airports[$pilot->flight_plan->arrival]['lon']);
                 
 
-                // Do not interest yourself in Aircraft > 500NM from the Airport oh little one
+                // Do not interest yourself in Aircraft > 600NM from the Airport oh little one
                 if($distanceToArrival > 600){
                     continue;
                 }
@@ -171,7 +171,9 @@ class FlightData implements ShouldQueue
                 Flights::updateOrCreate(['callsign' => $aa['callsign']], [
                     'id'        => $aa['cid'],
                     'hdg'       => $aa['hdg'],
-                    'ac'      => $aa['ac'],
+                    'dep'       => $aa['dep'],
+                    'arr'       => $aa['arr'],
+                    'ac'         => $aa['ac'],
                     'lat'       => $aa['lat'],
                     'lon'       => $aa['lon'],
                     'speed'     => $aa['speed'],
@@ -204,8 +206,8 @@ class FlightData implements ShouldQueue
 
         Log::info('FlightData result', $arrivalAircraft);
 
-        dd($arrivalAircraft);
-        // dd($OnGround);
+        // dd($arrivalAircraft);
+        dd($OnGround);
 
     }
 

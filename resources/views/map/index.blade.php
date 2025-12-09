@@ -130,7 +130,7 @@ function refreshAircraft() {
                         arr: ac.arr,
                         speed: Number(ac.speed),
                         status: ac.status,
-                        colour: airportColourMap[ac.arr] ?? '#ff9800',
+                        colour: airportColourMap[ac.arr] ?? '#787777',
                         bearing: Number(ac.hdg ?? 0)
                     }
                 }))
@@ -197,7 +197,7 @@ map.on('load', () => {
         el.style.width = '8px';
         el.style.height = '8px';
         el.style.borderRadius = '50%';
-        el.style.backgroundColor = '#ff9800';
+        el.style.backgroundColor = 'green';
         el.style.cursor = 'pointer';
 
         new mapboxgl.Marker(el)
