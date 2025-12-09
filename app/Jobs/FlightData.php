@@ -85,6 +85,7 @@ class FlightData implements ShouldQueue
                     'lat'       => $pilot->latitude,
                     'lon'       => $pilot->longitude,
                     'speed'     => $pilot->groundspeed,
+                    'alt'       => $pilot->altitude,
                     'online'    => 1,
                 ];
             }
@@ -133,11 +134,9 @@ class FlightData implements ShouldQueue
                     $status = null;
                 }
 
-                if (str_starts_with($pilot->flight_plan->departure, 'Y')) {
-                    $type = 1;
-                } else {
-                    $type = 2;
-                }
+                $departure = strtoupper(trim($pilot->flight_plan->departure));
+                
+                $type = str_starts_with($departure, 'Y') ? 'DOM' : 'INTL';
 
 
                 // Collate the Data
@@ -152,6 +151,7 @@ class FlightData implements ShouldQueue
                     'lat'       => $pilot->latitude,
                     'lon'       => $pilot->longitude,
                     'speed'     => $pilot->groundspeed,
+                    'alt'       => $pilot->altitude,
                     'distance'  => round($distanceToArrival),
                     'elt'       => $elt,
                     'eibt'      => $eibt,
@@ -178,6 +178,7 @@ class FlightData implements ShouldQueue
                     'lat'       => $aa['lat'],
                     'lon'       => $aa['lon'],
                     'speed'     => $aa['speed'],
+                    'alt'       => $aa['alt'],
                     'online'    => 1,
                 ]);
         }
@@ -196,6 +197,7 @@ class FlightData implements ShouldQueue
                     'lat'  => $ac['lat'],
                     'lon'  => $ac['lon'],
                     'speed'  => $ac['speed'],
+                    'alt'    => $ac['alt'],
                     'distance'  => $ac['distance'],
                     'elt'  => $ac['elt'],
                     'eibt'  => $ac['eibt'],
@@ -205,9 +207,14 @@ class FlightData implements ShouldQueue
             }
         }
 
-        Log::info('FlightData result', $arrivalAircraft);
+        // Delete entries once offline for 15 minutes
+        $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(15))->get();
 
-        dd($arrivalAircraft);
+        foreach($offlineFlights as $flight){
+            $flight->delete();
+        }
+
+        // dd($offlineFlights);
         // dd($OnGround);
 
     }

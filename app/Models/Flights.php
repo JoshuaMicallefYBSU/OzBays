@@ -17,6 +17,7 @@ class Flights extends Model
         'lat',
         'lon',
         'speed',
+        'alt',
         'distance',
         'elt',
         'eibt',

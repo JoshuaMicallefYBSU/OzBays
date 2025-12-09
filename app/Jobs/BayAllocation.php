@@ -52,15 +52,19 @@ class BayAllocation implements ShouldQueue
                     );
 
                     if($distance <= 30) {
-                        $OccupyBay = Bays::where('bay', $bay->bay)->where('airport', $dist['ICAO'])->first();
-                        $OccupyBay->callsign = $ac->callsign;
-                        $OccupyBay->status = 2;
-                        $OccupyBay->clear = 0;
-                        $OccupyBay->save();
+                        $core = $this->bayCore($bay->bay);
+
+                        Bays::where('airport', $dist['ICAO'])   // SAME AIRPORT ✅
+                            ->where('bay', 'LIKE', $core . '%') // B12 → B12, B12A, B12B ✅
+                            ->update([
+                                'callsign' => $ac->callsign,
+                                'status'   => 2,
+                                'clear'    => 0,
+                            ]);
+                        }
                     }
                 }
             }
-        }
 
         // Bays where they where blocked, but are now free from any aircraft
         $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
@@ -74,7 +78,7 @@ class BayAllocation implements ShouldQueue
         // dd($aircraftBays);
     }
 
-    // PRIVATE FUNCTIONS
+    // PRIVATE FUNCTIONS - YOLO AND HOPE FOR A PRAYER BOIS THIS STUFF IS CONFUSING
     private function calculateDistance($lat1, $lon1, $lat2, $lon2) {
         $earthRadiusNm = 3440.065; // Radius of Earth in nautical miles
     
@@ -93,6 +97,12 @@ class BayAllocation implements ShouldQueue
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         $distanceNm = $earthRadiusNm * $c;
         return $distanceNm;
+    }
+
+    private function bayCore(string $bay): string
+    {
+        preg_match('/^[A-Za-z]*\d+/', $bay, $m);
+        return $m[0];
     }
 
     public function airportDistance($lat, $lon, $airports){
