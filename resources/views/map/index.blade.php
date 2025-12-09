@@ -328,6 +328,98 @@ map.on('load', () => {
         paint: { 'icon-color': ['get','colour'] }
     });
 
+    /* ================== AIRCRAFT POPUPS ================== */
+    map.on('click', 'aircraft-arrows', e => {
+        if (!e.features || !e.features.length) return;
+
+        const f = e.features[0];
+        const p = f.properties;
+
+        new mapboxgl.Popup({ offset: 15 })
+            .setLngLat(f.geometry.coordinates)
+            .setHTML(`
+                <strong>${p.callsign}</strong><br>
+                ${p.dep} → ${p.arr}<br>
+                Speed: ${p.speed} kt<br>
+                Status: ${p.status}<br>
+                Assigned Bay: N/A
+            `)
+            .addTo(map);
+    });
+
+    map.on('mouseenter', 'aircraft-arrows', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'aircraft-arrows', () => {
+        map.getCanvas().style.cursor = '';
+    });
+
+    /* ================== DOUBLE-CLICK LAT/LON PICKER ================== */
+    map.on('dblclick', e => {
+        const lat = e.lngLat.lat.toFixed(8);
+        const lon = e.lngLat.lng.toFixed(8);
+
+        const text = `"lat": ${lat},\n"lon": ${lon},`;
+
+        const html = `
+            <div style="font-size:13px;">
+                <pre style="margin:0 0 6px 0;">${text}</pre>
+                <button class="copy-coords-btn"
+                    style="
+                        padding:4px 8px;
+                        font-size:12px;
+                        cursor:pointer;
+                        border:1px solid #555;
+                        background:#222;
+                        color:#fff;
+                        border-radius:4px;
+                    ">
+                    Copy
+                </button>
+                <span class="copy-status" style="margin-left:6px; display:none;">✅ Copied</span>
+            </div>
+        `;
+
+        const popup = new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(html)
+            .addTo(map);
+
+        // Attach the click handler AFTER the popup is added
+        const popupEl = popup.getElement();
+        const btn = popupEl.querySelector('.copy-coords-btn');
+        const status = popupEl.querySelector('.copy-status');
+
+        if (btn) {
+            btn.addEventListener('click', () => {
+                // Try Clipboard API
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        if (status) {
+                            status.style.display = 'inline';
+                            setTimeout(() => status.style.display = 'none', 1000);
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('Clipboard write failed', err);
+                        // Fallback: select text in the <pre> so user can Ctrl+C
+                        const pre = popupEl.querySelector('pre');
+                        if (!pre) return;
+
+                        const range = document.createRange();
+                        range.selectNodeContents(pre);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    });
+            });
+        }
+    });
+
+
+
+
     /* ================== FIRST LOAD + REFRESH ================== */
     refreshAircraft();
     setInterval(refreshAircraft, 5000);

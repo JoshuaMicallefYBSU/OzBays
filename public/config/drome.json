@@ -4433,7 +4433,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B744",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "160A": {
@@ -4442,7 +4442,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B734",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "160B": {
@@ -4451,7 +4451,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B734",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "160C": {
@@ -4460,7 +4460,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "GLEX",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "160D": {
@@ -4469,7 +4469,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B734",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "160R": {
@@ -4478,7 +4478,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B744",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "161": {
@@ -4487,7 +4487,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B744",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "161A": {
@@ -4496,7 +4496,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B744",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "162": {
@@ -4505,7 +4505,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "A388",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "162A": {
@@ -4514,7 +4514,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B738",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "162B": {
@@ -4523,7 +4523,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B738",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "163": {
@@ -4532,7 +4532,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "A388",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "163A": {
@@ -4541,7 +4541,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B739",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "163B": {
@@ -4550,7 +4550,7 @@
                     "Operator": null,
                     "Terminal": "T1",
                     "AC": "B739",
-                    "Type": "ANY",
+                    "Type": null,
                     "Priority": 1
                 },
                 "201": {
