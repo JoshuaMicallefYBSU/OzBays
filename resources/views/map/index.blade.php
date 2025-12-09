@@ -212,6 +212,9 @@ map.on('load', () => {
     .forEach(a => {
 
         const ring = createCircle(a.geometry.coordinates, 600 * 1852);
+
+        ring.properties = {
+            colour: a.properties.color ?? '#F54927'
         };
 
         airportRings.features.push(ring);
@@ -253,15 +256,12 @@ map.on('load', () => {
             .setLngLat(f.geometry.coordinates)
             .setPopup(
                 new mapboxgl.Popup({ offset: 10 }).setHTML(`
-                    <strong>Bay ${f.properties.title}</strong><br>
-                    Terminal: ${f.properties.terminal}<br>
-                    Aircraft: ${f.properties.ac}<br>
-                    Priority: ${f.properties.priority}
                     <strong>Bay ${f.properties.bay}</strong><br>
                     Status: ${f.properties.status}
                 `)
             )
             .addTo(map);
+
         const key = `${f.properties.icao}:${f.properties.bay}`;
         bayMarkers[key] = { marker, el };
     });
@@ -273,7 +273,6 @@ map.on('load', () => {
         el.style.width = '12px';
         el.style.height = '12px';
         el.style.borderRadius = '50%';
-        el.style.backgroundColor =
         el.style.backgroundColor = f.properties.color;
         el.style.cursor = 'pointer';
 
@@ -329,38 +328,10 @@ map.on('load', () => {
         paint: { 'icon-color': ['get','colour'] }
     });
 
-    /* ================== AIRCRAFT POPUPS ================== */
-    map.on('click', 'aircraft-arrows', e => {
-        const f = e.features[0];
-        const p = f.properties;
-
-        new mapboxgl.Popup({ offset: 15 })
-            .setLngLat(f.geometry.coordinates)
-    });
-
-    map.on('mouseenter', 'aircraft-arrows', () => {
-        map.getCanvas().style.cursor = 'pointer';
-    });
-
-    map.on('mouseleave', 'aircraft-arrows', () => {
-        map.getCanvas().style.cursor = '';
     /* ================== FIRST LOAD + REFRESH ================== */
     refreshAircraft();
     setInterval(refreshAircraft, 5000);
 
-    /* ================== DOUBLE-CLICK LAT/LON PICKER ================== */
-    map.on('dblclick', e => {
-        const lat = e.lngLat.lat.toFixed(8);
-        const lon = e.lngLat.lng.toFixed(8);
-        const text = `"lat": ${lat},\n"lon": ${lon},`;
-
-        navigator.clipboard.writeText(text);
-
-        new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`<pre>${text}</pre>`)
-            .addTo(map);
-    });
     refreshBayColours();
     setInterval(refreshBayColours, 15000);
 
