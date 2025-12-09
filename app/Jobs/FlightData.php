@@ -13,9 +13,12 @@ use Carbon\Carbon;
 use App\Models\Flights;
 use Exception;
 
-class ArrivalFlights implements ShouldQueue
+class FlightData implements ShouldQueue
 {
     use Queueable;
+
+    public $timeout = 55;
+    public $tries = 1;
 
     /**
      * Create a new job instance.
@@ -29,6 +32,20 @@ class ArrivalFlights implements ShouldQueue
      * Execute the job.
      */
     public function handle(): void
+    {
+        for ($i = 0; $i < 4; $i++) {
+
+            $this->update();
+
+            // Stop overlapping even if scheduler retries
+            if ($i < 3) {
+                sleep(15);
+            }
+        }
+
+    }
+
+    private function update(): void
     {
         // Initialise some VARIABLES
         $vatsimData = new VATSIMClient();
@@ -200,10 +217,10 @@ class ArrivalFlights implements ShouldQueue
             }
         }
 
-        Log::info('ArrivalFlights result', $arrivalAircraft);
+        Log::info('FlightData result', $arrivalAircraft);
 
         // dd($arrivalAircraft);
-        dd($OnGround);
+        // dd($OnGround);
 
     }
 
