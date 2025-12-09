@@ -2,70 +2,90 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\File;
 use App\Models\Flights;
+use App\Models\Airports;
+use App\Models\Bays;
 
 class MapController extends Controller
 {
     public function index()
     {
-        $jsonPath = public_path('config/drome.json');
-        $airports = json_decode(File::get($jsonPath), true);
-
-        $flights = Flights::where('online', 1)->get();
+        $airports = Airports::all();
+        $bays     = Bays::all();
+        $flights  = Flights::where('online', 1)->get();
 
         $features = [];
 
         foreach ($airports as $airport) {
 
-            // Airport marker
+            // dd($airport);
+
+            /* -------------------------------------------------
+             * Airport marker
+             * ------------------------------------------------ */
             $features[] = [
                 'type' => 'Feature',
                 'properties' => [
-                    'title' => $airport['icao'],
-                    'icao'  => $airport['icao'],
+                    'title' => $airport->icao,
+                    'name'  => $airport->name,
                     'type'  => 'airport',
+                    'color' => $airport->color ?? null,
                 ],
                 'geometry' => [
                     'type' => 'Point',
                     'coordinates' => [
-                        $airport['lon'],
-                        $airport['lat'],
+                        (float) $airport->lon,
+                        (float) $airport->lat,
                     ],
                 ],
             ];
 
-            // Parking bays
-            if (!empty($airport['parking'])) {
-                foreach ($airport['parking'] as $bay => $stand) {
+            // dd($features);
+        }
+
+        /* -------------------------------------------------
+             * Parking bays
+             * ------------------------------------------------ */
+                foreach ($bays as $stand) {
+                    // dd($stand);
+
+                    $color = "green";
+                    $status = "Available";
+
+                    if($stand->status == 1){
+                        $color = "orange";
+                        $status = "Booked";
+                    } elseif($stand->status == 2){
+                        $color = "red";
+                        $status = "Occupied";
+                    }
+
                     $features[] = [
                         'type' => 'Feature',
                         'properties' => [
-                            'title'     => "{$airport['icao']} Stand {$bay}",
-                            'terminal'  => $stand['Terminal'] ?? '',
-                            'aircraft'  => $stand['AC'] ?? '',
-                            'priority'  => $stand['Priority'] ?? '',
-                            'type'      => 'parking',
+                            'icao'     => $stand->airport,
+                            'bay'      => $stand->bay,
+                            'status'   => $status,
+                            'color'    => $color,
+                            'type'     => 'parking',
                         ],
                         'geometry' => [
                             'type' => 'Point',
                             'coordinates' => [
-                                $stand['lon'],
-                                $stand['lat'],
+                                (float) $stand->lon,
+                                (float) $stand->lat,
                             ],
                         ],
                     ];
                 }
-            }
-        }
 
         return view('map.index', [
-            'geojson'        => json_encode([
-                'type' => 'FeatureCollection',
+            'geojson' => json_encode([
+                'type'     => 'FeatureCollection',
                 'features' => $features,
             ]),
-            'airportsJson'   => json_encode($airports),
-            'aircraftJson'   => $flights->toJson(),
+            'airportsJson' => $airports->toJson(),
+            'aircraftJson' => $flights->toJson(),
         ]);
     }
 }

@@ -58,7 +58,8 @@ class FlightData implements ShouldQueue
 
         // Bay Allocation Airports - Only These Flights get filtered
         $jsonPath = public_path('config/drome.json');
-        $airports = json_decode(File::get($jsonPath), true);
+        $rawJson = json_decode(File::get($jsonPath), true);
+        $airports = $rawJson['Airports'] ?? [];
 
 
         $arrivalAircraft = array_fill_keys(array_keys($airports), []);
@@ -206,8 +207,8 @@ class FlightData implements ShouldQueue
 
         Log::info('FlightData result', $arrivalAircraft);
 
-        // dd($arrivalAircraft);
-        dd($OnGround);
+        dd($arrivalAircraft);
+        // dd($OnGround);
 
     }
 
