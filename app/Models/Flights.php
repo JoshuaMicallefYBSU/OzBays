@@ -12,6 +12,7 @@ class Flights extends Model
         'dep',
         'arr',
         'ac',
+        'hdg',
         'type',
         'lat',
         'lon',

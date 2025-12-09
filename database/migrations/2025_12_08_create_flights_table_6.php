@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('dep');
             $table->string('arr');
             $table->string('ac');
+            $table->string('hdg');
             $table->string('type');
             $table->string('lat');
             $table->string('lon');

@@ -122,6 +122,7 @@ class ArrivalFlights implements ShouldQueue
                     'dep'       => $pilot->flight_plan->departure,
                     'arr'       => $pilot->flight_plan->arrival,
                     'ac'        => $pilot->flight_plan->aircraft_short,
+                    'hdg'       => $pilot->heading,
                     'type'      => $type,
                     'lat'       => $pilot->latitude,
                     'lon'       => $pilot->longitude,
@@ -151,6 +152,7 @@ class ArrivalFlights implements ShouldQueue
                     'ac'   => $ac['ac'],
                     'type' => $type,
                     'arr'  => $ac['arr'],
+                    'hdg'  => $ac['hdg'],
                     'lat'  => $ac['lat'],
                     'lon'  => $ac['lon'],
                     'speed'  => $ac['speed'],
@@ -166,7 +168,7 @@ class ArrivalFlights implements ShouldQueue
 
         Log::info('ArrivalFlights result', $arrivalAircraft);
 
-        // dd($arrivalAircraft);
+        dd($arrivalAircraft);
 
     }
 
