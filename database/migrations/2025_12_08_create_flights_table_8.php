@@ -14,15 +14,15 @@ return new class extends Migration
         Schema::create('flights', function (Blueprint $table) {
             $table->id();
             $table->string('callsign');
-            $table->string('dep');
-            $table->string('arr');
-            $table->string('ac');
+            $table->string('dep')->nullable();
+            $table->string('arr')->nullable();
+            $table->string('ac')->nullable();
             $table->string('hdg');
-            $table->string('type');
+            $table->string('type')->nullable();
             $table->string('lat');
             $table->string('lon');
             $table->string('speed');
-            $table->string('distance');
+            $table->string('distance')->nullable();
             $table->datetime('elt')->nullable();
             $table->datetime('eibt')->nullable();
             $table->string('status')->nullable();

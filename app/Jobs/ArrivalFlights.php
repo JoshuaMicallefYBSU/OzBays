@@ -60,14 +60,36 @@ class ArrivalFlights implements ShouldQueue
 
 
         $arrivalAircraft = array_fill_keys(array_keys($airports), []);
+        $OnGround = [];
 
         foreach($pilots as $pilot){
-            // Must have a Filed Flight Plan
+
+            // Check each Aircraft (See if they are on the ground)
+            $distanceToYBBN = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YBBN']['lat'], $airports['YBBN']['lon']);
+            $distanceToYSSY = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YSSY']['lat'], $airports['YSSY']['lon']);
+            $distanceToYMML = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YMML']['lat'], $airports['YMML']['lon']);
+            $distanceToYPPH = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YPPH']['lat'], $airports['YPPH']['lon']);
+
+            // Check if Aircraft is on the Ground - Either Departing from the Airport, or 
+            if($distanceToYBBN < 3 || $distanceToYSSY < 3 || $distanceToYMML < 3 || $distanceToYPPH <3 && $pilot->groundspeed < 80){
+                $OnGround[] = [
+                    'callsign'  => $pilot->callsign,
+                    'cid'       => $pilot->cid,
+                    'hdg'       => $pilot->heading,
+                    'dep'       => $pilot->flight_plan->departure ?? null,
+                    'arr'       => $pilot->flight_plan->arrival ?? null,
+                    'ac'        => $pilot->flight_plan->aircraft_short ?? null,
+                    'lat'       => $pilot->latitude,
+                    'lon'       => $pilot->longitude,
+                    'speed'     => $pilot->groundspeed,
+                    'online'    => 1,
+                ];
+            }
+
+            // Check FP - Changes what is done
             if($pilot->flight_plan == null){
                 continue;
             }
-
-            // dd($pilot);
 
             // Flight Scheduled at a ozBays Airport
             if(in_array($pilot->flight_plan->arrival, array_column($airports, 'icao'), true)){
@@ -77,7 +99,7 @@ class ArrivalFlights implements ShouldQueue
                 
 
                 // Do not interest yourself in Aircraft > 500NM from the Airport oh little one
-                if($distanceToArrival > 500){
+                if($distanceToArrival > 600){
                     continue;
                 }
 
@@ -94,7 +116,7 @@ class ArrivalFlights implements ShouldQueue
                 }
 
                 // Status Calculation
-                if($pilot->groundspeed < 80 && $distanceToArrival > 3 && $pilot->altitude < 500){
+                if($pilot->groundspeed < 80 && $distanceToArrival > 3 && $pilot->altitude < 4500){
                     $status = 'Departing another Airport';
                 }elseif($pilot->groundspeed < 80 && $distanceToArrival > 3){
                     $status = 'Paused';
@@ -143,6 +165,19 @@ class ArrivalFlights implements ShouldQueue
         }
 
         // Update the Entries in the Database
+        foreach ($OnGround as $aa) {
+                Flights::updateOrCreate(['callsign' => $aa['callsign']], [
+                    'id'        => $aa['cid'],
+                    'hdg'       => $aa['hdg'],
+                    'ac'      => $aa['ac'],
+                    'lat'       => $aa['lat'],
+                    'lon'       => $aa['lon'],
+                    'speed'     => $aa['speed'],
+                    'online'    => 1,
+                ]);
+        }
+
+        // Update the Entries in the Database
         foreach ($arrivalAircraft as $airportIcao => $aircraftList) {
             foreach ($aircraftList as $ac) {
 
@@ -162,13 +197,13 @@ class ArrivalFlights implements ShouldQueue
                     'status'  => $ac['status'],
                     'online'    => 1,
                 ]);
-
             }
         }
 
         Log::info('ArrivalFlights result', $arrivalAircraft);
 
-        dd($arrivalAircraft);
+        // dd($arrivalAircraft);
+        dd($OnGround);
 
     }
 
