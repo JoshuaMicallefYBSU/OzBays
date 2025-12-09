@@ -305,7 +305,7 @@ map.on('load', () => {
         const lat = e.lngLat.lat.toFixed(8);
         const lon = e.lngLat.lng.toFixed(8);
 
-        const text = `"lat": ${lat},\n"lon": ${lon}`;
+        const text = `"lat": ${lat},\n"lon": ${lon},`;
         navigator.clipboard.writeText(text);
 
         new mapboxgl.Popup()
