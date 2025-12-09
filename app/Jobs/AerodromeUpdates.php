@@ -53,7 +53,7 @@ class AerodromeUpdates implements ShouldQueue
             Airports::updateOrCreate(['icao' => $icao], [
                 'lat' => $airport['lat'],
                 'lon' => $airport['lon'],
-                'name' => $airport['lat'],
+                'name' => $airport['name'],
                 'color' => $airport['color'],
                 'check_exist' => 1,
             ]);
@@ -63,7 +63,7 @@ class AerodromeUpdates implements ShouldQueue
                     'lat'       => $bay['lat'],
                     'lon'       => $bay['lon'],
                     'aircraft'  => $bay['AC'],
-                    'type'      => $bay['Type'],
+                    'pax_type'      => $bay['Type'],
                     'operator'  => $bay['Operator'],
                     'priority'  => $bay['Priority'],
                     'lat'       => $bay['lat'],

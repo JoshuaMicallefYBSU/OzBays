@@ -12,13 +12,12 @@ class Bays extends Model
         'lat',
         'lon',
         'aircraft',
-        'type',
+        'pax_type',
         'status',
         'operators',
-        'booking1_start',
-        'booking1_end',
-        'booking1_start',
-        'booking2_end',
+        'priority',
+        'callsign',
+        'clear',
         'check_exist'
     ];
 }

@@ -48,9 +48,54 @@ let aircraftData   = {!! $aircraftJson !!};
  * Airport → colour lookup
  * -------------------------------------------------------- */
 const airportColourMap = {};
-Object.entries(airports).forEach(([icao, ap]) => {
-    airportColourMap[icao] = ap.color;
+airports.forEach(ap => {
+    airportColourMap[ap.icao] = ap.color;
 });
+
+/* ----------------------------------------------------------
+ * BAY STATUS STORAGE + MAPPING ✅
+ * -------------------------------------------------------- */
+const bayMarkers = {}; // key: "YSSY:1A"
+
+function bayStatusMap(status) {
+    switch (status) {
+        case 1:
+            return { color: 'orange', label: 'Booked' };
+        case 2:
+            return { color: 'red', label: 'Occupied' };
+        default:
+            return { color: 'green', label: 'Available' };
+    }
+}
+
+function refreshBayColours() {
+
+    fetch('/api/v1/bays/live')
+        .then(res => res.json())
+        .then(data => {
+
+            data.forEach(bay => {
+                const key = `${bay.airport}:${bay.bay}`;
+                if (!bayMarkers[key]) return;
+
+                const { color, label } = bayStatusMap(bay.status);
+
+                bayMarkers[key].el.style.backgroundColor = color;
+
+                const popup = bayMarkers[key].marker.getPopup();
+                if (popup) {
+                    popup.setHTML(`
+                        <strong>Bay ${bay.bay}</strong><br>
+                        Status: ${label}
+                    `);
+                }
+            });
+
+            console.log(bayMarkers);
+
+        })
+        .catch(err => console.error('Bay refresh failed', err));
+}
 
 /* ----------------------------------------------------------
  * Utility: aviation-accurate geodesic circle
@@ -139,7 +184,7 @@ function refreshAircraft() {
             const aircraftRings = {
                 type: 'FeatureCollection',
                 features: aircraftPoints.features.map(f => {
-                    const ring = createCircle(f.geometry.coordinates, 40);
+                    const ring = createCircle(f.geometry.coordinates, 30);
                     ring.properties = f.properties;
                     return ring;
                 })
@@ -162,9 +207,13 @@ map.on('load', () => {
         features: []
     };
 
-    geojson.features.filter(f => f.properties.type === 'airport').forEach(a => {
+    geojson.features
+    .filter(f => f.properties.type === 'airport')
+    .forEach(a => {
+
         const ring = createCircle(a.geometry.coordinates, 600 * 1852);
-        ring.properties = { colour: airportColourMap[a.properties.icao] ?? '#F54927' };
+        };
+
         airportRings.features.push(ring);
     });
 
@@ -190,17 +239,17 @@ map.on('load', () => {
         }
     });
 
-    /* ================== PARKING BAYS ================== */
+    /* ================== PARKING BAYS (UPDATED ✅) ================== */
     geojson.features.filter(f => f.properties.type === 'parking').forEach(f => {
 
         const el = document.createElement('div');
         el.style.width = '8px';
         el.style.height = '8px';
         el.style.borderRadius = '50%';
-        el.style.backgroundColor = 'green';
+        el.style.backgroundColor = f.properties.color;
         el.style.cursor = 'pointer';
 
-        new mapboxgl.Marker(el)
+        const marker = new mapboxgl.Marker(el)
             .setLngLat(f.geometry.coordinates)
             .setPopup(
                 new mapboxgl.Popup({ offset: 10 }).setHTML(`
@@ -208,9 +257,13 @@ map.on('load', () => {
                     Terminal: ${f.properties.terminal}<br>
                     Aircraft: ${f.properties.ac}<br>
                     Priority: ${f.properties.priority}
+                    <strong>Bay ${f.properties.bay}</strong><br>
+                    Status: ${f.properties.status}
                 `)
             )
             .addTo(map);
+        const key = `${f.properties.icao}:${f.properties.bay}`;
+        bayMarkers[key] = { marker, el };
     });
 
     /* ================== AIRPORT MARKERS ================== */
@@ -221,7 +274,7 @@ map.on('load', () => {
         el.style.height = '12px';
         el.style.borderRadius = '50%';
         el.style.backgroundColor =
-            airportColourMap[f.properties.icao] ?? '#F54927';
+        el.style.backgroundColor = f.properties.color;
         el.style.cursor = 'pointer';
 
         new mapboxgl.Marker(el)
@@ -229,7 +282,7 @@ map.on('load', () => {
             .setPopup(
                 new mapboxgl.Popup({ offset: 20 }).setHTML(`
                     <strong>${f.properties.title}</strong><br>
-                    ICAO: ${f.properties.icao}
+                    Name: ${f.properties.name} Airport
                 `)
             )
             .addTo(map);
@@ -283,13 +336,6 @@ map.on('load', () => {
 
         new mapboxgl.Popup({ offset: 15 })
             .setLngLat(f.geometry.coordinates)
-            .setHTML(`
-                <strong>${p.callsign}</strong><br>
-                ${p.dep} → ${p.arr}<br>
-                Speed: ${p.speed} kt<br>
-                Status: ${p.status}
-            `)
-            .addTo(map);
     });
 
     map.on('mouseenter', 'aircraft-arrows', () => {
@@ -298,8 +344,6 @@ map.on('load', () => {
 
     map.on('mouseleave', 'aircraft-arrows', () => {
         map.getCanvas().style.cursor = '';
-    });
-
     /* ================== FIRST LOAD + REFRESH ================== */
     refreshAircraft();
     setInterval(refreshAircraft, 5000);
@@ -317,6 +361,8 @@ map.on('load', () => {
             .setHTML(`<pre>${text}</pre>`)
             .addTo(map);
     });
+    refreshBayColours();
+    setInterval(refreshBayColours, 15000);
 
 });
 </script>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Jobs\FlightData;
+use App\Jobs\BayAllocation;
 use App\Jobs\AerodromeUpdates;
 
 class TestController extends Controller
@@ -12,7 +13,7 @@ class TestController extends Controller
     public function Job()
     {
         // Dispatch the job
-        $job = AerodromeUpdates::dispatch();
+        $job = BayAllocation::dispatch();
 
         // Call the handle method directly to get the result synchronously
         $result = $job->handle();

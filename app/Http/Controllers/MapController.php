@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\File;
 use App\Models\Flights;
 use App\Models\Airports;
 use App\Models\Bays;
@@ -10,67 +9,83 @@ use App\Models\Bays;
 class MapController extends Controller
 {
     public function index()
-{
-    // $jsonPath = public_path('config/drome.json');
+    {
+        $airports = Airports::all();
+        $bays     = Bays::all();
+        $flights  = Flights::where('online', 1)->get();
 
-    // $rawJson  = json_decode(File::get($jsonPath), true);
-    // $airports = $rawJson['Airports'] ?? [];
+        $features = [];
 
-    $airports = Airports::all();
-    $parking = Bays::all();
+        foreach ($airports as $airport) {
 
-    $flights = Flights::where('online', 1)->get();
-    $features = [];
+            // dd($airport);
 
-    foreach ($airports as $airport) {
-
-        // Airport marker
-        $features[] = [
-            'type' => 'Feature',
-            'properties' => [
-                'title' => $airport['icao'],
-                'icao'  => $airport['icao'],
-                'type'  => 'airport',
-            ],
-            'geometry' => [
-                'type' => 'Point',
-                'coordinates' => [
-                    $airport['lon'],
-                    $airport['lat'],
+            /* -------------------------------------------------
+             * Airport marker
+             * ------------------------------------------------ */
+            $features[] = [
+                'type' => 'Feature',
+                'properties' => [
+                    'title' => $airport->icao,
+                    'name'  => $airport->name,
+                    'type'  => 'airport',
+                    'color' => $airport->color ?? null,
                 ],
-            ],
-        ];
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [
+                        (float) $airport->lon,
+                        (float) $airport->lat,
+                    ],
+                ],
+            ];
 
-        // Parking bays
-        if (!empty($airport['parking'])) {
-            foreach ($airport['parking'] as $bay => $stand) {
-                $features[] = [
-                    'type' => 'Feature',
-                    'properties' => [
-                        'title'    => "{$airport['icao']} Stand {$bay}",
-                        'aircraft' => "Max {$stand['AC']}" ?? '',
-                        'type'     => 'parking',
-                    ],
-                    'geometry' => [
-                        'type' => 'Point',
-                        'coordinates' => [
-                            $stand['lon'],
-                            $stand['lat'],
-                        ],
-                    ],
-                ];
-            }
+            // dd($features);
         }
+
+        /* -------------------------------------------------
+             * Parking bays
+             * ------------------------------------------------ */
+                foreach ($bays as $stand) {
+                    // dd($stand);
+
+                    $color = "green";
+                    $status = "Available";
+
+                    if($stand->status == 1){
+                        $color = "orange";
+                        $status = "Booked";
+                    } elseif($stand->status == 2){
+                        $color = "red";
+                        $status = "Occupied";
+                    }
+
+                    $features[] = [
+                        'type' => 'Feature',
+                        'properties' => [
+                            'icao'     => $stand->airport,
+                            'bay'      => $stand->bay,
+                            'status'   => $status,
+                            'color'    => $color,
+                            'type'     => 'parking',
+                        ],
+                        'geometry' => [
+                            'type' => 'Point',
+                            'coordinates' => [
+                                (float) $stand->lon,
+                                (float) $stand->lat,
+                            ],
+                        ],
+                    ];
+                }
+
+        return view('map.index', [
+            'geojson' => json_encode([
+                'type'     => 'FeatureCollection',
+                'features' => $features,
+            ]),
+            'airportsJson' => $airports->toJson(),
+            'aircraftJson' => $flights->toJson(),
+        ]);
     }
-
-    return view('map.index', [
-        'geojson'      => json_encode([
-            'type' => 'FeatureCollection',
-            'features' => $features,
-        ]),
-        'airportsJson' => json_encode($airports),
-        'aircraftJson' => $flights->toJson(),
-    ]);
-}
-
 }

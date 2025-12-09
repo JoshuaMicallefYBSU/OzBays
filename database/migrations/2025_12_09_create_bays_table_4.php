@@ -20,14 +20,11 @@ return new class extends Migration
             $table->string('aircraft')->nullable();
             $table->integer('priority')->nullable();
             $table->string('operators')->nullable();
-            $table->string('type')->nullable();
+            $table->string('pax_type')->nullable();
             $table->integer('status')->nullable(); //null=free, 1=reserved, 2=occupied
-            $table->string('assign_ac')->nullable();
-            $table->datetime('booking1_start')->nullable();
-            $table->datetime('booking1_end')->nullable();
-            $table->datetime('booking2_start')->nullable();
-            $table->datetime('booking2_end')->nullable();
-            $table->string('check_exist')->nullable();
+            $table->string('callsign')->nullable();
+            $table->string('clear')->nullable(); // Bay Allocation Check
+            $table->string('check_exist')->nullable(); // Aerodrome Updates check
             $table->timestamps();
         });
     }
