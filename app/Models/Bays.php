@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Bays extends Model
 {
+    protected $casts = [
+        'status' => 'integer',
+    ];
+
     protected $fillable = [
         'airport',
         'bay',
