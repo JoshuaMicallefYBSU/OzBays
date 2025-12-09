@@ -11,6 +11,7 @@ use App\Services\VATSIMClient;
 use App\Services\DiscordClient;
 use Carbon\Carbon;
 use App\Models\Flights;
+use Illuminate\Support\Facades\File;
 use Exception;
 
 class FlightData implements ShouldQueue
@@ -33,7 +34,10 @@ class FlightData implements ShouldQueue
      */
     public function handle(): void
     {
-        for ($i = 0; $i < 4; $i++) {
+        if(env('APP_DEBUG') == true){
+            $this->update();
+        } else {
+            for ($i = 0; $i < 4; $i++) {
 
             $this->update();
 
@@ -41,6 +45,7 @@ class FlightData implements ShouldQueue
             if ($i < 3) {
                 sleep(15);
             }
+        }
         }
 
     }
@@ -52,28 +57,8 @@ class FlightData implements ShouldQueue
         $pilots = $vatsimData->getPilots();
 
         // Bay Allocation Airports - Only These Flights get filtered
-        $airports = [
-            'YBBN' => [
-                'icao' => 'YBBN',
-                'lat'  => -27.3842,
-                'lon'  => 153.1175,
-            ],
-            'YSSY' => [
-                'icao' => 'YSSY',
-                'lat'  => -33.9461,
-                'lon'  => 151.1772,
-            ],
-            'YMML' => [
-                'icao' => 'YMML',
-                'lat'  => -37.6733,
-                'lon'  => 144.8433,
-            ],
-            'YPPH' => [
-                'icao' => 'YPPH',
-                'lat'  => -31.9403,
-                'lon'  => 115.9669,
-            ],
-        ];
+        $jsonPath = public_path('config/drome.json');
+        $airports = json_decode(File::get($jsonPath), true);
 
 
         $arrivalAircraft = array_fill_keys(array_keys($airports), []);
@@ -219,7 +204,7 @@ class FlightData implements ShouldQueue
 
         Log::info('FlightData result', $arrivalAircraft);
 
-        // dd($arrivalAircraft);
+        dd($arrivalAircraft);
         // dd($OnGround);
 
     }

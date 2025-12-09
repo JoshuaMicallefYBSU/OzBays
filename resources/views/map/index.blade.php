@@ -10,10 +10,7 @@
     <style>
         body { margin: 0; }
         #map { height: 100vh; width: 100%; }
-        pre {
-            font-family: monospace;
-            font-size: 13px;
-        }
+        pre { font-family: monospace; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -38,14 +35,14 @@ const map = new mapboxgl.Map({
 
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
-map.doubleClickZoom.disable(); // ✅ REQUIRED
+map.doubleClickZoom.disable();
 
 /* ----------------------------------------------------------
  * Data from controller
  * -------------------------------------------------------- */
 const geojson      = {!! $geojson !!};
 const airports     = {!! $airportsJson !!};
-const aircraftData = {!! $aircraftJson !!};
+let aircraftData   = {!! $aircraftJson !!};
 
 /* ----------------------------------------------------------
  * Airport → colour lookup
@@ -67,18 +64,15 @@ function createCircle(center, radiusMeters, points = 64) {
     const d = radiusMeters / earthRadius;
 
     for (let i = 0; i <= points; i++) {
-        const bearing = i * 2 * Math.PI / points;
-
+        const b = i * 2 * Math.PI / points;
         const lat2 = Math.asin(
             Math.sin(latRad) * Math.cos(d) +
-            Math.cos(latRad) * Math.sin(d) * Math.cos(bearing)
+            Math.cos(latRad) * Math.sin(d) * Math.cos(b)
         );
-
         const lng2 = lngRad + Math.atan2(
-            Math.sin(bearing) * Math.sin(d) * Math.cos(latRad),
+            Math.sin(b) * Math.sin(d) * Math.cos(latRad),
             Math.cos(d) - Math.sin(latRad) * Math.sin(lat2)
         );
-
         coords.push([lng2 * 180 / Math.PI, lat2 * 180 / Math.PI]);
     }
 
@@ -89,16 +83,15 @@ function createCircle(center, radiusMeters, points = 64) {
 }
 
 /* ----------------------------------------------------------
- * Utility: aircraft arrow icon
+ * Aircraft arrow icon
  * -------------------------------------------------------- */
 function addAircraftArrowIcon() {
     const size = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#fff';
     ctx.beginPath();
     ctx.moveTo(size / 2, 4);
     ctx.lineTo(size - 10, size - 4);
@@ -108,12 +101,54 @@ function addAircraftArrowIcon() {
     ctx.fill();
 
     if (!map.hasImage('aircraft-arrow')) {
-        map.addImage(
-            'aircraft-arrow',
-            ctx.getImageData(0, 0, size, size),
-            { sdf: true }
-        );
+        map.addImage('aircraft-arrow', ctx.getImageData(0,0,size,size), { sdf: true });
     }
+}
+
+/* ----------------------------------------------------------
+ * Aircraft refresh logic
+ * -------------------------------------------------------- */
+function refreshAircraft() {
+
+    if (!map.getSource('aircraft')) return;
+
+    fetch('/api/v1/flights/live')
+        .then(res => res.json())
+        .then(data => {
+
+            const aircraftPoints = {
+                type: 'FeatureCollection',
+                features: data.map(ac => ({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [Number(ac.lon), Number(ac.lat)]
+                    },
+                    properties: {
+                        callsign: ac.callsign,
+                        dep: ac.dep,
+                        arr: ac.arr,
+                        speed: Number(ac.speed),
+                        status: ac.status,
+                        colour: airportColourMap[ac.arr] ?? '#ff9800',
+                        bearing: Number(ac.hdg ?? 0)
+                    }
+                }))
+            };
+
+            const aircraftRings = {
+                type: 'FeatureCollection',
+                features: aircraftPoints.features.map(f => {
+                    const ring = createCircle(f.geometry.coordinates, 40);
+                    ring.properties = f.properties;
+                    return ring;
+                })
+            };
+
+            map.getSource('aircraft').setData(aircraftPoints);
+            map.getSource('aircraft-rings').setData(aircraftRings);
+        })
+        .catch(err => console.error('Aircraft refresh failed', err));
 }
 
 /* ----------------------------------------------------------
@@ -121,33 +156,26 @@ function addAircraftArrowIcon() {
  * -------------------------------------------------------- */
 map.on('load', () => {
 
-    /* ================== AIRPORT 600 NM RINGS ================== */
+    /* ================== AIRPORT RINGS ================== */
     const airportRings = {
         type: "FeatureCollection",
         features: []
     };
 
-    geojson.features
-        .filter(f => f.properties.type === 'airport')
-        .forEach(a => {
-            const ring = createCircle(a.geometry.coordinates, 600 * 1852);
-            ring.properties = {
-                colour: airportColourMap[a.properties.icao] ?? '#F54927'
-            };
-            airportRings.features.push(ring);
-        });
-
-    map.addSource('airport-rings', {
-        type: 'geojson',
-        data: airportRings
+    geojson.features.filter(f => f.properties.type === 'airport').forEach(a => {
+        const ring = createCircle(a.geometry.coordinates, 600 * 1852);
+        ring.properties = { colour: airportColourMap[a.properties.icao] ?? '#F54927' };
+        airportRings.features.push(ring);
     });
+
+    map.addSource('airport-rings', { type: 'geojson', data: airportRings });
 
     map.addLayer({
         id: 'airport-rings-fill',
         type: 'fill',
         source: 'airport-rings',
         paint: {
-            'fill-color': ['get', 'colour'],
+            'fill-color': ['get','colour'],
             'fill-opacity': 0.04
         }
     });
@@ -157,118 +185,81 @@ map.on('load', () => {
         type: 'line',
         source: 'airport-rings',
         paint: {
-            'line-color': ['get', 'colour'],
+            'line-color': ['get','colour'],
             'line-width': 0.6
         }
     });
 
     /* ================== PARKING BAYS ================== */
-    geojson.features
-        .filter(f => f.properties.type === 'parking')
-        .forEach(f => {
-            const el = document.createElement('div');
-            el.style.width = '8px';
-            el.style.height = '8px';
-            el.style.borderRadius = '50%';
-            el.style.backgroundColor = '#ff9800';
-            el.style.cursor = 'pointer';
+    geojson.features.filter(f => f.properties.type === 'parking').forEach(f => {
 
-            new mapboxgl.Marker(el)
-                .setLngLat(f.geometry.coordinates)
-                .setPopup(
-                    new mapboxgl.Popup({ offset: 10 }).setHTML(`
-                        <strong>Bay ${f.properties.title}</strong><br>
-                        Terminal: ${f.properties.terminal}<br>
-                        Aircraft: ${f.properties.ac}<br>
-                        Priority: ${f.properties.priority}
-                    `)
-                )
-                .addTo(map);
-        });
+        const el = document.createElement('div');
+        el.style.width = '8px';
+        el.style.height = '8px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#ff9800';
+        el.style.cursor = 'pointer';
 
-    /* ================== AIRPORT MARKERS ================== */
-    geojson.features
-        .filter(f => f.properties.type === 'airport')
-        .forEach(f => {
-            const el = document.createElement('div');
-            el.style.width = '12px';
-            el.style.height = '12px';
-            el.style.borderRadius = '50%';
-            el.style.backgroundColor =
-                airportColourMap[f.properties.icao] ?? '#F54927';
-
-            new mapboxgl.Marker(el)
-                .setLngLat(f.geometry.coordinates)
-                .setPopup(
-                    new mapboxgl.Popup({ offset: 20 })
-                        .setHTML(`<strong>${f.properties.title}</strong>`)
-                )
-                .addTo(map);
-        });
-
-    /* ================== AIRCRAFT ================== */
-    const aircraftPoints = {
-        type: 'FeatureCollection',
-        features: aircraftData.map(ac => ({
-            type: 'Feature',
-            geometry: {
-                type: 'Point',
-                coordinates: [parseFloat(ac.lon), parseFloat(ac.lat)]
-            },
-            properties: {
-                callsign: ac.callsign,
-                dep: ac.dep,
-                arr: ac.arr,
-                speed: Number(ac.speed),
-                status: ac.status,
-                colour: airportColourMap[ac.arr] ?? '#ff9800',
-                bearing: Number(ac.hdg ?? 0)
-            }
-        }))
-    };
-
-    const aircraftRings = {
-        type: 'FeatureCollection',
-        features: []
-    };
-
-    aircraftPoints.features.forEach(f => {
-        const ring = createCircle(f.geometry.coordinates, 40);
-        ring.properties = f.properties;
-        aircraftRings.features.push(ring);
+        new mapboxgl.Marker(el)
+            .setLngLat(f.geometry.coordinates)
+            .setPopup(
+                new mapboxgl.Popup({ offset: 10 }).setHTML(`
+                    <strong>Bay ${f.properties.title}</strong><br>
+                    Terminal: ${f.properties.terminal}<br>
+                    Aircraft: ${f.properties.ac}<br>
+                    Priority: ${f.properties.priority}
+                `)
+            )
+            .addTo(map);
     });
 
+    /* ================== AIRPORT MARKERS ================== */
+    geojson.features.filter(f => f.properties.type === 'airport').forEach(f => {
+
+        const el = document.createElement('div');
+        el.style.width = '12px';
+        el.style.height = '12px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor =
+            airportColourMap[f.properties.icao] ?? '#F54927';
+        el.style.cursor = 'pointer';
+
+        new mapboxgl.Marker(el)
+            .setLngLat(f.geometry.coordinates)
+            .setPopup(
+                new mapboxgl.Popup({ offset: 20 }).setHTML(`
+                    <strong>${f.properties.title}</strong><br>
+                    ICAO: ${f.properties.icao}
+                `)
+            )
+            .addTo(map);
+    });
+
+    /* ================== AIRCRAFT SOURCES ================== */
     map.addSource('aircraft', {
         type: 'geojson',
-        data: aircraftPoints
+        data: { type: 'FeatureCollection', features: [] }
     });
 
     map.addSource('aircraft-rings', {
         type: 'geojson',
-        data: aircraftRings
+        data: { type: 'FeatureCollection', features: [] }
     });
 
     map.addLayer({
         id: 'aircraft-rings-fill',
         type: 'fill',
         source: 'aircraft-rings',
-        paint: {
-            'fill-color': ['get', 'colour'],
-            'fill-opacity': 0.25
-        }
+        paint: { 'fill-color': ['get','colour'], 'fill-opacity': 0.25 }
     });
 
     map.addLayer({
         id: 'aircraft-rings-outline',
         type: 'line',
         source: 'aircraft-rings',
-        paint: {
-            'line-color': ['get', 'colour'],
-            'line-width': 1
-        }
+        paint: { 'line-color': ['get','colour'], 'line-width': 1 }
     });
 
-    /* ================== AIRCRAFT ARROWS ================== */
     addAircraftArrowIcon();
 
     map.addLayer({
@@ -278,19 +269,20 @@ map.on('load', () => {
         layout: {
             'icon-image': 'aircraft-arrow',
             'icon-size': 0.4,
-            'icon-rotate': ['get', 'bearing'],
+            'icon-rotate': ['get','bearing'],
             'icon-rotation-alignment': 'map',
             'icon-allow-overlap': true
         },
-        paint: {
-            'icon-color': ['get', 'colour']
-        }
+        paint: { 'icon-color': ['get','colour'] }
     });
 
+    /* ================== AIRCRAFT POPUPS ================== */
     map.on('click', 'aircraft-arrows', e => {
-        const p = e.features[0].properties;
-        new mapboxgl.Popup()
-            .setLngLat(e.features[0].geometry.coordinates)
+        const f = e.features[0];
+        const p = f.properties;
+
+        new mapboxgl.Popup({ offset: 15 })
+            .setLngLat(f.geometry.coordinates)
             .setHTML(`
                 <strong>${p.callsign}</strong><br>
                 ${p.dep} → ${p.arr}<br>
@@ -300,12 +292,24 @@ map.on('load', () => {
             .addTo(map);
     });
 
+    map.on('mouseenter', 'aircraft-arrows', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'aircraft-arrows', () => {
+        map.getCanvas().style.cursor = '';
+    });
+
+    /* ================== FIRST LOAD + REFRESH ================== */
+    refreshAircraft();
+    setInterval(refreshAircraft, 5000);
+
     /* ================== DOUBLE-CLICK LAT/LON PICKER ================== */
     map.on('dblclick', e => {
         const lat = e.lngLat.lat.toFixed(8);
         const lon = e.lngLat.lng.toFixed(8);
-
         const text = `"lat": ${lat},\n"lon": ${lon},`;
+
         navigator.clipboard.writeText(text);
 
         new mapboxgl.Popup()
