@@ -212,7 +212,7 @@ map.on('load', () => {
     .filter(f => f.properties.type === 'airport')
     .forEach(a => {
 
-        const ring = createCircle(a.geometry.coordinates, 600 * 1852);
+        const ring = createCircle(a.geometry.coordinates, 400 * 1852);
 
         ring.properties = {
             colour: a.properties.color ?? '#F54927'

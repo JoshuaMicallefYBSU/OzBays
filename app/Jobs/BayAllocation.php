@@ -49,6 +49,8 @@ class BayAllocation implements ShouldQueue
 
                 // Search through every single bay to see if there are any presently being occupied.
                 foreach($bays as $bay){
+
+                    // Only do calculations for bays at the airport of interest
                     if($bay->airport !== $dist['ICAO']){
                         continue;
                     }

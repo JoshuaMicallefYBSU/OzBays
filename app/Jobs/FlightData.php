@@ -86,6 +86,8 @@ class FlightData implements ShouldQueue
                     'lon'       => $pilot->longitude,
                     'speed'     => $pilot->groundspeed,
                     'alt'       => $pilot->altitude,
+                    'status_id' => null,
+                    'status'    => 'Departing',
                     'online'    => 1,
                 ];
             }
@@ -102,8 +104,8 @@ class FlightData implements ShouldQueue
                 $distanceToArrival = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports[$pilot->flight_plan->arrival]['lat'], $airports[$pilot->flight_plan->arrival]['lon']);
                 
 
-                // Do not interest yourself in Aircraft > 600NM from the Airport oh little one
-                if($distanceToArrival > 600){
+                // Do not interest yourself in Aircraft > 400NM from the Airport oh little one
+                if($distanceToArrival > 400){
                     continue;
                 }
 
@@ -126,12 +128,16 @@ class FlightData implements ShouldQueue
                     $status = 'Paused';
                 } elseif($pilot->groundspeed < 80 && $distanceToArrival <= 3){
                     $status = 'Arrived';
-                } elseif($pilot->groundspeed > 80 && $distanceToArrival < 20){
+                } elseif($pilot->groundspeed > 80 && $distanceToArrival < 10){
                     $status = 'Final Approach';
-                } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 20){
-                    $status = 'Inbound';
+                }  elseif($pilot->groundspeed > 80 && $distanceToArrival >= 10 && $distanceToArrival < 200){
+                    $status = 'Inbound (Gate Assigned)';
+                } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 200 && $distanceToArrival < 300){
+                    $status = 'Inbound (Temp Gate Assigned)';
+                } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 300){
+                    $status = 'Inbound (No Gate Calc Done)';
                 } else {
-                    $status = 'Departing';
+                    $status = null;
                 }
 
                 $departure = strtoupper(trim($pilot->flight_plan->departure));
