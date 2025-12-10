@@ -177,6 +177,9 @@ function refreshAircraft() {
                         alt: ac.alt,
                         status: ac.status,
                         colour: airportColourMap[ac.arr] ?? '#787777',
+                        elt: toHHMM(ac.elt),
+                        eibt: toHHMM(ac.eibt),
+                        bay: ac.bay ?? 'N/A',
                         bearing: Number(ac.hdg ?? 0)
                     }
                 }))
@@ -343,8 +346,8 @@ map.on('load', () => {
                 ${p.dep} → ${p.arr}<br>
                 ${p.alt}ft | ${p.speed}kt<br>
                 Status: ${p.status}<br>
-                ELT: N/A | EIBT: N/A<br>
-                Assigned Bay: N/A<br>
+                ELT: ${p.elt}Z | EIBT: ${p.eibt}Z<br>
+                Assigned Bay: ${p.bay}<br>
             `)
             .addTo(map);
     });
@@ -430,6 +433,16 @@ map.on('load', () => {
     setInterval(refreshBayColours, 15000);
 
 });
+
+function toHHMM(dt) {
+    if (!dt) return null;
+
+    const d = new Date(dt);
+    if (isNaN(d)) return null;
+
+    return String(d.getHours()).padStart(2, '0') +
+           String(d.getMinutes()).padStart(2, '0');
+}
 </script>
 
 </body>

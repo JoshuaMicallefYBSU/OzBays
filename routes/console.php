@@ -12,5 +12,5 @@ Schedule::job(new BayAllocation)->everyMinute();
 
 
 ### HOURLY UPDATES
-// Check Aerodrome.JSON for any configuration updates
+// Check Airport.JSON for any configuration updates
 Schedule::job(new AerodromeUpdates)->cron('10 * * * *');

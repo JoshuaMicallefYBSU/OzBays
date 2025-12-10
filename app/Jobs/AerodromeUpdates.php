@@ -26,7 +26,7 @@ class AerodromeUpdates implements ShouldQueue
     public function handle(): void
     {
         // Grab the Airports.JSON File
-        $jsonPath = public_path('config/drome.json');
+        $jsonPath = public_path('config/airport.json');
         $rawJson = json_decode(File::get($jsonPath), true);
         $airports = $rawJson['Airports'] ?? [];
 

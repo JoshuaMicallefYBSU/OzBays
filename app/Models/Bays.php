@@ -24,4 +24,9 @@ class Bays extends Model
         'clear',
         'check_exist'
     ];
+
+    public function currentAircraft()
+    {
+        return $this->hasOne(Flights::class, 'callsign', 'callsign');
+    }
 }

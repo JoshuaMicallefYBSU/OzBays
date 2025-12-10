@@ -57,7 +57,7 @@ class FlightData implements ShouldQueue
         $pilots = $vatsimData->getPilots();
 
         // Bay Allocation Airports - Only These Flights get filtered
-        $jsonPath = public_path('config/drome.json');
+        $jsonPath = public_path('config/airport.json');
         $rawJson = json_decode(File::get($jsonPath), true);
         $airports = $rawJson['Airports'] ?? [];
 
@@ -144,7 +144,6 @@ class FlightData implements ShouldQueue
                 
                 $type = str_starts_with($departure, 'Y') ? 'DOM' : 'INTL';
 
-
                 // Collate the Data
                 $arrivalAircraft[$pilot->flight_plan->arrival][] = [
                     'cid'       => $pilot->cid,
@@ -197,7 +196,7 @@ class FlightData implements ShouldQueue
                     'id'   => $ac['cid'],
                     'dep'  => $ac['dep'],
                     'ac'   => $ac['ac'],
-                    'type' => $type,
+                    'type' => $ac['type'],
                     'arr'  => $ac['arr'],
                     'hdg'  => $ac['hdg'],
                     'lat'  => $ac['lat'],
@@ -221,6 +220,7 @@ class FlightData implements ShouldQueue
         }
 
         // dd($offlineFlights);
+        // dd($)
         // dd($OnGround);
 
     }

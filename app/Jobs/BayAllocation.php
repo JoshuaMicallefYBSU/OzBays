@@ -4,8 +4,10 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Carbon\Carbon;
 use App\Models\Airports;
 use App\Models\Bays;
+use App\Models\BayAllocations;
 use App\Models\Flights;
 
 class BayAllocation implements ShouldQueue
@@ -25,71 +27,157 @@ class BayAllocation implements ShouldQueue
      */
     public function handle(): void
     {
-        // Initialise all Variables
-        $flights = Flights::where('online', 1)->get();
-        $airports = Airports::all()->keyBy('icao');
-        $bays = Bays::all();
+        ############ 1. Check Bay Status = Either Occupied, Or Empty
+        {
+            // Initialise all Variables
+            $flights = Flights::where('online', 1)->get();
+            $airports = Airports::all()->keyBy('icao');
+            $bays = Bays::all();
 
-        $aircraftBays = [];
+            $occupiedBays = []; //List of all bays currently with an Aircraft parked in them
 
-        ## BAY OCCUPANCY CHECKER - This needs to be done first everytime.
-        // Set all bays as clear (will be propogated through shortly)
-        foreach($bays as $bay){
-            $bay->clear = 1;
-            $bay->save();
-        }
+            ## BAY OCCUPANCY CHECKER - This needs to be done first everytime.
+            // Set all bays as clear (will be propogated through shortly)
+            foreach($bays as $bay){
+                $bay->clear = 1;
+                $bay->save();
+            }
 
-        foreach($flights as $ac){
+            // Get all the Bay Data from All Flights
+            foreach($flights as $ac){
 
-            $dist = $this->airportDistance($ac->lat, $ac->lon, $airports);
-            // dd($dist);
+                $dist = $this->airportDistance($ac->lat, $ac->lon, $airports);
+                // dd($dist);
 
-            // Aircraft must be stationary to be occupying a bay
-            if(($dist['YBBN'] < 3 || $dist['YSSY'] < 3 || $dist['YMML'] < 3 || $dist['YPPH'] < 3) && $ac->groundspeed < 5){
+                // Aircraft must be stationary to be occupying a bay
+                if(($dist['YBBN'] < 3 || $dist['YSSY'] < 3 || $dist['YMML'] < 3 || $dist['YPPH'] < 3) && $ac->groundspeed < 5){
 
-                // Search through every single bay to see if there are any presently being occupied.
-                foreach($bays as $bay){
+                    // Search through every single bay to see if there are any presently being occupied.
+                    foreach($bays as $bay){
 
-                    // Only do calculations for bays at the airport of interest
-                    if($bay->airport !== $dist['ICAO']){
-                        continue;
+                        // Only do calculations for bays at the airport of interest
+                        if($bay->airport !== $dist['ICAO']){
+                            continue;
+                        }
+                        
+                        // Calculate Aircraft Distance from all bays at the airport
+                        $distance = $this->BayDistanceChecker(
+                            $ac->lat, $ac->lon, $bay->lat, $bay->lon
+                        );
+
+                        if ($distance <= 30) {
+
+                            $core = $this->bayCore($bay->bay);
+
+                            $acBays = Bays::where('airport', $dist['ICAO'])
+                                ->whereRaw(
+                                    'bay REGEXP ?',
+                                    ['^' . $core . '(?!\\d)([A-Z])?$']
+                                )
+                            ->get();
+
+                            foreach($acBays as $acb){
+                                $occupiedBays[$acb->id] = [
+                                    'callsign_id'   => $ac->id, //ID
+                                    'callsign'      => $ac->callsign, //ID
+                                    'bay_id'        => $acb->id,
+                                    'bay_core'      => $core,
+                                    'type'          => $ac->type,
+                                    'airport'       => $dist['ICAO'],
+                                ];
+                            }
+
+                            // Update them
+                            $acBays->each(function ($bay) use ($ac) {
+                                $bay->update([
+                                    'callsign' => $ac->callsign,
+                                    'status'   => 2,
+                                    'clear'    => 0,
+                                ]);
+                            });
+
+                            break;
+                        }
+
                     }
-                    
-                    // Calculate Aircraft Distance from all bays at the airport
-                    $distance = $this->BayDistanceChecker(
-                        $ac->lat, $ac->lon, $bay->lat, $bay->lon
-                    );
-
-                    if ($distance <= 30) {
-
-                    $core = $this->bayCore($bay->bay);
-
-                    Bays::where('airport', $dist['ICAO'])   // same airport ✅
-                        ->whereRaw(
-                            'bay REGEXP ?',
-                            ['^' . $core . '(?!\\d)([A-Z])?$']
-                        )
-                        ->update([
-                            'callsign' => $ac->callsign,
-                            'status'   => 2,
-                            'clear'    => 0,
-                        ]);
-                    }
-
                 }
             }
 
-            // Bays where they where blocked, but are now free from any aircraft
+            // Bays where they where blocked, but are now free from any aircraft --- Clear Bay & Delete AC Slot
             $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
+
             foreach($clearBays as $bay){
+                // Remove all slots for Departure - They have now left the gate
+                $slotsClear = BayAllocations::where('callsign', $bay->currentAircraft->id)->get();
+                foreach($slotsClear as $slot){
+                    $slot->delete();
+                }
+
+                // Update the bay as available
                 $bay->status = null;
                 $bay->callsign = null;
                 $bay->save();
             }
-            // dd($bayChecker);
-
-            // dd($aircraftBays);
         }
+
+        ############ 2. Update Slot Infromation for Aircraft on the Ground!
+        {
+            // Slot Allocation - Check it exists for the aircraft at the bay 
+            // - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot anyone on that bay inside the alotted slot time.
+            foreach($occupiedBays as $bayInfo){
+                // Look if there is a slot for the aircraft
+                $slot = BayAllocations::where('bay', $bayInfo['bay_id'])->get();
+
+                // dd($slot);
+
+                if($slot->isEmpty()){
+                    
+                    if($bayInfo['type'] == "INTL" || $bayInfo['type'] == null){
+                        $eobt = Carbon::now()->addMinutes(60);
+                    } else {
+                        $eobt = Carbon::now()->addMinutes(45);
+                    }
+
+                    BayAllocations::create([
+                        'airport'   => $bayInfo['airport'],
+                        'bay'       => $bayInfo['bay_id'],
+                        'bay_core'  => $bayInfo['bay_core'],
+                        'callsign'  => $bayInfo['callsign_id'],
+                        'status'    => "OCCUPIED",
+                        'eibt'      => Carbon::now(),
+                        'eobt'      => $eobt,
+                    ]);
+
+                }
+            }
+        }
+
+        ############ 3. Check Planned Slots 
+        {
+
+        }
+
+        ############ 5.
+        {
+            
+        }
+
+        ############ 5.
+        {
+            
+        }
+        
+
+            // dd($occupiedBays);
+
+        {
+
+        }
+
+
+        ### END OF THE JOB - THIS IS WHERE END DATA LIVES BITCHES
+        // dd($bayChecker);
+        // dd($occupiedBays);
     }
 
     // PRIVATE FUNCTIONS - YOLO AND HOPE FOR A PRAYER BOIS THIS STUFF IS CONFUSING

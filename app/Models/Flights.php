@@ -24,4 +24,9 @@ class Flights extends Model
         'status',
         'online'
     ];
+
+    public function assignedBay()
+    {
+        return $this->hasOne(Bays::class, 'callsign', 'callsign');
+    }
 }
