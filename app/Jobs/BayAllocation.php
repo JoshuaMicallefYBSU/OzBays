@@ -42,40 +42,52 @@ class BayAllocation implements ShouldQueue
         foreach($flights as $ac){
 
             $dist = $this->airportDistance($ac->lat, $ac->lon, $airports);
+            // dd($dist);
 
             // Aircraft must be stationary to be occupying a bay
             if(($dist['YBBN'] < 3 || $dist['YSSY'] < 3 || $dist['YMML'] < 3 || $dist['YPPH'] < 3) && $ac->groundspeed < 5){
+
                 // Search through every single bay to see if there are any presently being occupied.
                 foreach($bays as $bay){
+                    if($bay->airport !== $dist['ICAO']){
+                        continue;
+                    }
+                    
+                    // Calculate Aircraft Distance from all bays at the airport
                     $distance = $this->BayDistanceChecker(
                         $ac->lat, $ac->lon, $bay->lat, $bay->lon
                     );
 
-                    if($distance <= 30) {
-                        $core = $this->bayCore($bay->bay);
+                    if ($distance <= 30) {
 
-                        Bays::where('airport', $dist['ICAO'])   // SAME AIRPORT ✅
-                            ->where('bay', 'LIKE', $core . '%') // B12 → B12, B12A, B12B ✅
-                            ->update([
-                                'callsign' => $ac->callsign,
-                                'status'   => 2,
-                                'clear'    => 0,
-                            ]);
-                        }
+                    $core = $this->bayCore($bay->bay);
+
+                    Bays::where('airport', $dist['ICAO'])   // same airport ✅
+                        ->whereRaw(
+                            'bay REGEXP ?',
+                            ['^' . $core . '(?!\\d)([A-Z])?$']
+                        )
+                        ->update([
+                            'callsign' => $ac->callsign,
+                            'status'   => 2,
+                            'clear'    => 0,
+                        ]);
                     }
+
                 }
             }
 
-        // Bays where they where blocked, but are now free from any aircraft
-        $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
-        foreach($clearBays as $bay){
-            $bay->status = null;
-            $bay->callsign = null;
-            $bay->save();
-        }
-        // dd($bayChecker);
+            // Bays where they where blocked, but are now free from any aircraft
+            $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
+            foreach($clearBays as $bay){
+                $bay->status = null;
+                $bay->callsign = null;
+                $bay->save();
+            }
+            // dd($bayChecker);
 
-        // dd($aircraftBays);
+            // dd($aircraftBays);
+        }
     }
 
     // PRIVATE FUNCTIONS - YOLO AND HOPE FOR A PRAYER BOIS THIS STUFF IS CONFUSING
@@ -99,7 +111,7 @@ class BayAllocation implements ShouldQueue
         return $distanceNm;
     }
 
-    private function bayCore(string $bay): string
+    function bayCore(string $bay): string
     {
         preg_match('/^[A-Za-z]*\d+/', $bay, $m);
         return $m[0];
