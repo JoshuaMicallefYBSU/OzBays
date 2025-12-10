@@ -131,7 +131,7 @@ class FlightData implements ShouldQueue
                 } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 20){
                     $status = 'Inbound';
                 } else {
-                    $status = null;
+                    $status = 'Departing';
                 }
 
                 $departure = strtoupper(trim($pilot->flight_plan->departure));

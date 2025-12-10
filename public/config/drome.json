@@ -14,6 +14,15 @@
             "lon": 153.1175,
             "color": "#F54927",
             "parking": {
+                "TEST": {
+                    "lat": -27.38009735,
+                    "lon": 153.12319750,
+                    "Operator": null,
+                    "Terminal": "T1",
+                    "AC": "DH8D",
+                    "Type": "DOM",
+                    "Priority": 1
+                },
                 "1A": {
                     "lat": -27.381314,
                     "lon": 153.122547,
