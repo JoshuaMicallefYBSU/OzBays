@@ -139,7 +139,7 @@ class BayAllocation implements ShouldQueue
                 }
 
                 // Does an arrival aircraft require bay assignment?
-                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
+                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->distance < 220 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
                     $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
                 }
             }
@@ -152,12 +152,12 @@ class BayAllocation implements ShouldQueue
             foreach($clearBays as $bay){
                 // Remove all slots for Departure - They have now left the gate
 
-                $slotsClear = BayAllocations::where('callsign', $bay->callsign)->get();
+                $slotsClear = BayAllocations::where('callsign', $bay->FlightInfo->id)->get();
                 foreach($slotsClear as $slot){
                     $slot->delete();
                 }
 
-                // Update the bay as available
+                // // Update the bay as available
                 $bay->status = null;
                 $bay->callsign = null;
                 $bay->save();
@@ -169,7 +169,7 @@ class BayAllocation implements ShouldQueue
 
             foreach($bookedBays as $bay){
                 // Any slot allocations? if not, then set bay as available
-                if(empty($bay->slots) || $bay->slots->isEmpty()){
+                if(empty($bay->arrivalSlots) || $bay->arrivalSlots->isEmpty()){
                     $bay->status = null;
                     $bay->callsign = null;
                     $bay->save();
@@ -201,7 +201,6 @@ class BayAllocation implements ShouldQueue
                         'eibt'      => Carbon::now(),
                         'eobt'      => $eobt,
                     ]);
-
                 }
             }
         }
@@ -212,6 +211,10 @@ class BayAllocation implements ShouldQueue
 
             // Loop through each $occupiedBays and see if there are any slots that do not match the Aircraft
                 // - If there are, we need to add the aircraft to the bay_conficts table, and later on do some reassignment.
+            
+            foreach($occupiedBays as $departure){
+                // dd($departure);
+            }
 
 
             // Loop through the reassignment aircraft. Waits for min 3 mins before checking
@@ -258,6 +261,8 @@ class BayAllocation implements ShouldQueue
         ####### TO BE REWRITTEN
         // Needs to prioritise all Company Specific Bays over Non-Specific.
         // E.g. Priority 5 JST Bay trumps Priority 1 NULL Bay.
+
+
         // Need to also ensure that the system doesn't give a stupid bay before 
         $info = Flights::where('callsign', $cs)->first();
 
@@ -276,13 +281,59 @@ class BayAllocation implements ShouldQueue
         $aircraftIndex = $aircraftJSON[$ac];
         $allowedTypes = array_slice($aircraftJSON, 0, $aircraftIndex + 1);
         $priorityOrder = array_reverse(array_keys($allowedTypes));
-
         // dd($priorityOrder);
 
+        ### - Preferred Bay Assignment Check can go Here - Pull data from online sources?
+            // - TBC in future building
+        {
+
+        }
+
+
+        ##### - OPERATOR CASE EXPRESSION
+        $operatorListCase = "CASE 
+            WHEN operators IS NULL THEN 999
+        ";
+
+        // Generate CASE ranks for all operators in the ORDER they appear in DB
+        // Example: "QFA, QLK, JST" → ['QFA','QLK','JST']
+        $allOperators = Bays::whereNotNull('operators')
+            ->pluck('operators')
+            ->flatMap(fn($o) => array_map('trim', explode(',', $o)))
+            ->unique()
+            ->values();
+
+        $priorityIndex = 0;
+        foreach ($allOperators as $op) {
+            $operatorListCase .= " WHEN FIND_IN_SET('$op', operators) > 0 THEN $priorityIndex ";
+            $priorityIndex++;
+        }
+
+        $operatorListCase .= " END";
+
+
+        
+
+        ##### - AIRCRAFT CASE EXPRESSION
+        $aircraftPriorityParts = [];
+
+        foreach ($priorityOrder as $i => $type) {
+            $aircraftPriorityParts[] =
+                "IF(FIND_IN_SET('$type', REPLACE(aircraft, '/', ',')) > 0, $i, -1)";
+        }
+
+        $aircraftPrioritySql = "GREATEST(" . implode(", ", $aircraftPriorityParts) . ")";
+
+
         $availableBays = Bays::where('airport', $info->arr)
-                    ->whereNull('Callsign')
-                    ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
-                    ->whereRaw("(operators = ? OR operators IS NULL)", [$operator])
+            ->whereNull('callsign')
+            ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+
+            ->where(function ($q) use ($operator) {
+                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                ->orWhereNull('operators');
+            })
+
             ->where(function ($q) use ($allowedTypes) {
                 foreach (array_keys($allowedTypes) as $type) {
                     $q->orWhereRaw(
@@ -291,77 +342,66 @@ class BayAllocation implements ShouldQueue
                     );
                 }
             })
-            ->orderByRaw("FIELD(
-                SUBSTRING_INDEX(aircraft, '/', 1),
-                '" . implode("','", $priorityOrder) . "'
-            )")
-            ->get();
 
-        // echo $availableBays;
-        // dd($availableBays);
+            // 1️⃣ OPERATOR PRIORITY
+            ->orderByRaw("
+                CASE 
+                    WHEN operators IS NULL THEN 999
+                    ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
+                END
+            ", [$operator])
 
-        // Sort by Priority Number
-        $grouped = $availableBays->groupBy(function ($bay) {
-            return explode('/', $bay->aircraft)[0];
-        });
+            ->orderByRaw($aircraftPrioritySql)
+            ->orderByRaw("RAND()")
+        ->get();
 
-        $grouped = $grouped->map(function ($group) {
-            return $group->sortBy('priority');
-        });
+        // 
+        $candidates = $availableBays->take(7);
 
-        $addPriority = $grouped->flatten(1);
+        $selectedBay = $candidates->random();
 
-        // echo $addPriority;
-        // dd($addPriority);
+        echo $availableBays."<br><br><br>";
 
-        if($addPriority->first() == null ){
-            Log::channel('bays')->error($info->ac . ' - No bay found at ' . $info->arr);
-            // return;
+        ##### - Good code for just one Operator. 2 Doesnt work for this well....
+        {
+            // $availableBays = Bays::where('airport', $info->arr)
+            //     ->whereNull('callsign')
+            //     ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+            //     ->where(function ($q) use ($operator) {
+            //         $q->where('operators', $operator)
+            //         ->orWhereNull('operators');
+            //     })
+            //     ->where(function ($q) use ($allowedTypes) {
+            //         foreach (array_keys($allowedTypes) as $type) {
+            //             $q->orWhereRaw(
+            //                 "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
+            //                 [$type]
+            //             );
+            //         }
+            //     })
+            //     // 1️⃣ Operator priority (JST first, then NULL)
+            //     ->orderByRaw("
+            //         CASE 
+            //             WHEN operators = ? THEN 0
+            //             WHEN operators IS NULL THEN 1
+            //             ELSE 2
+            //         END
+            //     ", [$operator])
+
+            //     // 2️⃣ Aircraft suitability priority
+            //     ->orderByRaw("FIELD(
+            //         SUBSTRING_INDEX(aircraft, '/', 1),
+            //         '" . implode("','", $priorityOrder) . "'
+            //     )")
+
+            //     // 3️⃣ RANDOMISATION inside equal groups
+            //     ->orderByRaw("RAND()")
+
+            // ->get();
         }
-
-        // echo $addPriority;
-        // dd($addPriority);
-
-        $bestAircraft = explode('/', $addPriority->first()->aircraft)[0];
-        $bestPriority = $addPriority->first()->priority;
-        // dd($bestAircraft);
-
-        // Strict best matches
-        $strictCandidates = $addPriority->filter(function ($bay) use ($bestAircraft, $bestPriority) {
-            return explode('/', $bay->aircraft)[0] === $bestAircraft
-                && $bay->priority === $bestPriority;
-        });
-
-        // dd($strictCandidates);
-
-        $topCandidates = collect();
-
-        foreach ($addPriority as $bay) {
-            if ($topCandidates->count() >= 7) {
-                break;
-            }
-
-            // Always include strict best matches first
-            if (
-                explode('/', $bay->aircraft)[0] === $bestAircraft &&
-                $bay->priority === $bestPriority
-            ) {
-                $topCandidates->push($bay);
-                continue;
-            }
-
-            // Then allow next-best options
-            if (!$topCandidates->contains('id', $bay->id)) {
-                $topCandidates->push($bay);
-            }
-        }
-
-        echo "<br><br>";
-        echo "Bay Collection Options for {{$info->callsign}}";
-        echo $topCandidates;
 
         // Randomise selection within top 7 - Wamt it to be a bit random over time :)
-        $selectedBay = $topCandidates->random();
+        $selectedBay = $availableBays->first();
         
         // dd($selectedBay);
 

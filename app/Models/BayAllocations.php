@@ -17,4 +17,6 @@ class BayAllocations extends Model
         'eibt',
         'eobt',
     ];
+
+    
 }

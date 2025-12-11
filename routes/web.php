@@ -18,6 +18,9 @@ Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi'
 
 
 // Error File Checks
+Route::get('/logs', [PagesController::class, 'logs']);
+
+
 Route::get('/logs/aircraft', function () {
     $path = storage_path('logs/aircraft.log');
 

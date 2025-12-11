@@ -35,4 +35,9 @@ class PagesController extends Controller
 
         return view('welcome', compact('ybbn', 'yssy', 'ymml', 'ypph'));
     }
+
+    public function Logs()
+    {
+        return view('logs');
+    }
 }

@@ -36,5 +36,9 @@ class Bays extends Model
         return $this->hasMany(BayAllocations::class, 'bay', 'id');
     }
 
-
+    // Get the Callsign ID for the aircraft planned/occupying the bay
+    public function FlightInfo()
+    {
+        return $this->hasOne(Flights::class, 'callsign', 'callsign');
+    }
 }
