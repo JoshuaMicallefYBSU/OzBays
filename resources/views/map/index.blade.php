@@ -175,10 +175,11 @@ function refreshAircraft() {
                         arr: ac.arr,
                         speed: Number(ac.speed),
                         alt: ac.alt,
-                        status: ac.status,
+                        status: ac.status ?? 'N/A',
                         colour: airportColourMap[ac.arr] ?? '#787777',
-                        elt: toHHMM(ac.elt),
-                        eibt: toHHMM(ac.eibt),
+                        elt: toHHMM(ac.elt) ?? 'N/A',
+                        eibt: toHHMM(ac.eibt) ?? 'N/A',
+                        ac: ac.ac,
                         bay: ac.bay ?? 'N/A',
                         bearing: Number(ac.hdg ?? 0)
                     }
@@ -344,7 +345,7 @@ map.on('load', () => {
             .setHTML(`
                 <strong>${p.callsign}</strong><br>
                 ${p.dep} → ${p.arr}<br>
-                ${p.alt}ft | ${p.speed}kt<br>
+                ${p.alt}ft | ${p.speed}kt | ${p.ac}<br>
                 Status: ${p.status}<br>
                 ELT: ${p.elt}Z | EIBT: ${p.eibt}Z<br>
                 Assigned Bay: ${p.bay}<br>

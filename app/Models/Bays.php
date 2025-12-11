@@ -25,8 +25,13 @@ class Bays extends Model
         'check_exist'
     ];
 
-    public function currentAircraft()
+    public function scopeForAirport($query, $icao)
     {
-        return $this->hasOne(Flights::class, 'callsign', 'callsign');
+        return $query->where('airport', $icao);
     }
+
+    // public function flight()
+    // {
+    //     return $this->hasOne(Flights::class, 'callsign', 'callsign');
+    // }
 }

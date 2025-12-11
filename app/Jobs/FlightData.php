@@ -6,12 +6,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use GuzzleHttp\Client;
 use App\Services\VATSIMClient;
 use App\Services\DiscordClient;
 use Carbon\Carbon;
 use App\Models\Flights;
-use Illuminate\Support\Facades\File;
+use App\Models\BayAllocations;
+
 use Exception;
 
 class FlightData implements ShouldQueue
@@ -64,8 +66,12 @@ class FlightData implements ShouldQueue
 
         $arrivalAircraft = array_fill_keys(array_keys($airports), []);
         $OnGround = [];
+        $landingCalcs = [];
 
         foreach($pilots as $pilot){
+
+            $aircraft = Flights::where('callsign', $pilot->callsign)->first();
+
 
             // Check each Aircraft (See if they are on the ground)
             $distanceToYBBN = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YBBN']['lat'], $airports['YBBN']['lon']);
@@ -108,17 +114,22 @@ class FlightData implements ShouldQueue
                 if($distanceToArrival > 400){
                     continue;
                 }
+                
+                // dd($aircraft->elt);
 
                 // Calculate Landing and Block Time (Estimates)
-                if ($pilot->groundspeed <= 0) {
-                    $eibt = null;
-                    $elt = null;
-                } else {
-                    $TimeRemaining = ($distanceToArrival / $pilot->groundspeed) * 60;
+                if($aircraft){
+                    if ($pilot->groundspeed > 80 && $distanceToArrival < 200 && $aircraft->elt == null) {
+                        $TimeRemaining = (($distanceToArrival / $pilot->groundspeed) * 60);
 
-                    $elt = Carbon::now('UTC')->addMinutes((int) round($TimeRemaining)); //Adds time for slowdown during descent
+                        $TimeAdditional = $TimeRemaining * 1.3;
 
-                    $eibt = Carbon::now('UTC')->addMinutes((int) round($TimeRemaining) + 10); //Adds further time for taxi to the bay - This is the time the bay is considered 'blocked' from.
+                        $elt = Carbon::now('UTC')->addMinutes((int) round($TimeAdditional)); //Adds time for slowdown during descent
+
+                        $eibt = Carbon::now('UTC')->addMinutes((int) round($TimeAdditional) + 15); //Adds further time for taxi to the bay - This is the time the bay is considered 'blocked' from.
+
+                        $landingCalcs[] = ['cs' => $pilot->callsign, 'elt' => $elt, 'eibt' => $eibt];
+                    }
                 }
 
                 // Status Calculation
@@ -131,11 +142,9 @@ class FlightData implements ShouldQueue
                 } elseif($pilot->groundspeed > 80 && $distanceToArrival < 10){
                     $status = 'Final Approach';
                 }  elseif($pilot->groundspeed > 80 && $distanceToArrival >= 10 && $distanceToArrival < 200){
-                    $status = 'Inbound (Gate Assigned)';
-                } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 200 && $distanceToArrival < 300){
-                    $status = 'Inbound (Temp Gate Assigned)';
-                } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 300){
-                    $status = 'Inbound (No Gate Calc Done)';
+                    $status = 'Inbound (Assigned Gate)';
+                } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 200){
+                    $status = 'Inbound';
                 } else {
                     $status = null;
                 }
@@ -158,8 +167,6 @@ class FlightData implements ShouldQueue
                     'speed'     => $pilot->groundspeed,
                     'alt'       => $pilot->altitude,
                     'distance'  => round($distanceToArrival),
-                    'elt'       => $elt,
-                    'eibt'      => $eibt,
                     'status'    => $status,
                 ];
             }
@@ -204,24 +211,44 @@ class FlightData implements ShouldQueue
                     'speed'  => $ac['speed'],
                     'alt'    => $ac['alt'],
                     'distance'  => $ac['distance'],
-                    'elt'  => $ac['elt'],
-                    'eibt'  => $ac['eibt'],
                     'status'  => $ac['status'],
                     'online'    => 1,
                 ]);
             }
         }
 
+        // Input the ELT & EIBT Values only once at the beginning
+        foreach($landingCalcs as $calc){
+            Flights::updateOrCreate(['callsign' => $calc['cs']], [
+                    'elt' => $calc['elt'],
+                    'eibt' => $calc['eibt'],
+                ]);
+        }
+
         // Delete entries once offline for 15 minutes
         $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(15))->get();
 
         foreach($offlineFlights as $flight){
+
+            // Clear Bay Assignment (if any exists)
+            $clearBays = BayAllocations::where('callsign', $flight->id)->get();
+
+            // dd($clearBays);
+
+            if(!$clearBays->isEmpty()){
+                foreach($clearBays as $clearBay){
+                    $clearBay->delete();
+                }
+            }
+
+            // Delete the flight entry
             $flight->delete();
         }
 
         // dd($offlineFlights);
         // dd($)
         // dd($OnGround);
+        // dd($landingCalcs);
 
     }
 

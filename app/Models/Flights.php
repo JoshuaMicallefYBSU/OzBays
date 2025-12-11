@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BayAllocations;
 
 class Flights extends Model
 {
@@ -27,6 +28,6 @@ class Flights extends Model
 
     public function assignedBay()
     {
-        return $this->hasOne(Bays::class, 'callsign', 'callsign');
+        return $this->hasMany(BayAllocations::class, 'callsign', 'callsign');
     }
 }
