@@ -30,8 +30,11 @@ class Bays extends Model
         return $query->where('airport', $icao);
     }
 
-    // public function flight()
-    // {
-    //     return $this->hasOne(Flights::class, 'callsign', 'callsign');
-    // }
+    // For BayAllocations Job - Checking if there are duplicate entries.
+    public function arrivalSlots()
+    {
+        return $this->hasMany(BayAllocations::class, 'bay', 'id');
+    }
+
+
 }

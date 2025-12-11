@@ -14,12 +14,12 @@ class TestController extends Controller
     {
         // Dispatch the job
         $job = AerodromeUpdates::dispatch();
-        // $job2 = FlightData::dispatch();
+        $job2 = FlightData::dispatch();
         $job3 = BayAllocation::dispatch();
 
         // Call the handle method directly to get the result synchronously
         $result = $job->handle();
-        // $result2 = $job2->handle();
+        $result2 = $job2->handle();
         $result3 = $job3->handle();
 
         return response()->json([

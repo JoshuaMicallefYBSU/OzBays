@@ -12,7 +12,9 @@ class MapController extends Controller
     {
         $airports = Airports::all();
         $bays     = Bays::all();
-        $flights  = Flights::where('online', 1)->get();
+        $flights  = Flights::where('online', 1)->with('mapBay')->get();
+
+        // dd($flights);
 
         $features = [];
 

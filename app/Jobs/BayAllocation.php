@@ -35,38 +35,34 @@ class BayAllocation implements ShouldQueue
         
         ############ 1. Check Bay Status = Either Occupied, Or Empty
         {
-            // All Aircraft Types
-            $jsonPath = public_path('config/aircraft.json');
-            $rawJson = json_decode(File::get($jsonPath), true);
-            $aircraftJSON = array_flip($rawJson);
-            
-            // $jsonPath = public_path('config/new-aircraft.json');
+            // JSON Aircraft File
+            // $jsonPath = public_path('config/old-aircraft.json');
             // $rawJson = json_decode(File::get($jsonPath), true);
+            // $aircraftJSON = array_flip($rawJson);
             
-            // $flat = [];
+            // JSON Aircraft File
+            $jsonPath = public_path('config/new-aircraft.json');
+            $rawJson = json_decode(File::get($jsonPath), true);
+            $flat = [];
+            foreach ($rawJson as $groupKey => $types) {
+                // Extract group-level codes: "A320/B738" → ["A320", "B738"]
+                $outerCodes = explode('/', $groupKey);
 
-            // foreach ($rawJson as $groupKey => $types) {
-            //     // Extract group-level codes: "A320/B738" → ["A320", "B738"]
-            //     $outerCodes = explode('/', $groupKey);
+                // 2. Add nested items after
+                foreach ($types as $t) {
+                    if (!in_array($t, $flat)) {
+                        $flat[] = $t;
+                    }
+                }
 
-            //     // 1. Add outer codes first (avoid duplicates)
-            //     foreach ($outerCodes as $outer) {
-            //         if (!in_array($outer, $flat)) {
-            //             $flat[] = $outer;
-            //         }
-            //     }
-
-            //     // 2. Add nested items after
-            //     foreach ($types as $t) {
-            //         if (!in_array($t, $flat)) {
-            //             $flat[] = $t;
-            //         }
-            //     }
-            // }
-
-            // $aircraftJSON = array_flip($flat);
-
-            // dd($aircraftJSON);
+                // 1. Add outer codes first (avoid duplicates)
+                foreach ($outerCodes as $outer) {
+                    if (!in_array($outer, $flat)) {
+                        $flat[] = $outer;
+                    }
+                }
+            }
+            $aircraftJSON = array_flip($flat);
             
             // Initialise all Variables
             $flights = Flights::where('online', 1)->get();
@@ -142,15 +138,15 @@ class BayAllocation implements ShouldQueue
                     }
                 }
 
-                // dd($ac->assignedBay);
-
-                // Does aircraft require bay assignment?
-                if($ac->speed > 80 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
+                // Does an arrival aircraft require bay assignment?
+                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
                     $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
                 }
             }
 
-            // Bays where they where blocked, but are now free from any aircraft --- Clear Bay & Delete AC Slot
+            // dd($occupiedBays);
+
+            ## Bays that were blocked, but are now free from any aircraft --- Clear Bay & Delete AC Slot
             $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
 
             foreach($clearBays as $bay){
@@ -166,25 +162,35 @@ class BayAllocation implements ShouldQueue
                 $bay->callsign = null;
                 $bay->save();
             }
+
+
+            // Bays with planned arrivals. Check Slots and update status as required
+            $bookedBays = Bays::where('status', 1)->get();
+
+            foreach($bookedBays as $bay){
+                // Any slot allocations? if not, then set bay as available
+                if(empty($bay->slots) || $bay->slots->isEmpty()){
+                    $bay->status = null;
+                    $bay->callsign = null;
+                    $bay->save();
+                }
+            }
         }
 
         ############ 2. Update Slot Infromation for Aircraft on the Ground!
         {
             // Slot Allocation - Check it exists for the aircraft at the bay 
-            // - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot anyone on that bay inside the alotted slot time.
+            ### - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot any arrivals on that bay inside the alotted slot time.
             foreach($occupiedBays as $bayInfo){
+
                 // Look if there is a slot for the aircraft
-                $slot = BayAllocations::where('bay', $bayInfo['bay_id'])->get();
+                $slot = BayAllocations::where('bay', $bayInfo['bay_id'])->where('callsign', $bayInfo['callsign_id'])->get();
 
                 // dd($slot);
 
                 if($slot->isEmpty()){
-
-                    // dd($bayInfo);
                     
                     $eobt = $this->bayTimeCalcs($bayInfo['type']);
-
-                    // dd($eobt);
 
                     BayAllocations::create([
                         'airport'   => $bayInfo['airport'],
@@ -200,13 +206,20 @@ class BayAllocation implements ShouldQueue
             }
         }
 
-        ############ 3. Check Planned Slots for Bay Conflicts
+        ############ 3. Check Planned Slots for Bay Conflicts & Reassignment
         {
+            ### - ENR Aircraft wait 3mins before reassignment
 
+            // Loop through each $occupiedBays and see if there are any slots that do not match the Aircraft
+                // - If there are, we need to add the aircraft to the bay_conficts table, and later on do some reassignment.
+
+
+            // Loop through the reassignment aircraft. Waits for min 3 mins before checking
+                // - Does conflict still exist (e.g. is bay occupied) - Yes, reassign | No, delete entry and continue.
+                // - Set assigned bay to null, and 
         }
         
-        // dd($unscheduledArrivals);
-        ############ 4. Generate New Slots for Aircraft that do not have one yet
+        ############ 4. Generate New Slots for Aircraft that are yet to have one
         {
             $assignedBays = [];
 
@@ -220,8 +233,6 @@ class BayAllocation implements ShouldQueue
                     'id' => $bay];
             }
         }
-
-        dd($assignedBays);
 
         
 
@@ -244,9 +255,14 @@ class BayAllocation implements ShouldQueue
     # Assign a bay to aircraft (Either Reassign or Initial)
     private function selectBay($cs, $aircraftJSON)
     {
+        ####### TO BE REWRITTEN
+        // Needs to prioritise all Company Specific Bays over Non-Specific.
+        // E.g. Priority 5 JST Bay trumps Priority 1 NULL Bay.
+        // Need to also ensure that the system doesn't give a stupid bay before 
         $info = Flights::where('callsign', $cs)->first();
 
         $operator = substr($info->callsign, 0, 3); // Cuts off the Callsign
+        // dd($operator);
 
         // Does the Aircraft Code exist? If not, assume it a B738 for symplicity.
         if(!isset($aircraftJSON[$info->ac])){
@@ -261,7 +277,12 @@ class BayAllocation implements ShouldQueue
         $allowedTypes = array_slice($aircraftJSON, 0, $aircraftIndex + 1);
         $priorityOrder = array_reverse(array_keys($allowedTypes));
 
+        // dd($priorityOrder);
+
         $availableBays = Bays::where('airport', $info->arr)
+                    ->whereNull('Callsign')
+                    ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+                    ->whereRaw("(operators = ? OR operators IS NULL)", [$operator])
             ->where(function ($q) use ($allowedTypes) {
                 foreach (array_keys($allowedTypes) as $type) {
                     $q->orWhereRaw(
@@ -293,37 +314,20 @@ class BayAllocation implements ShouldQueue
         // echo $addPriority;
         // dd($addPriority);
 
-        // Remove non-operator specific bays (e.g. JST doesn't see VOZ bays)
-        $finalBays = $addPriority->filter(function ($bay) use ($operator) {
-
-            // Null or empty string = unrestricted
-            if (empty($bay->operators)) {
-                return true;
-            }
-
-            // Convert "VOZ, FCA, RXA" → ["VOZ", "FCA", "RXA"]
-            $ops = array_map('trim', explode(',', $bay->operators));
-
-            // Keep bay only if operator matches
-            return in_array($operator, $ops, true);
-        })->values();
-
-        if($finalBays->first() == null ){
+        if($addPriority->first() == null ){
             Log::channel('bays')->error($info->ac . ' - No bay found at ' . $info->arr);
             // return;
         }
 
-        // echo $finalBays;
-        // dd($finalBays);
+        // echo $addPriority;
+        // dd($addPriority);
 
-        $bestAircraft = explode('/', $finalBays->first()->aircraft)[0];
-        $bestPriority = $finalBays->first()->priority;
+        $bestAircraft = explode('/', $addPriority->first()->aircraft)[0];
+        $bestPriority = $addPriority->first()->priority;
         // dd($bestAircraft);
 
-        
-
         // Strict best matches
-        $strictCandidates = $finalBays->filter(function ($bay) use ($bestAircraft, $bestPriority) {
+        $strictCandidates = $addPriority->filter(function ($bay) use ($bestAircraft, $bestPriority) {
             return explode('/', $bay->aircraft)[0] === $bestAircraft
                 && $bay->priority === $bestPriority;
         });
@@ -332,7 +336,7 @@ class BayAllocation implements ShouldQueue
 
         $topCandidates = collect();
 
-        foreach ($finalBays as $bay) {
+        foreach ($addPriority as $bay) {
             if ($topCandidates->count() >= 7) {
                 break;
             }
@@ -352,6 +356,8 @@ class BayAllocation implements ShouldQueue
             }
         }
 
+        echo "<br><br>";
+        echo "Bay Collection Options for {{$info->callsign}}";
         echo $topCandidates;
 
         // Randomise selection within top 7 - Wamt it to be a bit random over time :)
@@ -366,27 +372,38 @@ class BayAllocation implements ShouldQueue
     {
         $value = $this->selectBay($cs, $aircraftJSON);
         $eobt = $this->bayTimeCalcs($cs['eibt']);
-        
-        // dd($cs);
-
         $core = $this->bayCore($value->bay);
 
-        // dd($core);
+        // Find all bays to block off
+        $findCoreBays = Bays::where('airport', $cs['arr'])
+                            ->whereRaw(
+                                'bay REGEXP ?',
+                                ['^' . $core . '(?!\\d)([A-Z])?$']
+                            )->get();
 
-        $newBay = BayAllocations::create([
-                        'airport'   => $cs['arr'],
-                        'bay'       => $value['id'],
+        // Scehdule each bay as blocked
+        foreach($findCoreBays as $bayID){
+            $newBay = BayAllocations::create([
+                        'airport'   => $bayID['airport'],
+                        'bay'       => $bayID['id'],
                         'bay_core'  => $core,
                         'callsign'  => $cs['cs_id'],
                         'status'    => "PLANNED",
                         'eibt'      => $cs['eibt'],
                         'eobt'      => $eobt,
-        ]);
+            ]);
 
-        $markBay = Bays::find($value['id']);
-        $markBay->status = 1;
-        $markBay->callsign = $cs['cs'];
-        $markBay->save();
+            $markBay = Bays::where('id', $value->id)->first();
+
+            $markBay->status = 1;
+            $markBay->callsign = $cs['cs'];
+            $markBay->save();
+        }
+
+        // Record Scheduled Bay in Flights Table
+        $aircraftBay = Flights::find($cs['cs_id']);
+            $aircraftBay->scheduled_bay = $value->id;
+            $aircraftBay->save();
 
         return $value;
     }

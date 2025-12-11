@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Airport Parking Map</title>
+    <title>OzBays - Map</title>
+
+    
 
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
@@ -57,10 +59,12 @@ airports.forEach(ap => {
  * -------------------------------------------------------- */
 const bayMarkers = {}; // key: "YSSY:1A"
 
-function bayStatusMap(status) {
+function bayStatusMap(status, arrCallsign, arr) {
+    const time = formatTime(arr);
+
     switch (status) {
         case 1:
-            return { color: 'orange', label: 'Booked' };
+            return { color: 'orange', label: `Reserved for ${arrCallsign}<br>EIBT ${time}z` };
         case 2:
             return { color: 'red', label: 'Occupied' };
         default:
@@ -78,7 +82,9 @@ function refreshBayColours() {
                 const key = `${bay.airport}:${bay.bay}`;
                 if (!bayMarkers[key]) return;
 
-                const { color, label } = bayStatusMap(bay.status);
+                const slot = bay.arrival_slots?.[0];
+
+                const { color, label } = bayStatusMap(bay.status, bay.callsign, slot?.eibt);
 
                 bayMarkers[key].el.style.backgroundColor = color;
 
@@ -86,7 +92,7 @@ function refreshBayColours() {
                 if (popup) {
                     popup.setHTML(`
                         <strong>Bay ${bay.bay}</strong><br>
-                        Status: ${label}
+                        ${label}
                     `);
                 }
             });
@@ -95,6 +101,16 @@ function refreshBayColours() {
 
         })
         .catch(err => console.error('Bay refresh failed', err));
+}
+
+function formatTime(datetime) {
+    if (!datetime) return 'N/A';
+
+    const d = new Date(datetime);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+
+    return `${hh}${mm}`;   // → 2023
 }
 
 /* ----------------------------------------------------------
@@ -180,7 +196,7 @@ function refreshAircraft() {
                         elt: toHHMM(ac.elt) ?? 'N/A',
                         eibt: toHHMM(ac.eibt) ?? 'N/A',
                         ac: ac.ac,
-                        bay: ac.bay ?? 'N/A',
+                        bay: ac.map_bay ? ac.map_bay.bay : 'N/A',
                         bearing: Number(ac.hdg ?? 0)
                     }
                 }))
@@ -262,7 +278,7 @@ map.on('load', () => {
             .setPopup(
                 new mapboxgl.Popup({ offset: 10 }).setHTML(`
                     <strong>Bay ${f.properties.bay}</strong><br>
-                    Status: ${f.properties.status}
+                    Status: ${f.properties.status} | ${f.properties.gate}
                 `)
             )
             .addTo(map);
@@ -347,7 +363,7 @@ map.on('load', () => {
                 ${p.dep} → ${p.arr}<br>
                 ${p.alt}ft | ${p.speed}kt | ${p.ac}<br>
                 Status: ${p.status}<br>
-                ELT: ${p.elt}Z | EIBT: ${p.eibt}Z<br>
+                ELT: ${p.elt}z | EIBT: ${p.eibt}z<br>
                 Assigned Bay: ${p.bay}<br>
             `)
             .addTo(map);
