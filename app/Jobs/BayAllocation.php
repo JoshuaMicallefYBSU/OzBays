@@ -7,6 +7,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use App\Services\DiscordClient;
+use App\Services\HoppieClient;
 use Carbon\Carbon;
 use App\Models\Airports;
 use App\Models\Bays;
@@ -506,6 +507,9 @@ class BayAllocation implements ShouldQueue
 
         try {
             $value = $this->selectBay($cs, $aircraftJSON);
+
+            // dd($value);
+            
             $eobt = $this->bayTimeCalcs($cs['eibt']);
             $core = $this->bayCore($value->bay);
 
@@ -537,21 +541,40 @@ class BayAllocation implements ShouldQueue
 
             // Record Scheduled Bay in Flights Table
             if($initial == true) {
-                // Initial Group Assignment
+                #### - Initial Bay Assignment
+                // Update scheduled_bay to the assigned bay
                 $aircraftBay = Flights::find($cs['cs_id']);
                 $aircraftBay->scheduled_bay = $value->id;
                 $aircraftBay->save();
 
+                // dd($aircraftBay);
 
+                // Hoppie CPDLC Message
+                $version = 1;
+                $flight = $aircraftBay->callsign;
+                $dep = $aircraftBay->dep;
+                $arr = $aircraftBay->arr;
+                $bayType = $aircraftBay->type;
+                $arrBay = $value->bay;
+                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
+
+
+
+                // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Assigned | ".$cs['cs'].", ".$cs['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", '27F58B');
+                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Assigned | ".$cs['cs'].", ".$cs['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", '27F58B');
             } else {
+                // Update scheduled_bay to the assigned bay
                 $aircraftBay = Flights::find($cs['cs_id']);
                 $aircraftBay->scheduled_bay = $value->id;
                 $aircraftBay->save();
 
+                // Hoppie CPDLC Message
+
+
+                // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Re-Assignment | ".$cs['cs'].", ".$cs['ac'], " Bay ".$cs['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", 'fca503');
+                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Re-Assignment | ".$cs['cs'].", ".$cs['ac'], " Bay ".$cs['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", 'fca503');
             }
 
             return $value;
@@ -559,6 +582,49 @@ class BayAllocation implements ShouldQueue
             Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
             return null; // <-- This prevents the outer loop from crashing
         }
+    }
+
+    private function HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay)
+    {
+        $hoppie = app(HoppieClient::class);
+
+        $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay);
+
+        if ($hoppie->isConnected($flight, $arr)) {
+            $hoppie->sendTelex($arr, $flight, $Uplink);
+        }
+        
+        return $Uplink;
+
+    }
+
+    private function BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay): string
+    {
+        if($version == 1){
+            // Initial 
+            $messageLines = [
+                "{$dep} ARRIVAL INFORMATION @ ",
+                "{$flight}, {$dep}-{$arr} @ ",
+                "ARR BAY: {$bayType}, {$arrBay} @ ",
+                'IF UNABLE ADVISE GND FOR ALTN BAY @ ',
+                // "RMK/ OZBAYZ.XYZ @ ",
+                'END UPLINK'
+            ];
+
+        } elseif($version == 2){
+            // REVISED BAY ()
+            $messageLines = [
+                "{$dep} ARRIVAL UPDATE @ ",
+                "{$flight}, {$dep}-{$arr} @ ",
+                "ARR BAY: {$bayType}, {$arrBay} @ ",
+                'IF UNABLE ADVISE GND FOR ALTN BAY @ ',
+                "RMK/ BAY CHANGED DUE OTHER AIRCRAFT ON BAY @ ",
+                'END UPLINK'
+            ];
+        }
+        
+
+        return implode("\n", $messageLines);
     }
 
     private function bayTimeCalcs($type)

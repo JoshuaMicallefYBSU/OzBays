@@ -25,11 +25,10 @@ class APIController extends Controller
     // OzStrips API
     public function OzStrips()
     {
-        $flights = Flights::select(['id', 'callsign', 'dep', 'arr', 'lat', 'lon', 'scheduled_bay'])
+        $flights = Flights::select(['callsign', 'arr', 'distance', 'scheduled_bay'])
         ->where('online', 1)
-        ->with([
-            'mapBay:id,bay,airport' // limit related model fields
-        ])
+        ->whereIn('arr', ['YBBN', 'YSSY', 'YMML', 'YPPH'])
+        ->orderBy('distance', 'asc')
         ->get();
 
         return $flights;

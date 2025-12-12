@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Jobs\HoppieSend;
 use App\Jobs\FlightData;
 use App\Jobs\BayAllocation;
 use App\Jobs\AerodromeUpdates;
