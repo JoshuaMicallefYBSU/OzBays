@@ -25,7 +25,19 @@ class Bays extends Model
         'check_exist'
     ];
 
-    public function currentAircraft()
+    public function scopeForAirport($query, $icao)
+    {
+        return $query->where('airport', $icao);
+    }
+
+    // For BayAllocations Job - Checking if there are duplicate entries.
+    public function arrivalSlots()
+    {
+        return $this->hasMany(BayAllocations::class, 'bay', 'id');
+    }
+
+    // Get the Callsign ID for the aircraft planned/occupying the bay
+    public function FlightInfo()
     {
         return $this->hasOne(Flights::class, 'callsign', 'callsign');
     }

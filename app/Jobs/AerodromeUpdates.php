@@ -30,6 +30,7 @@ class AerodromeUpdates implements ShouldQueue
         $rawJson = json_decode(File::get($jsonPath), true);
         $airports = $rawJson['Airports'] ?? [];
 
+        // dd($airports);
 
         ### UPDATE THE AIRPORTS & BAYS
         // Set all airports to not checked
@@ -64,7 +65,7 @@ class AerodromeUpdates implements ShouldQueue
                     'lon'       => $bay['lon'],
                     'aircraft'  => $bay['AC'],
                     'pax_type'      => $bay['Type'],
-                    'operator'  => $bay['Operator'],
+                    'operators'  => $bay['Operator'],
                     'priority'  => $bay['Priority'],
                     'lat'       => $bay['lat'],
                     'check_exist'   => 1,

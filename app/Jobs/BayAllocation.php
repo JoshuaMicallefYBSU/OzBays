@@ -4,10 +4,14 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use App\Services\DiscordClient;
 use Carbon\Carbon;
 use App\Models\Airports;
 use App\Models\Bays;
 use App\Models\BayAllocations;
+use App\Models\BayConflicts;
 use App\Models\Flights;
 
 class BayAllocation implements ShouldQueue
@@ -27,14 +31,48 @@ class BayAllocation implements ShouldQueue
      */
     public function handle(): void
     {
+        $test = [];
+
+        
         ############ 1. Check Bay Status = Either Occupied, Or Empty
         {
+            // JSON Aircraft File
+            // $jsonPath = public_path('config/old-aircraft.json');
+            // $rawJson = json_decode(File::get($jsonPath), true);
+            // $aircraftJSON = array_flip($rawJson);
+            
+            // JSON Aircraft File
+            $jsonPath = public_path('config/new-aircraft.json');
+            $rawJson = json_decode(File::get($jsonPath), true);
+            $flat = [];
+            foreach ($rawJson as $groupKey => $types) {
+                // Extract group-level codes: "A320/B738" → ["A320", "B738"]
+                $outerCodes = explode('/', $groupKey);
+
+                // 2. Add nested items after
+                foreach ($types as $t) {
+                    if (!in_array($t, $flat)) {
+                        $flat[] = $t;
+                    }
+                }
+
+                // 1. Add outer codes first (avoid duplicates)
+                foreach ($outerCodes as $outer) {
+                    if (!in_array($outer, $flat)) {
+                        $flat[] = $outer;
+                    }
+                }
+            }
+            $aircraftJSON = array_flip($flat);
+            
             // Initialise all Variables
             $flights = Flights::where('online', 1)->get();
             $airports = Airports::all()->keyBy('icao');
             $bays = Bays::all();
 
             $occupiedBays = []; //List of all bays currently with an Aircraft parked in them
+            $unscheduledArrivals = []; //List of all Arrivals within 300NM with no gate assigned
+            $recomputeAircraft = []; //All Aircraft requiring Bay Recompute
 
             ## BAY OCCUPANCY CHECKER - This needs to be done first everytime.
             // Set all bays as clear (will be propogated through shortly)
@@ -47,7 +85,6 @@ class BayAllocation implements ShouldQueue
             foreach($flights as $ac){
 
                 $dist = $this->airportDistance($ac->lat, $ac->lon, $airports);
-                // dd($dist);
 
                 // Aircraft must be stationary to be occupying a bay
                 if(($dist['YBBN'] < 3 || $dist['YSSY'] < 3 || $dist['YMML'] < 3 || $dist['YPPH'] < 3) && $ac->groundspeed < 5){
@@ -87,7 +124,7 @@ class BayAllocation implements ShouldQueue
                                 ];
                             }
 
-                            // Update them
+                            // Mark bay as occupied
                             $acBays->each(function ($bay) use ($ac) {
                                 $bay->update([
                                     'callsign' => $ac->callsign,
@@ -101,42 +138,62 @@ class BayAllocation implements ShouldQueue
 
                     }
                 }
+
+                // Does an arrival aircraft require bay assignment?
+                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
+                    $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
+                }
             }
 
-            // Bays where they where blocked, but are now free from any aircraft --- Clear Bay & Delete AC Slot
+            // dd($occupiedBays);
+
+            ## Bays that were blocked, but are now free from any aircraft --- Clear Bay & Delete AC Slot
             $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
 
             foreach($clearBays as $bay){
                 // Remove all slots for Departure - They have now left the gate
-                $slotsClear = BayAllocations::where('callsign', $bay->currentAircraft->id)->get();
+
+                $slotsClear = BayAllocations::where('callsign', $bay->FlightInfo->id)->get();
                 foreach($slotsClear as $slot){
                     $slot->delete();
                 }
 
-                // Update the bay as available
+                // // Update the bay as available
                 $bay->status = null;
                 $bay->callsign = null;
                 $bay->save();
+
+                Log::channel('bays')->error($bay->FlightInfo->callsign." has left the bay, returning bay to clear status");
+            }
+
+
+            // Bays with planned arrivals. Check Slots and update status as required
+            $bookedBays = Bays::where('status', 1)->get();
+
+            foreach($bookedBays as $bay){
+                // Any slot allocations? if not, then set bay as available
+                if(empty($bay->arrivalSlots) || $bay->arrivalSlots->isEmpty()){
+                    $bay->status = null;
+                    $bay->callsign = null;
+                    $bay->save();
+                }
             }
         }
 
         ############ 2. Update Slot Infromation for Aircraft on the Ground!
         {
             // Slot Allocation - Check it exists for the aircraft at the bay 
-            // - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot anyone on that bay inside the alotted slot time.
+            ### - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot any arrivals on that bay inside the alotted slot time.
             foreach($occupiedBays as $bayInfo){
+
                 // Look if there is a slot for the aircraft
-                $slot = BayAllocations::where('bay', $bayInfo['bay_id'])->get();
+                $slot = BayAllocations::where('bay', $bayInfo['bay_id'])->where('callsign', $bayInfo['callsign_id'])->get();
 
                 // dd($slot);
 
                 if($slot->isEmpty()){
                     
-                    if($bayInfo['type'] == "INTL" || $bayInfo['type'] == null){
-                        $eobt = Carbon::now()->addMinutes(60);
-                    } else {
-                        $eobt = Carbon::now()->addMinutes(45);
-                    }
+                    $eobt = $this->bayTimeCalcs($bayInfo['type']);
 
                     BayAllocations::create([
                         'airport'   => $bayInfo['airport'],
@@ -147,41 +204,376 @@ class BayAllocation implements ShouldQueue
                         'eibt'      => Carbon::now(),
                         'eobt'      => $eobt,
                     ]);
-
                 }
             }
         }
 
-        ############ 3. Check Planned Slots 
+        ############ 3. Check Planned Slots for Bay Conflicts & Reassignment
         {
+            ### - ENR Aircraft wait 3mins before reassignment
 
-        }
-
-        ############ 5.
-        {
-            
-        }
-
-        ############ 5.
-        {
-            
-        }
-        
-
+            // Loop through each $occupiedBays and see if there are any slots that do not match the Aircraft
+                // - If there are, we need to add the aircraft to the bay_conficts table, and later on do some reassignment.
+            $data = [];
             // dd($occupiedBays);
 
-        {
+            foreach($occupiedBays as $departure){
+                // dd($departure);
 
+                // Grab all planned future slots for the Aircraft that has now entered an occupied bay
+                $futureSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->with('BayInfo')->get();
+                foreach($futureSlots as $slots){
+                    $data[] = $slots;
+
+                    if($slots->bay_core == $departure['bay_core']){
+                        // Nothing needed if correct bay, thank the lord himself
+                        echo "OMG {{$departure['callsign']}} went to the correct bay!";
+                    } else {
+                        ##### - Clear old assigned bay, and lookup if a aircraft was scheduled to be on the new bay the aircraft has arrived on.
+                        echo "damn it, wrong bay {{$departure['callsign']}}<br>";
+
+                        ##### - Delete the planned slot & clear the bay. Aircraft has not used it.
+                        // Clear the bay status
+                        $bay = $slots->BayInfo;
+                        $bay->callsign = null;
+                        $bay->status = null;
+                        $bay->save();
+
+                        // Delete the slot
+                        $slots->delete();
+                    }
+                }
+
+
+                ##### - Check that no other aircraft is planned via the bay this aircraft has parked on.
+                $conflictingSlot = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->get();
+                foreach($conflictingSlot as $slot){
+                    $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
+                }
+            }
+
+
+            // Loop through the reassignment aircraft. Waits for min 3 mins before checking
+                // - Does conflict still exist (e.g. is bay occupied) - Yes, reassign | No, delete entry and continue.
+                // - Set assigned bay to null, and
+
+
+            foreach($occupiedBays as $departure){
+
+                $conflicts = BayConflicts::where('created_at', '<=', now()->subMinutes(4))->with('SlotInfo')->with('FlightInfo')->get();
+                foreach($conflicts as $conflict){
+
+                    // Find all entries which are not the same as the Aircraft on the ground
+                    $inbound_aircraft = BayAllocations::where('status', 'PLANNED')
+                        ->where('bay', $conflict->bay)
+                        ->with('FlightInfo')
+                        ->get();
+
+                    // Loop through each conflict
+                    if(!$inbound_aircraft->isEmpty()){
+                        foreach($inbound_aircraft as $conflict_bay){
+
+                            // Time to generate the $cs file
+                            $cs = [
+                                'cs' => $conflict_bay->FlightInfo->callsign,
+                                'cs_id' => $conflict_bay->FlightInfo->id,
+                                'arr' => $conflict_bay->FlightInfo->arr,
+                                'ac' => $conflict_bay->FlightInfo->ac,
+                                'elt' => $conflict_bay->FlightInfo->elt,
+                                'eibt' => $conflict_bay->FlightInfo->eibt,
+                                'OLD_BAY' => $conflict_bay->BayInfo->bay,
+                                'ac_model' => $conflict_bay->FlightInfo,
+                            ];
+
+                            $conflict_bay->delete();
+
+                            $conflict->delete();
+
+                            $initialAssignment = false;
+                            // Assign a bay to the Aircraft
+                            $bay = $this->assignBay($cs, $aircraftJSON, $initialAssignment);
+                        }
+                    }
+                    
+                    // Check Slot exists and aircraft is still connected
+
+                    // dd($inbound_aircraft);
+                    // BayAllocations::where();-
+                }
+            }
+        }
+        
+        ############ 4. Generate New Slots for Aircraft that are yet to have one
+        {
+            $assignedBays = [];
+
+            foreach($unscheduledArrivals as $cs){
+                $initialAssignment = true;
+                // Assign a bay to the Aircraft
+                $bay = $this->assignBay($cs, $aircraftJSON, $initialAssignment);
+
+                // If assigning fails, skip and continue loop
+                if ($bay === null) {
+                    Log::channel('bays')->error("Failed to assign bay for {$cs['cs']}({$cs['ac']}) — skipping");
+                    continue;
+                }
+
+                $assignedBays[] = [
+                    'cs' => $cs,
+                    'id' => $bay];
+            }
+        }
+
+        
+
+        ############ 5.
+        {
+            
         }
 
 
         ### END OF THE JOB - THIS IS WHERE END DATA LIVES BITCHES
         // dd($bayChecker);
         // dd($occupiedBays);
+        dd($unscheduledArrivals);
     }
 
-    // PRIVATE FUNCTIONS - YOLO AND HOPE FOR A PRAYER BOIS THIS STUFF IS CONFUSING
-    private function calculateDistance($lat1, $lon1, $lat2, $lon2) {
+    ###########################
+    # PRIVATE FUNCTIONS - YOLO AND HOPE FOR A PRAYER BOIS THIS STUFF IS CONFUSING
+    ###########################
+
+    # Assign a bay to aircraft (Either Reassign or Initial)
+    private function selectBay($cs, $aircraftJSON)
+    {
+        ####### TO BE REWRITTEN
+        // Needs to prioritise all Company Specific Bays over Non-Specific.
+        // E.g. Priority 5 JST Bay trumps Priority 1 NULL Bay.
+
+
+        // Need to also ensure that the system doesn't give a stupid bay before 
+        $info = Flights::where('callsign', $cs)->first();
+
+        $operator = substr($info->callsign, 0, 3); // Cuts off the Callsign
+        // dd($operator);
+
+        // Does the Aircraft Code exist? If not, assume it a B738 for symplicity.
+        if(!isset($aircraftJSON[$info->ac])){
+            Log::channel('aircraft')->error($info->ac . ' type does not exist');
+            $ac = 'B738';
+        } else {
+            $ac = $info->ac;
+        }
+
+        // Index the AC so
+        $aircraftIndex = $aircraftJSON[$ac];
+        $allowedTypes = array_slice($aircraftJSON, 0, $aircraftIndex + 1);
+        $priorityOrder = array_reverse(array_keys($allowedTypes));
+        // dd($priorityOrder);
+
+        ### - Preferred Bay Assignment Check can go Here - Pull data from online sources?
+            // - TBC in future building
+        {
+
+        }
+
+
+        ##### - OPERATOR CASE EXPRESSION
+        $operatorListCase = "CASE 
+            WHEN operators IS NULL THEN 999
+        ";
+
+        // Generate CASE ranks for all operators in the ORDER they appear in DB
+        // Example: "QFA, QLK, JST" → ['QFA','QLK','JST']
+        $allOperators = Bays::whereNotNull('operators')
+            ->pluck('operators')
+            ->flatMap(fn($o) => array_map('trim', explode(',', $o)))
+            ->unique()
+            ->values();
+
+        $priorityIndex = 0;
+        foreach ($allOperators as $op) {
+            $operatorListCase .= " WHEN FIND_IN_SET('$op', operators) > 0 THEN $priorityIndex ";
+            $priorityIndex++;
+        }
+
+        $operatorListCase .= " END";
+
+
+        
+
+        ##### - AIRCRAFT CASE EXPRESSION
+        $aircraftPriorityParts = [];
+
+        foreach ($priorityOrder as $i => $type) {
+            $aircraftPriorityParts[] =
+                "IF(FIND_IN_SET('$type', REPLACE(aircraft, '/', ',')) > 0, $i, -1)";
+        }
+
+        $aircraftPrioritySql = "GREATEST(" . implode(", ", $aircraftPriorityParts) . ")";
+
+
+        $availableBays = Bays::where('airport', $info->arr)
+            ->whereNull('callsign')
+            ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+
+            ->where(function ($q) use ($operator) {
+                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                ->orWhereNull('operators');
+            })
+
+            ->where(function ($q) use ($allowedTypes) {
+                foreach (array_keys($allowedTypes) as $type) {
+                    $q->orWhereRaw(
+                        "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
+                        [$type]
+                    );
+                }
+            })
+
+            ->orderByRaw("
+                CASE 
+                    WHEN operators IS NULL THEN 999
+                    ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
+                END
+            ", [$operator])
+            
+            ->orderBy('priority', 'asc')
+            ->orderByRaw($aircraftPrioritySql)
+            ->orderByRaw("RAND()")
+            
+        ->get();
+
+        if($availableBays !== null){
+        }
+
+        // 
+        $candidates = $availableBays->take(7);
+
+        // dd($candidates);
+
+        $selectedBay = $candidates->random();
+
+        echo $availableBays."<br><br><br>";
+
+        ##### - Good code for just one Operator. 2 Doesnt work for this well....
+        {
+            // $availableBays = Bays::where('airport', $info->arr)
+            //     ->whereNull('callsign')
+            //     ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+            //     ->where(function ($q) use ($operator) {
+            //         $q->where('operators', $operator)
+            //         ->orWhereNull('operators');
+            //     })
+            //     ->where(function ($q) use ($allowedTypes) {
+            //         foreach (array_keys($allowedTypes) as $type) {
+            //             $q->orWhereRaw(
+            //                 "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
+            //                 [$type]
+            //             );
+            //         }
+            //     })
+            //     // 1️⃣ Operator priority (JST first, then NULL)
+            //     ->orderByRaw("
+            //         CASE 
+            //             WHEN operators = ? THEN 0
+            //             WHEN operators IS NULL THEN 1
+            //             ELSE 2
+            //         END
+            //     ", [$operator])
+
+            //     // 2️⃣ Aircraft suitability priority
+            //     ->orderByRaw("FIELD(
+            //         SUBSTRING_INDEX(aircraft, '/', 1),
+            //         '" . implode("','", $priorityOrder) . "'
+            //     )")
+
+            //     // 3️⃣ RANDOMISATION inside equal groups
+            //     ->orderByRaw("RAND()")
+
+            // ->get();
+        }
+
+        // Randomise selection within top 7 - Wamt it to be a bit random over time :)
+        $selectedBay = $availableBays->first();
+        
+        // dd($selectedBay);
+
+        return $selectedBay;
+    }
+
+    private function assignBay($cs, $aircraftJSON, $initial)
+    {
+
+        try {
+            $value = $this->selectBay($cs, $aircraftJSON);
+            $eobt = $this->bayTimeCalcs($cs['eibt']);
+            $core = $this->bayCore($value->bay);
+
+            // Find all bays to block off
+            $findCoreBays = Bays::where('airport', $cs['arr'])
+                                ->whereRaw(
+                                    'bay REGEXP ?',
+                                    ['^' . $core . '(?!\\d)([A-Z])?$']
+                                )->get();
+
+            // Scehdule each bay as blocked
+            foreach($findCoreBays as $bayID){
+                $newBay = BayAllocations::create([
+                            'airport'   => $bayID['airport'],
+                            'bay'       => $bayID['id'],
+                            'bay_core'  => $core,
+                            'callsign'  => $cs['cs_id'],
+                            'status'    => "PLANNED",
+                            'eibt'      => $cs['eibt'],
+                            'eobt'      => $eobt,
+                ]);
+
+                $markBay = Bays::where('id', $value->id)->first();
+
+                $markBay->status = 1;
+                $markBay->callsign = $cs['cs'];
+                $markBay->save();
+            }
+
+            // Record Scheduled Bay in Flights Table
+            if($initial == true) {
+                // Initial Group Assignment
+                $aircraftBay = Flights::find($cs['cs_id']);
+                $aircraftBay->scheduled_bay = $value->id;
+                $aircraftBay->save();
+
+
+                $discord = new DiscordClient();
+                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Assigned | ".$cs['cs'].", ".$cs['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", '27F58B');
+            } else {
+                $aircraftBay = Flights::find($cs['cs_id']);
+                $aircraftBay->scheduled_bay = $value->id;
+                $aircraftBay->save();
+
+                $discord = new DiscordClient();
+                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Re-Assignment | ".$cs['cs'].", ".$cs['ac'], " Bay ".$cs['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", 'fca503');
+            }
+
+            return $value;
+        } catch (\Throwable $e) {
+            Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
+            return null; // <-- This prevents the outer loop from crashing
+        }
+    }
+
+    private function bayTimeCalcs($type)
+    {
+        if($type == "INTL" || $type == null){
+            $eobt = Carbon::now()->addMinutes(60);
+        } else {
+            $eobt = Carbon::now()->addMinutes(45);
+        }
+
+        return $eobt;
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2) 
+    {
         $earthRadiusNm = 3440.065; // Radius of Earth in nautical miles
     
         // Convert degrees to radians
@@ -201,13 +593,14 @@ class BayAllocation implements ShouldQueue
         return $distanceNm;
     }
 
-    function bayCore(string $bay): string
+    private function bayCore(string $bay): string
     {
         preg_match('/^[A-Za-z]*\d+/', $bay, $m);
         return $m[0];
     }
 
-    public function airportDistance($lat, $lon, $airports){
+    private function airportDistance($lat, $lon, $airports)
+    {
         $airportDistance = [];
 
         // Check if Aircraft are close enough to trigger a bay check

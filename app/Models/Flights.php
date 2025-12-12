@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BayAllocations;
 
 class Flights extends Model
 {
@@ -22,11 +23,23 @@ class Flights extends Model
         'elt',
         'eibt',
         'status',
-        'online'
+        'online',
+        'current_bay',
+        'scheduled_bay',
     ];
 
     public function assignedBay()
     {
-        return $this->hasOne(Bays::class, 'callsign', 'callsign');
+        return $this->hasMany(BayAllocations::class, 'callsign', 'id');
+    }
+
+    public function mapBay()
+    {
+        return $this->hasOne(Bays::class, 'id', 'scheduled_bay');
+    }
+
+    public function bayConflict()
+    {
+        return $this->hasOne(BayConflicts::class, 'id', 'callsign');
     }
 }

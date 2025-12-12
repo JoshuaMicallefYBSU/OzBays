@@ -7,18 +7,13 @@ use App\Models\Bays;
 use App\Models\BayAllocations;
 use App\Models\Flights;
 
-class BayAllocations extends Model
+class BayConflicts extends Model
 {
-    protected $table = 'bay_allocation';    
+    protected $table = 'bay_conflict';    
 
     protected $fillable = [
-        'airport',
-        'bay',
         'callsign',
-        'bay_core',
-        'status', //PLANNED, LATE, OCCUPIED
-        'eibt',
-        'eobt',
+        'bay',
     ];
 
     public function FlightInfo()
@@ -31,8 +26,8 @@ class BayAllocations extends Model
         return $this->belongsTo(Bays::class, 'bay', 'id');
     }
 
-    public function BayConflict()
+    public function SlotInfo()
     {
-        return $this->hasOne(BayConflicts::class, 'bay', 'id');
+        return $this->hasMany(BayAllocations::class, 'bay', 'bay');
     }
 }

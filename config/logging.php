@@ -52,6 +52,24 @@ return [
 
     'channels' => [
 
+        'aircraft' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/aircraft.log'),
+            'level' => 'debug',
+        ],
+
+        'bays' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/bays.log'),
+            'level' => 'debug',
+        ],
+
+        'allocations' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/allocations.log'),
+            'level' => 'debug',
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
