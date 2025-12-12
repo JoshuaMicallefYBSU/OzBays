@@ -13,6 +13,7 @@ use App\Services\DiscordClient;
 use Carbon\Carbon;
 use App\Models\Flights;
 use App\Models\BayAllocations;
+use App\Models\BayConflicts;
 
 use Exception;
 
@@ -111,7 +112,7 @@ class FlightData implements ShouldQueue
                 
 
                 // Do not interest yourself in Aircraft > 400NM from the Airport oh little one
-                if($distanceToArrival > 400){
+                if($distanceToArrival > 600){
                     continue;
                 }
                 
@@ -122,7 +123,7 @@ class FlightData implements ShouldQueue
                     if ($pilot->groundspeed > 80 && $distanceToArrival < 200 && $aircraft->elt == null) {
                         $TimeRemaining = (($distanceToArrival / $pilot->groundspeed) * 60);
 
-                        $TimeAdditional = $TimeRemaining * 1.3;
+                        $TimeAdditional = $TimeRemaining * 1.4;
 
                         $elt = Carbon::now('UTC')->addMinutes((int) round($TimeAdditional)); //Adds time for slowdown during descent
 
@@ -226,20 +227,25 @@ class FlightData implements ShouldQueue
         }
 
         // Delete entries once offline for 15 minutes
-        $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(15))->get();
+        $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(10))->with('bayConflict')->get();
 
         foreach($offlineFlights as $flight){
 
             // Clear Bay Assignment (if any exists)
             $clearBays = BayAllocations::where('callsign', $flight->id)->get();
 
-            // dd($clearBays);
-
             if(!$clearBays->isEmpty()){
                 foreach($clearBays as $clearBay){
                     $clearBay->delete();
                 }
             }
+
+            $slotConflict = BayConflicts::where('callsign', $flight->id)->get();
+            if(!$slotConflict->isEmpty()){
+                $slotConflict->delete();
+            }
+
+            // Remove Bay Conflict Notice (If it hasn't been resolved by now, its not an issue)
 
             // Delete the flight entry
             $flight->delete();

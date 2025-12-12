@@ -64,6 +64,12 @@ return [
             'level' => 'debug',
         ],
 
+        'allocations' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/allocations.log'),
+            'level' => 'debug',
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),

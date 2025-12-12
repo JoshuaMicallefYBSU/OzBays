@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bay_conflicts', function (Blueprint $table) {
+        Schema::create('bay_conflict', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('callsign');
+            $table->unsignedBigInteger('bay');
             $table->timestamps();
 
 
             $table->foreign('callsign')->references('id')->on('flights');
+            $table->foreign('bay')->references('id')->on('bays');
         });
     }
 

@@ -37,4 +37,9 @@ class Flights extends Model
     {
         return $this->hasOne(Bays::class, 'id', 'scheduled_bay');
     }
+
+    public function bayConflict()
+    {
+        return $this->hasOne(BayConflicts::class, 'id', 'callsign');
+    }
 }
