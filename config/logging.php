@@ -52,6 +52,33 @@ return [
 
     'channels' => [
 
+<<<<<<< Updated upstream
+=======
+        'aircraft' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/aircraft.log'),
+            'level' => 'debug',
+        ],
+
+        'bays' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/bays.log'),
+            'level' => 'debug',
+        ],
+
+        'jamie' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/jamie.log'),
+            'level' => 'debug',
+        ],
+
+        'allocations' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/allocations.log'),
+            'level' => 'debug',
+        ],
+
+>>>>>>> Stashed changes
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
