@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta property="og:title" content="ozBays">
+        <meta property="og:title" content="OzBays">
         <meta property="og:description"
             content="Automatic bay assignments for Brisbane, Sydney, Melbourne & Perth International Airports on the VATSIM Network.">
         <meta property="og:type" content="website">

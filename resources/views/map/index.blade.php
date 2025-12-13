@@ -22,11 +22,26 @@
         body { margin: 0; }
         #map { height: 100vh; width: 100%; }
         pre { font-family: monospace; font-size: 13px; }
+        #event-overlay {
+    position: absolute;
+    text-align: center;
+    hyphens: auto;
+    top: 10px; /* Adjust the top position as needed */
+    right: 10px; /* Adjust the right position as needed */
+    min-width: 20%;
+    max-width: 25%;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 1; /* Ensure it's above the map */
+        }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
+<div id="event-overlay"></div>
 
 <script>
 /* ----------------------------------------------------------
@@ -43,6 +58,30 @@ const map = new mapboxgl.Map({
     bearing: 0,
     projection: 'mercator'
 });
+
+// Populate the event details in the overlay
+    const eventOverlay = document.getElementById("event-overlay");
+    eventOverlay.innerHTML = `
+        <h2>OzBays - Live Network Map</h2>
+        <x style="font-size: 12px;">
+            <p>Welcome to OzBays. Automatic Gate Assignments for VATPAC's Busiest Airports.</p>
+            <p>
+                Each Airport has its own unique color, with a range of 200NM circled around it. <br>
+                All aircraft inside the circle will have an assigned bay, provided they are considered Airbourne (Above F120, GS > 80k etc). <br>
+                Aircraft will appear outside of this area for visualisation purposes only. They are not considered until they pass inside the circle.
+            </p>
+            <p>
+                Each airport has all bays mapped according to their specifications. <br>
+                Clicking on the circle will display the specific information about the bays status. <br>
+                Bay colours are broken into 3 destinct types: <br>
+                <b>- <x style="color: red"><u>Red:</u></x></b> Bay is activley occupied by an aircraft. <br>
+                <b>- <x style="color: #b37202"><u>Orange:</u></x></b> Bay has been scheduled for an arrival aircraft. <br>
+                <b>- <x style="color: green"><u>Green:</u></x></b> Bay is unoccupied and available for assignment. <br>
+                </ul>
+            </p>
+        </x>
+        
+    `;
 
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
@@ -73,7 +112,7 @@ function bayStatusMap(status, arrCallsign, arr) {
 
     switch (status) {
         case 1:
-            return { color: 'orange', label: `Reserved for ${arrCallsign}<br>EIBT ${time}z` };
+            return { color: '#b37202', label: `Reserved for ${arrCallsign}<br>EIBT ${time}z` };
         case 2:
             return { color: 'red', label: 'Occupied' };
         default:
@@ -241,7 +280,7 @@ map.on('load', () => {
     .filter(f => f.properties.type === 'airport')
     .forEach(a => {
 
-        const ring = createCircle(a.geometry.coordinates, 600 * 1852);
+        const ring = createCircle(a.geometry.coordinates, 200 * 1852);
 
         ring.properties = {
             colour: a.properties.color ?? '#F54927'

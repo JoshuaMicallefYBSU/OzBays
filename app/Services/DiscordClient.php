@@ -49,6 +49,7 @@ class DiscordClient
                         'title' => $title,
                         'description' => $description,
                         'color' => hexdec($color),
+                        'footer' => ['text' => Carbon::now('UTC')->format('H:i') . "z | OzBays Slot Management"],
                     ]
                 ]
             ]
@@ -67,6 +68,7 @@ class DiscordClient
                         'title' => $title,
                         'description' => $description,
                         'color' => hexdec('0080C9'),
+                        'footer' => ['text' => Carbon::now('UTC')->format('H:i') . "z | OzBays Slot Management"],
                     ]
                 ]
             ]
