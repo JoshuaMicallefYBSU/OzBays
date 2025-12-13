@@ -39,32 +39,27 @@ class BayAllocation implements ShouldQueue
         {
             // JSON Aircraft File
             $jsonPath = public_path('config/aircraft.json');
-            $rawJson = json_decode(File::get($jsonPath), true);
-            $flat = [];
+            $rawJson  = json_decode(File::get($jsonPath), true);
+
+            $aircraftJSON = [];
+            $priorityIndex = 0;
+
             foreach ($rawJson as $groupKey => $types) {
+
+                // Skip allocation metadata
                 if (str_starts_with($groupKey, 'AllocationInfo_')) {
                     continue;
                 }
-                // Extract group-level codes: "A320/B738" → ["A320", "B738"]
-                $outerCodes = explode('/', $groupKey);
 
-                // 2. Add nested items after
-                foreach ($types as $t) {
-                    if (!in_array($t, $flat)) {
-                        $flat[] = $t;
-                    }
-                }
+                // Ensure numeric indexing and preserve order
+                $aircraftJSON[$priorityIndex] = array_values(array_unique($types));
 
-                // 1. Add outer codes first (avoid duplicates)
-                foreach ($outerCodes as $outer) {
-                    if (!in_array($outer, $flat)) {
-                        $flat[] = $outer;
-                    }
-                }
+                $priorityIndex++;
             }
-            $aircraftJSON = array_flip($flat);
 
-            dd($aircraftJSON);
+            // dd($aircraftJSON);
+
+            // dd($aircraftJSON);
             
             // Initialise all Variables
             $flights = Flights::where('online', 1)->get();
@@ -368,12 +363,19 @@ class BayAllocation implements ShouldQueue
         // dd($info);
 
         // Index the AC so it can 
-        $aircraftIndex = $aircraftJSON[$ac];
-        $allowedTypes = array_slice($aircraftJSON, 0, $aircraftIndex + 1);
+        $aircraftIndex = null;
 
-        dd($allowedTypes);
-        
-        $priorityOrder = array_reverse(array_keys($allowedTypes));
+        foreach ($aircraftJSON as $index => $types) {
+            if (in_array($ac, $types, true)) {
+                $aircraftIndex = $index;
+                break;
+            }
+        }
+
+        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
+        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
+        // dd($allowedTypes);
+
         // dd($priorityOrder);
 
         ### - Preferred Bay Assignment Check can go Here - Pull data from online sources?
@@ -382,18 +384,17 @@ class BayAllocation implements ShouldQueue
 
         }
 
-
-        
-
         ##### - AIRCRAFT CASE EXPRESSION
         $aircraftPriorityParts = [];
 
-        foreach ($priorityOrder as $i => $type) {
+        foreach ($allowedTypes as $i => $type) {
             $aircraftPriorityParts[] =
                 "IF(FIND_IN_SET('$type', REPLACE(aircraft, '/', ',')) > 0, $i, -1)";
         }
 
         $aircraftPrioritySql = "GREATEST(" . implode(", ", $aircraftPriorityParts) . ")";
+
+        // dd($aircraftPrioritySql);
 
 
         $availableBays = Bays::where('airport', $info->arr)
@@ -405,7 +406,7 @@ class BayAllocation implements ShouldQueue
 
             // Order bays by Aircraft Closeness to 
             ->where(function ($q) use ($allowedTypes) {
-                foreach (array_keys($allowedTypes) as $type) {
+                foreach ($allowedTypes as $type) {
                     $q->orWhereRaw(
                         "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
                         [$type]
