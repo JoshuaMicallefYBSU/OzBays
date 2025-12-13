@@ -378,28 +378,6 @@ class BayAllocation implements ShouldQueue
         }
 
 
-        ##### - OPERATOR CASE EXPRESSION
-        $operatorListCase = "CASE 
-            WHEN operators IS NULL THEN 999
-        ";
-
-        // Generate CASE ranks for all operators in the ORDER they appear in DB
-        // Example: "QFA, QLK, JST" → ['QFA','QLK','JST']
-        $allOperators = Bays::whereNotNull('operators')
-            ->pluck('operators')
-            ->flatMap(fn($o) => array_map('trim', explode(',', $o)))
-            ->unique()
-            ->values();
-
-        $priorityIndex = 0;
-        foreach ($allOperators as $op) {
-            $operatorListCase .= " WHEN FIND_IN_SET('$op', operators) > 0 THEN $priorityIndex ";
-            $priorityIndex++;
-        }
-
-        $operatorListCase .= " END";
-
-
         
 
         ##### - AIRCRAFT CASE EXPRESSION
@@ -417,11 +395,10 @@ class BayAllocation implements ShouldQueue
             ->whereNull('callsign')
             ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
 
-            ->where(function ($q) use ($operator) {
-                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                ->orWhereNull('operators');
-            })
+            // Order by Bay Prioriies (1=most, 9=never?)
+            ->orderBy('priority', 'asc')
 
+            // Order bays by Aircraft Closeness to 
             ->where(function ($q) use ($allowedTypes) {
                 foreach (array_keys($allowedTypes) as $type) {
                     $q->orWhereRaw(
@@ -431,20 +408,29 @@ class BayAllocation implements ShouldQueue
                 }
             })
 
+            ->where(function ($q) use ($operator) {
+                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                ->orWhereNull('operators');
+            })
+
+            ->orderByRaw($aircraftPrioritySql)
+
+            // Operator Order (QFA, QLK v QLK, QFA assignment priority)
             ->orderByRaw("
                 CASE 
-                    WHEN operators IS NULL THEN 999
+                    WHEN operators IS NULL THEN 4
                     ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
                 END
             ", [$operator])
-            
-            ->orderBy('priority', 'asc')
-            ->orderByRaw($aircraftPrioritySql)
+
             ->orderByRaw("RAND()")
             
         ->get();
 
+
+        ####### - Oh No, The Harder Rule returned no options!!!!!!!  We need to find something, so lets do a relaxed version.......
         if($availableBays !== null){
+
         }
 
         // 
