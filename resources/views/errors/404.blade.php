@@ -32,8 +32,7 @@
                     <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">We don't know what you are trying to find, but unfortunatley, you did not find it on this attempt. Have a 'easter egg' to try and quench your thurst for trouble.</p>
                 </div>
                 <div class="bg-[#fff2f2] dark:bg-[#424242] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden flex items-center justify-center">
-                    <img
-                        src="https://cdn.discordapp.com/attachments/1436569037240008704/1447339877497831486/ext.png?ex=6938954d&is=693743cd&hm=b9a67e57dd2155da43ff90baa9fc8edaadd9de7fe430022265c2ad02cec51e7b"
+                    <img src="{{ asset('img/rawrrrrrr.png') }}"
                         class="w-full h-full object-contain"
                         style="padding: 10px;"
                         alt=""
