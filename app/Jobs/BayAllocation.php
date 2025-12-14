@@ -204,6 +204,8 @@ class BayAllocation implements ShouldQueue
             }
         }
 
+        // dd($occupiedBays);
+
         ############ 3. Check Planned Slots for Bay Conflicts & Reassignment
         {
             ### - ENR Aircraft wait 3mins before reassignment
@@ -219,11 +221,23 @@ class BayAllocation implements ShouldQueue
                 // Grab all planned future slots for the Aircraft that has now entered an occupied bay
                 $futureSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->with('BayInfo')->get();
                 foreach($futureSlots as $slots){
+
                     $data[] = $slots;
 
                     if($slots->bay_core == $departure['bay_core']){
-                        // Nothing needed if correct bay, thank the lord himself
+                        // Nothing needed if correct bay, thank the lord himself - Update the slot to be a planned slot instead :)
                         echo "OMG {{$departure['callsign']}} went to the correct bay!";
+
+                        // $bay = $slots->BayInfo;
+                        // $bay->callsign = $departure['callsign'];
+                        // $bay->status = 2;
+                        // $bay->save();
+
+                        $slots->status = "OCCUPIED";
+                        $slots->save();
+
+                        // dd($departure);
+
                     } else {
                         ##### - Clear old assigned bay, and lookup if a aircraft was scheduled to be on the new bay the aircraft has arrived on.
                         echo "damn it, wrong bay {{$departure['callsign']}}<br>";
@@ -237,14 +251,13 @@ class BayAllocation implements ShouldQueue
 
                         // Delete the slot
                         $slots->delete();
+
+                        ##### - Check that no other aircraft is planned via the bay this aircraft has parked on.
+                        $conflictingSlot = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->first();
+                        foreach($conflictingSlot as $slot){
+                            $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
+                        }
                     }
-                }
-
-
-                ##### - Check that no other aircraft is planned via the bay this aircraft has parked on.
-                $conflictingSlot = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->get();
-                foreach($conflictingSlot as $slot){
-                    $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
                 }
             }
 
