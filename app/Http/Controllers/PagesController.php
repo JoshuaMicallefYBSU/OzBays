@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Jobs\FlightData;
 use App\Models\Flights;
+use App\Services\HoppieClient;
 
 class PagesController extends Controller
 {
@@ -34,6 +35,20 @@ class PagesController extends Controller
         }
 
         return view('welcome', compact('ybbn', 'yssy', 'ymml', 'ypph'));
+    }
+
+    public function Hoppie()
+    {
+        $hoppie = app(HoppieClient::class);
+
+        if ($hoppie->isConnected($flight->callsign)) {
+            $hoppie->sendTelex(
+                'YSSY',
+                $flight->callsign,
+                'GATE ASSIGNED E11'
+            );
+        }
+
     }
 
     public function Logs()

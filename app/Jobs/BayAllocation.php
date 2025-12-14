@@ -7,6 +7,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use App\Services\DiscordClient;
+use App\Services\HoppieClient;
 use Carbon\Carbon;
 use App\Models\Airports;
 use App\Models\Bays;
@@ -37,33 +38,28 @@ class BayAllocation implements ShouldQueue
         ############ 1. Check Bay Status = Either Occupied, Or Empty
         {
             // JSON Aircraft File
-            // $jsonPath = public_path('config/old-aircraft.json');
-            // $rawJson = json_decode(File::get($jsonPath), true);
-            // $aircraftJSON = array_flip($rawJson);
-            
-            // JSON Aircraft File
-            $jsonPath = public_path('config/new-aircraft.json');
-            $rawJson = json_decode(File::get($jsonPath), true);
-            $flat = [];
+            $jsonPath = public_path('config/aircraft.json');
+            $rawJson  = json_decode(File::get($jsonPath), true);
+
+            $aircraftJSON = [];
+            $priorityIndex = 0;
+
             foreach ($rawJson as $groupKey => $types) {
-                // Extract group-level codes: "A320/B738" → ["A320", "B738"]
-                $outerCodes = explode('/', $groupKey);
 
-                // 2. Add nested items after
-                foreach ($types as $t) {
-                    if (!in_array($t, $flat)) {
-                        $flat[] = $t;
-                    }
+                // Skip allocation metadata
+                if (str_starts_with($groupKey, 'AllocationInfo_')) {
+                    continue;
                 }
 
-                // 1. Add outer codes first (avoid duplicates)
-                foreach ($outerCodes as $outer) {
-                    if (!in_array($outer, $flat)) {
-                        $flat[] = $outer;
-                    }
-                }
+                // Ensure numeric indexing and preserve order
+                $aircraftJSON[$priorityIndex] = array_values(array_unique($types));
+
+                $priorityIndex++;
             }
-            $aircraftJSON = array_flip($flat);
+
+            // dd($aircraftJSON);
+
+            // dd($aircraftJSON);
             
             // Initialise all Variables
             $flights = Flights::where('online', 1)->get();
@@ -163,7 +159,7 @@ class BayAllocation implements ShouldQueue
                 $bay->callsign = null;
                 $bay->save();
 
-                Log::channel('bays')->error($bay->FlightInfo->callsign." has left the bay, returning bay to clear status");
+                // Log::channel('bays')->error($bay->FlightInfo->callsign." has left the bay, returning bay to clear status");
             }
 
 
@@ -258,23 +254,23 @@ class BayAllocation implements ShouldQueue
                 // - Set assigned bay to null, and
 
 
-            foreach($occupiedBays as $departure){
-
                 $conflicts = BayConflicts::where('created_at', '<=', now()->subMinutes(4))->with('SlotInfo')->with('FlightInfo')->get();
+                $info2 = [];
                 foreach($conflicts as $conflict){
 
                     // Find all entries which are not the same as the Aircraft on the ground
-                    $inbound_aircraft = BayAllocations::where('status', 'PLANNED')
+                    $conflict_bay = BayAllocations::where('status', 'PLANNED')
                         ->where('bay', $conflict->bay)
                         ->with('FlightInfo')
-                        ->get();
+                        ->first();
+
+                    // dd($inbound_aircraft);
 
                     // Loop through each conflict
-                    if(!$inbound_aircraft->isEmpty()){
-                        foreach($inbound_aircraft as $conflict_bay){
+                    if($conflict_bay !== null){
 
                             // Time to generate the $cs file
-                            $cs = [
+                            $info2[$conflict_bay->FlightInfo->callsign] = [
                                 'cs' => $conflict_bay->FlightInfo->callsign,
                                 'cs_id' => $conflict_bay->FlightInfo->id,
                                 'arr' => $conflict_bay->FlightInfo->arr,
@@ -285,22 +281,20 @@ class BayAllocation implements ShouldQueue
                                 'ac_model' => $conflict_bay->FlightInfo,
                             ];
 
-                            $conflict_bay->delete();
-
-                            $conflict->delete();
-
-                            $initialAssignment = false;
-                            // Assign a bay to the Aircraft
-                            $bay = $this->assignBay($cs, $aircraftJSON, $initialAssignment);
-                        }
+                            // $conflict_bay->delete();
+                            // $conflict->delete();
                     }
-                    
-                    // Check Slot exists and aircraft is still connected
-
-                    // dd($inbound_aircraft);
-                    // BayAllocations::where();-
                 }
-            }
+
+                // dd($info2);
+
+                foreach($info2 as $reschedule){
+                    // dd($reschedule);
+
+                    // Assign a bay to the Aircraft--
+                    $initialAssignment = false;
+                    $bay = $this->assignBay($info2, $aircraftJSON, $initialAssignment);
+                }
         }
         
         ############ 4. Generate New Slots for Aircraft that are yet to have one
@@ -356,18 +350,30 @@ class BayAllocation implements ShouldQueue
         $operator = substr($info->callsign, 0, 3); // Cuts off the Callsign
         // dd($operator);
 
-        // Does the Aircraft Code exist? If not, assume it a B738 for symplicity.
-        if(!isset($aircraftJSON[$info->ac])){
+        // Index the AC so it can 
+        $aircraftIndex = null;
+
+        foreach ($aircraftJSON as $index => $types) {
+            if (in_array($info->ac, $types, true)) {
+                $aircraftIndex = $index;
+                break;
+            }
+        }
+
+        echo $info->ac;
+
+        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
+
+
+        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
+
+        if (!in_array($info->ac, $allowedTypes, true)) {
             Log::channel('aircraft')->error($info->ac . ' type does not exist');
             $ac = 'B738';
         } else {
             $ac = $info->ac;
         }
 
-        // Index the AC so
-        $aircraftIndex = $aircraftJSON[$ac];
-        $allowedTypes = array_slice($aircraftJSON, 0, $aircraftIndex + 1);
-        $priorityOrder = array_reverse(array_keys($allowedTypes));
         // dd($priorityOrder);
 
         ### - Preferred Bay Assignment Check can go Here - Pull data from online sources?
@@ -376,53 +382,29 @@ class BayAllocation implements ShouldQueue
 
         }
 
-
-        ##### - OPERATOR CASE EXPRESSION
-        $operatorListCase = "CASE 
-            WHEN operators IS NULL THEN 999
-        ";
-
-        // Generate CASE ranks for all operators in the ORDER they appear in DB
-        // Example: "QFA, QLK, JST" → ['QFA','QLK','JST']
-        $allOperators = Bays::whereNotNull('operators')
-            ->pluck('operators')
-            ->flatMap(fn($o) => array_map('trim', explode(',', $o)))
-            ->unique()
-            ->values();
-
-        $priorityIndex = 0;
-        foreach ($allOperators as $op) {
-            $operatorListCase .= " WHEN FIND_IN_SET('$op', operators) > 0 THEN $priorityIndex ";
-            $priorityIndex++;
-        }
-
-        $operatorListCase .= " END";
-
-
-        
-
         ##### - AIRCRAFT CASE EXPRESSION
         $aircraftPriorityParts = [];
 
-        foreach ($priorityOrder as $i => $type) {
+        foreach ($allowedTypes as $i => $type) {
             $aircraftPriorityParts[] =
                 "IF(FIND_IN_SET('$type', REPLACE(aircraft, '/', ',')) > 0, $i, -1)";
         }
 
         $aircraftPrioritySql = "GREATEST(" . implode(", ", $aircraftPriorityParts) . ")";
 
+        // dd($aircraftPrioritySql);
+
 
         $availableBays = Bays::where('airport', $info->arr)
             ->whereNull('callsign')
             ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
 
-            ->where(function ($q) use ($operator) {
-                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                ->orWhereNull('operators');
-            })
+            // Order by Bay Prioriies (1=most, 9=never?)
+            ->orderBy('priority', 'asc')
 
+            // Order bays by Aircraft Closeness to 
             ->where(function ($q) use ($allowedTypes) {
-                foreach (array_keys($allowedTypes) as $type) {
+                foreach ($allowedTypes as $type) {
                     $q->orWhereRaw(
                         "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
                         [$type]
@@ -430,20 +412,29 @@ class BayAllocation implements ShouldQueue
                 }
             })
 
+            ->where(function ($q) use ($operator) {
+                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                ->orWhereNull('operators');
+            })
+
+            ->orderByRaw($aircraftPrioritySql)
+
+            // Operator Order (QFA, QLK v QLK, QFA assignment priority)
             ->orderByRaw("
                 CASE 
-                    WHEN operators IS NULL THEN 999
+                    WHEN operators IS NULL THEN 4
                     ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
                 END
             ", [$operator])
-            
-            ->orderBy('priority', 'asc')
-            ->orderByRaw($aircraftPrioritySql)
+
             ->orderByRaw("RAND()")
             
         ->get();
 
+
+        ####### - Oh No, The Harder Rule returned no options!!!!!!!  We need to find something, so lets do a relaxed version.......
         if($availableBays !== null){
+
         }
 
         // 
@@ -504,17 +495,25 @@ class BayAllocation implements ShouldQueue
     private function assignBay($cs, $aircraftJSON, $initial)
     {
 
-        try {
+        $info = collect($cs)->first();
+        // dd($info['eibt']);
+
+        // try {
             $value = $this->selectBay($cs, $aircraftJSON);
-            $eobt = $this->bayTimeCalcs($cs['eibt']);
+
+            // dd($value);
+            
+            $eobt = $this->bayTimeCalcs($info['eibt']);
             $core = $this->bayCore($value->bay);
 
             // Find all bays to block off
-            $findCoreBays = Bays::where('airport', $cs['arr'])
+            $findCoreBays = Bays::where('airport', $info['arr'])
                                 ->whereRaw(
                                     'bay REGEXP ?',
                                     ['^' . $core . '(?!\\d)([A-Z])?$']
                                 )->get();
+
+            // dd($findCoreBays);
 
             // Scehdule each bay as blocked
             foreach($findCoreBays as $bayID){
@@ -522,43 +521,121 @@ class BayAllocation implements ShouldQueue
                             'airport'   => $bayID['airport'],
                             'bay'       => $bayID['id'],
                             'bay_core'  => $core,
-                            'callsign'  => $cs['cs_id'],
+                            'callsign'  => $info['cs_id'],
                             'status'    => "PLANNED",
-                            'eibt'      => $cs['eibt'],
+                            'eibt'      => $info['eibt'],
                             'eobt'      => $eobt,
                 ]);
 
-                $markBay = Bays::where('id', $value->id)->first();
+                $markBay = Bays::where('id', $bayID->id)->first();
 
                 $markBay->status = 1;
-                $markBay->callsign = $cs['cs'];
+                $markBay->callsign = $info['cs'];
                 $markBay->save();
             }
 
+            // dd($findCoreBays);
+
             // Record Scheduled Bay in Flights Table
             if($initial == true) {
-                // Initial Group Assignment
-                $aircraftBay = Flights::find($cs['cs_id']);
+                #### - Initial Bay Assignment
+                // Update scheduled_bay to the assigned bay
+                $aircraftBay = Flights::find($info['cs_id']);
                 $aircraftBay->scheduled_bay = $value->id;
                 $aircraftBay->save();
 
 
+                // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Assigned | ".$cs['cs'].", ".$cs['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", '27F58B');
+                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Assigned | ".$info['cs'].", ".$info['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", '27F58B');
+
+
+                // Hoppie CPDLC Message
+                $version = 1;
+                $flight = $aircraftBay->callsign;
+                $dep = $aircraftBay->dep;
+                $arr = $aircraftBay->arr;
+                $bayType = $aircraftBay->type;
+                $arrBay = $value->bay;
+                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
+
             } else {
-                $aircraftBay = Flights::find($cs['cs_id']);
+                // Update scheduled_bay to the assigned bay
+                $aircraftBay = Flights::find($info['cs_id']);
                 $aircraftBay->scheduled_bay = $value->id;
                 $aircraftBay->save();
 
+
+                // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Re-Assignment | ".$cs['cs'].", ".$cs['ac'], " Bay ".$cs['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($cs['eibt'])->format('Hi')."z", 'fca503');
+                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Re-Assignment | ".$info['cs'].", ".$info['ac'], " Bay ".$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", 'fca503');
+
+
+                // Hoppie CPDLC Message
+                $version = 2;
+                $flight = $aircraftBay->callsign;
+                $dep = $aircraftBay->dep;
+                $arr = $aircraftBay->arr;
+                $bayType = $aircraftBay->type;
+                $arrBay = $value->bay;
+                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
             }
 
             return $value;
-        } catch (\Throwable $e) {
-            Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
-            return null; // <-- This prevents the outer loop from crashing
+        // } catch (\Throwable $e) {
+        //     Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
+        //     return null; // <-- This prevents the outer loop from crashing
+        // }
+    }
+
+    private function HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay)
+    {
+        $hoppie = app(HoppieClient::class);
+
+        $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay);
+
+        if ($hoppie->isConnected($flight, $arr)) {
+            if(env('HOPPIE_ACTIVE')  == "yes"){
+                $hoppie->sendTelex($arr, $flight, $Uplink);
+
+                $discord = new DiscordClient();
+                $discord->sendMessageWithEmbed('1447652387853566185', $flight." | CPDLC UPLINK", $Uplink, '808080');
+            }
         }
+        
+        return $Uplink;
+
+    }
+
+    private function BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay): string
+    {
+        if($version == 1){
+            // Initial 
+            $messageLines = [
+                "{$dep} ARRIVAL INFO \ ",
+                "{$flight}, {$dep}-{$arr} \ ",
+                "ARR BAY: {$bayType}, {$arrBay} \\ ",
+                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
+                "RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \ ",
+                "RMK/ ACK NOT REQUIRED WITH ATC",
+                'END BAY UPLINK'
+            ];
+
+        } elseif($version == 2){
+            // REVISED BAY ()
+            $messageLines = [
+                "{$dep} ARRIVAL UPDATE \ ",
+                "{$flight}, {$dep}-{$arr} \ ",
+                "ARR BAY: {$bayType}, {$arrBay} \ ",
+                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
+                "RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY \ ",
+                "RMK/ ACK NOT REQUIRED",
+                'END BAY UPLINK'
+            ];
+        }
+        
+
+        return implode("\n", $messageLines);
     }
 
     private function bayTimeCalcs($type)

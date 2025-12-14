@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('lon');
             $table->string('speed');
             $table->string('alt');
-            $table->string('distance')->nullable();
+            $table->integer('distance')->nullable();
             $table->datetime('elt')->nullable();
             $table->datetime('eibt')->nullable();
             $table->string('status')->nullable();

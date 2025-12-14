@@ -12,7 +12,7 @@ Route::get('/map', [MapController::class, 'index']);
 
 Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi');;
 
-
+Route::get('/hoppie', [PagesController::class, 'Hoppie'])->name('hoppie');
 
 
 

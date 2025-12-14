@@ -3,13 +3,13 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta property="og:title" content="ozBays">
+        <meta property="og:title" content="OzBays">
         <meta property="og:description"
             content="Automatic bay assignments for Brisbane, Sydney, Melbourne & Perth International Airports on the VATSIM Network.">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:image" content="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d">
-      <link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d">
+        <meta property="og:image" content="{{ asset('img/favcon.png') }}>
+      <link rel="icon" type="image/png" href="{{ asset('img/favcon.png') }}">
 
 
 
@@ -42,8 +42,7 @@
                     <a href="/map" class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">View the Map</a>
                 </div>
                 <div class="bg-[#fff2f2] dark:bg-[#424242] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden flex items-center justify-center">
-                    <img
-                        src="https://cdn.discordapp.com/attachments/1244567390209970229/1447603587277651988/OzBays_Logo_Draft_2.png?ex=69383966&is=6936e7e6&hm=9ebe4be3b4af95e158f1417a2363d3f96c5592a23a76b1705bdc2b16ec70ef9d"
+                    <img src="{{ asset('img/logo.png') }}"
                         class="w-full h-full object-contain"
                         style="padding: 10px;"
                         alt=""

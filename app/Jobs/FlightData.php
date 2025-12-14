@@ -112,7 +112,7 @@ class FlightData implements ShouldQueue
                 
 
                 // Do not interest yourself in Aircraft > 400NM from the Airport oh little one
-                if($distanceToArrival > 600){
+                if($distanceToArrival > 1200){
                     continue;
                 }
                 
@@ -227,27 +227,23 @@ class FlightData implements ShouldQueue
         }
 
         // Delete entries once offline for 15 minutes
-        $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(10))->with('bayConflict')->get();
+        $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(6))->with('bayConflict')->get();
 
-        foreach($offlineFlights as $flight){
+        foreach ($offlineFlights as $flight) {
 
-            // Clear Bay Assignment (if any exists)
+            // Clear Bay Assignments
             $clearBays = BayAllocations::where('callsign', $flight->id)->get();
-
-            if(!$clearBays->isEmpty()){
-                foreach($clearBays as $clearBay){
-                    $clearBay->delete();
-                }
+            foreach ($clearBays as $clearBay) {
+                $clearBay->delete();
             }
 
-            $slotConflict = BayConflicts::where('callsign', $flight->id)->get();
-            if(!$slotConflict->isEmpty()){
-                $slotConflict->delete();
+            // Clear Bay Conflicts
+            $slotConflicts = BayConflicts::where('callsign', $flight->id)->get();
+            foreach ($slotConflicts as $conflict) {
+                $conflict->delete();
             }
 
-            // Remove Bay Conflict Notice (If it hasn't been resolved by now, its not an issue)
-
-            // Delete the flight entry
+            // Delete the flight
             $flight->delete();
         }
 
