@@ -352,29 +352,32 @@ class BayAllocation implements ShouldQueue
         $operator = substr($info->callsign, 0, 3); // Cuts off the Callsign
         // dd($operator);
 
-        // Does the Aircraft Code exist? If not, assume it a B738 for symplicity.
-        if(!isset($aircraftJSON[$info->ac])){
+        // Index the AC so it can 
+        $aircraftIndex = null;
+
+        foreach ($aircraftJSON as $index => $types) {
+            if (in_array($info->ac, $types, true)) {
+                $aircraftIndex = $index;
+                break;
+            }
+        }
+
+        echo $info->ac;
+
+        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
+
+
+        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
+
+        if (!in_array($info->ac, $allowedTypes, true)) {
             Log::channel('aircraft')->error($info->ac . ' type does not exist');
             $ac = 'B738';
         } else {
             $ac = $info->ac;
         }
 
-        // dd($info);
 
-        // Index the AC so it can 
-        $aircraftIndex = null;
-
-        foreach ($aircraftJSON as $index => $types) {
-            if (in_array($ac, $types, true)) {
-                $aircraftIndex = $index;
-                break;
-            }
-        }
-
-        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
-        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
-        // dd($allowedTypes);
+        dd($allowedTypes);
 
         // dd($priorityOrder);
 
@@ -497,7 +500,7 @@ class BayAllocation implements ShouldQueue
     private function assignBay($cs, $aircraftJSON, $initial)
     {
 
-        try {
+        // try {
             $value = $this->selectBay($cs, $aircraftJSON);
 
             // dd($value);
@@ -581,10 +584,10 @@ class BayAllocation implements ShouldQueue
             }
 
             return $value;
-        } catch (\Throwable $e) {
-            Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
-            return null; // <-- This prevents the outer loop from crashing
-        }
+        // } catch (\Throwable $e) {
+        //     Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
+        //     return null; // <-- This prevents the outer loop from crashing
+        // }
     }
 
     private function HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay)
