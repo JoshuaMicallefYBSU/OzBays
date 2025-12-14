@@ -74,6 +74,7 @@ class BayAllocation implements ShouldQueue
             }
 
             $occupiedBays = []; //List of all bays currently with an Aircraft parked in them
+            $baysInside = [];
             $unscheduledArrivals = []; //List of all Arrivals within 300NM with no gate assigned
             $recomputeAircraft = []; //All Aircraft requiring Bay Recompute
 
@@ -92,7 +93,6 @@ class BayAllocation implements ShouldQueue
 
                 // Aircraft must be stationary to be occupying a bay
                 if(($dist['YBBN'] < 3 || $dist['YSSY'] < 3 || $dist['YMML'] < 3 || $dist['YPPH'] < 3) && $ac->groundspeed < 5){
-
                     // Search through every single bay to see if there are any presently being occupied.
                     foreach($bays as $bay){
 
@@ -108,6 +108,8 @@ class BayAllocation implements ShouldQueue
 
                         // Find all bays within the 
                         if ($distance <= 30) {
+
+                            $baysInside[] = $bay->bay;
 
                             $core = $this->bayCore($bay->bay);
 
@@ -138,7 +140,7 @@ class BayAllocation implements ShouldQueue
                                 ]);
                             });
 
-                            break;
+                            // break;
                         }
 
                     }
