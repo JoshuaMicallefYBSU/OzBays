@@ -3738,7 +3738,7 @@
                     "Terminal": "T2",
                     "AC": "A359/B773",
                     "Type": "INTL",
-                    "Priority": 3
+                    "Priority": 1
                 },
                 "D4A": {
                     "lat": -37.669145,
@@ -3747,7 +3747,7 @@
                     "Terminal": "T2",
                     "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D5": {
                     "lat": -37.667761,
@@ -3781,7 +3781,7 @@
                     "lon": 144.84516229,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A346/B748",
+                    "AC": "A346/B744",
                     "Type": "INTL",
                     "Priority": 1
                 },
@@ -3792,32 +3792,32 @@
                     "Terminal": "T2",
                     "AC": "A346/A388",
                     "Type": "INTL",
-                    "Priority": 3
+                    "Priority": 1
                 },
                 "D9A": {
                     "lat": -37.667364,
                     "lon": 144.846719,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D9B": {
                     "lat": -37.667558,
                     "lon": 144.846292,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D10": {
                     "lat": -37.667936,
                     "lon": 144.844592,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A346/B748",
+                    "AC": "A346/B744",
                     "Type": "INTL",
                     "Priority": 1
                 },
@@ -3828,25 +3828,25 @@
                     "Terminal": "T2",
                     "AC": "A388/B773",
                     "Type": "INTL",
-                    "Priority": 3
+                    "Priority": 1
                 },
                 "D11A": {
                     "lat": -37.667517,
                     "lon": 144.845700,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D11B": {
                     "lat": -37.667637,
                     "lon": 144.845450,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D12": {
                     "lat": -37.669267,
@@ -3864,32 +3864,32 @@
                     "Terminal": "T2",
                     "AC": "A388/B773",
                     "Type": "INTL",
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D13A": {
                     "lat": -37.665834,
                     "lon": 144.844653,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B739",
+                    "AC": "A321/B739",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D13B": {
                     "lat": -37.665778,
                     "lon": 144.845125,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B739",
+                    "AC": "A321/B739",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D14": {
                     "lat": -37.669439,
                     "lon": 144.843756,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "B748/B773",
+                    "AC": "B744/B773",
                     "Type": "INTL",
                     "Priority": 1
                 },
@@ -3900,25 +3900,25 @@
                     "Terminal": "T2",
                     "AC": "A388/B773",
                     "Type": null,
-                    "Priority": 6
+                    "Priority": 2
                 },
                 "D15A": {
                     "lat": -37.665722,
                     "lon": 144.845610,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B739",
+                    "AC": "A321/B739",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D15B": {
                     "lat": -37.665654,
                     "lon": 144.846083,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B739",
+                    "AC": "A321/B739",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D16": {
                     "lat": -37.668944,
@@ -3927,52 +3927,52 @@
                     "Terminal": "T2",
                     "AC": "A388/B773",
                     "Type": "INTL",
-                    "Priority": 3
+                    "Priority": 1
                 },
                 "D16A": {
                     "lat": -37.668783,
                     "lon": 144.843372,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D16B": {
                     "lat": -37.668989,
                     "lon": 144.843692,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 5
+                    "Priority": 1
                 },
                 "D17": {
                     "lat": -37.665611,
                     "lon": 144.846544,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D18": {
                     "lat": -37.668228,
                     "lon": 144.843617,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "B748/B773",
+                    "AC": "B744/B773",
                     "Type": "INTL",
-                    "Priority": 3
+                    "Priority": 1
                 },
                 "D18A": {
                     "lat": -37.667972,
                     "lon": 144.843247,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D18B": {
                     "lat": -37.668161,
@@ -3981,23 +3981,23 @@
                     "Terminal": "T2",
                     "AC": "A388/B748",
                     "Type": "INTL",
-                    "Priority": 4
+                    "Priority": 1
                 },
                 "D18C": {
                     "lat": -37.668256,
                     "lon": 144.843525,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B738",
+                    "AC": "A321/B38M",
                     "Type": "INTL",
-                    "Priority": 2
+                    "Priority": 1
                 },
                 "D19": {
                     "lat": -37.665579,
                     "lon": 144.846958,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
                     "Priority": 2
                 },
@@ -4006,7 +4006,7 @@
                     "lon": 144.843499,
                     "Operator": null,
                     "Terminal": "T2",
-                    "AC": "B748/B773",
+                    "AC": "B744/B773",
                     "Type": "INTL",
                     "Priority": 1
                 },
@@ -4024,7 +4024,7 @@
                     "lon": 144.847253,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4042,7 +4042,7 @@
                     "lon": 144.846784,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4060,7 +4060,7 @@
                     "lon": 144.846267,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4078,7 +4078,7 @@
                     "lon": 144.845761,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4096,7 +4096,7 @@
                     "lon": 144.845264,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4105,7 +4105,7 @@
                     "lon": 144.845397,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4123,7 +4123,7 @@
                     "lon": 144.847978,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4150,7 +4150,7 @@
                     "lon": 144.846622,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4168,7 +4168,7 @@
                     "lon": 144.846181,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4186,7 +4186,7 @@
                     "lon": 144.845678,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4195,7 +4195,7 @@
                     "lon": 144.845819,
                     "Operator":  "VOZ",
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4204,9 +4204,9 @@
                     "lon": 144.8451277778,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F21A": {
                     "lat": -37.6731722222,
@@ -4215,7 +4215,7 @@
                     "Terminal": "T3",
                     "AC": "A359",
                     "Type": null,
-                    "Priority": 6
+                    "Priority": 2
                 },
                 "F22": {
                     "lat": -37.6735305556,
@@ -4224,34 +4224,34 @@
                     "Terminal": "T3",
                     "AC": "B77L/B78X",
                     "Type": null,
-                    "Priority": 6
+                    "Priority": 2
                 },
                 "F22A": {
                     "lat": -37.6735416667,
                     "lon": 144.8452083333,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F22B": {
                     "lat": -37.6737472222,
                     "lon": 144.8448944444,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F23": {
                     "lat": -37.6728611111,
                     "lon": 144.8446527778,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "B738",
+                    "AC": "B38M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F24": {
                     "lat": -37.6736277778,
@@ -4260,25 +4260,25 @@
                     "Terminal": "T3",
                     "AC": "A35K/B77W",
                     "Type": null,
-                    "Priority": 6
+                    "Priority": 2
                 },
                 "F24A": {
                     "lat": -37.6735861111,
                     "lon": 144.8440611111,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F24B": {
                     "lat": -37.6737222222,
                     "lon": 144.8442694444,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F25": {
                     "lat": -37.6731305556,
@@ -4287,32 +4287,32 @@
                     "Terminal": "T3",
                     "AC": "B748",
                     "Type": null,
-                    "Priority": 6
+                    "Priority": 2
                 },
                 "F25A": {
                     "lat": -37.6728638889,
                     "lon": 144.8440055556,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "F25B": {
                     "lat": -37.6731027778,
                     "lon": 144.8441527778,
                     "Operator": null,
                     "Terminal": "T3",
-                    "AC": "A320/B39M",
+                    "AC": "A321/B39M",
                     "Type": null,
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "G41": {
                     "lat": -37.6752583333,
                     "lon": 144.8483833333,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4321,7 +4321,7 @@
                     "lon": 144.8484333333,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320",
+                    "AC": "A321",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4332,14 +4332,14 @@
                     "Terminal": "T4",
                     "AC": "A332/B788",
                     "Type": null,
-                    "Priority": 7
+                    "Priority": 1
                 },
                 "G43": {
                     "lat": -37.6754,
                     "lon": 144.8479361111,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4348,7 +4348,7 @@
                     "lon": 144.8479833333,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320",
+                    "AC": "A321",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4357,7 +4357,7 @@
                     "lon": 144.8474361111,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4366,7 +4366,7 @@
                     "lon": 144.8475083333,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320",
+                    "AC": "A321",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4375,16 +4375,16 @@
                     "lon": 144.8473861111,
                     "Operator": null,
                     "Terminal": "T4",
-                    "AC": "A332/B738",
+                    "AC": "A332/B788",
                     "Type": null,
-                    "Priority": 7
+                    "Priority": 1
                 },
                 "G47": {
                     "lat": -37.6754583333,
                     "lon": 144.8469777778,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4393,7 +4393,7 @@
                     "lon": 144.847075,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4402,7 +4402,7 @@
                     "lon": 144.8464027778,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4411,7 +4411,7 @@
                     "lon": 144.8467444444,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4420,7 +4420,7 @@
                     "lon": 144.8467,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4429,7 +4429,7 @@
                     "lon": 144.8467694444,
                     "Operator":  "JST",
                     "Terminal": "T4",
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -4438,7 +4438,7 @@
                     "lon": 144.8449861111,
                     "Operator": null,
                     "Terminal": null,
-                    "AC": "A320/B739",
+                    "AC": "A321/B739",
                     "Type": null,
                     "Priority": 5
                 },
@@ -4456,7 +4456,7 @@
                     "lon": 144.8449138889,
                     "Operator": null,
                     "Terminal": null,
-                    "AC": "A320/B739",
+                    "AC": "A321/B739",
                     "Type": null,
                     "Priority": 5
                 },
@@ -4465,7 +4465,7 @@
                     "lon": 144.8445777778,
                     "Operator": null,
                     "Terminal": null,
-                    "AC": "A320/C130",
+                    "AC": "A321/C130",
                     "Type": null,
                     "Priority": 5
                 },
@@ -4476,12 +4476,12 @@
                     "Terminal": null,
                     "AC": "B748",
                     "Type": null,
-                    "Priority": 6
+                    "Priority": 5
                 },
                 "G57B": {
                     "lat": -37.6757972222,
                     "lon": 144.8446222222,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -4490,7 +4490,7 @@
                 "G57C": {
                     "lat": -37.6758944444,
                     "lon": 144.8445166667,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -4499,7 +4499,7 @@
                 "G57D": {
                     "lat": -37.6755083333,
                     "lon": 144.8446194444,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -4508,7 +4508,7 @@
                 "G57E": {
                     "lat": -37.6753777778,
                     "lon": 144.8445361111,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -4517,7 +4517,7 @@
                 "G57F": {
                     "lat": -37.6754472222,
                     "lon": 144.84425,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -4526,7 +4526,7 @@
                 "G57G": {
                     "lat": -37.6753083333,
                     "lon": 144.844225,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -4537,7 +4537,7 @@
                     "lon": 144.8448305556,
                     "Operator": null,
                     "Terminal": null,
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": null,
                     "Priority": 5
                 },
@@ -4546,7 +4546,7 @@
                     "lon": 144.8446861111,
                     "Operator": null,
                     "Terminal": null,
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": null,
                     "Priority": 5
                 },
@@ -4555,7 +4555,7 @@
                     "lon": 144.8447583333,
                     "Operator": null,
                     "Terminal": null,
-                    "AC": "A320/B738",
+                    "AC": "A321/B738",
                     "Type": null,
                     "Priority": 5
                 },
@@ -4571,56 +4571,56 @@
                 "G60B": {
                     "lat": -37.6762305556,
                     "lon": 144.8445944444,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 6
                 },
                 "G60C": {
                     "lat": -37.6761555556,
                     "lon": 144.8444166667,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 6
                 },
                 "G60D": {
                     "lat": -37.6765638889,
                     "lon": 144.84485,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 6
                 },
                 "G60E": {
                     "lat": -37.6764416667,
                     "lon": 144.844825,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 6
                 },
                 "G60F": {
                     "lat": -37.6767194444,
                     "lon": 144.8444722222,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 6
                 },
                 "G60G": {
                     "lat": -37.6767416667,
                     "lon": 144.8442972222,
-                    "Operator":  "JST",
+                    "Operator":  null,
                     "Terminal": "T4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 6
                 },
                 "H1": {
                     "lat": -37.6783055556,
@@ -4628,8 +4628,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "A346/B748",
-                    "Type": null,
-                    "Priority": 6
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H1A": {
                     "lat": -37.6781222222,
@@ -4637,8 +4637,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "A320/B739",
-                    "Type": null,
-                    "Priority": 5
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H1B": {
                     "lat": -37.6780277778,
@@ -4646,8 +4646,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "A320/B739",
-                    "Type": null,
-                    "Priority": 5
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H2": {
                     "lat": -37.6783416667,
@@ -4655,8 +4655,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "B748",
-                    "Type": null,
-                    "Priority": 6
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H2A": {
                     "lat": -37.6783444444,
@@ -4664,8 +4664,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "A346/B748",
-                    "Type": null,
-                    "Priority": 5
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H3": {
                     "lat": -37.6783583333,
@@ -4673,8 +4673,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "B748",
-                    "Type": null,
-                    "Priority": 6
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H3A": {
                     "lat": -37.6780972222,
@@ -4682,8 +4682,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "A320/B738",
-                    "Type": null,
-                    "Priority": 5
+                    "Type": "FRT",
+                    "Priority": 1
                 },
                 "H3B": {
                     "lat": -37.678425,
@@ -4691,8 +4691,8 @@
                     "Operator": null,
                     "Terminal": null,
                     "AC": "A320/B738",
-                    "Type": null,
-                    "Priority": 5
+                    "Type": "FRT",
+                    "Priority": 1
                 }
             }
         },
