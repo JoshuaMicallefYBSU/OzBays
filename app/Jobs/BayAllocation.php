@@ -264,8 +264,6 @@ class BayAllocation implements ShouldQueue
                         ->with('FlightInfo')
                         ->first();
 
-                    // dd($inbound_aircraft);
-
                     // Loop through each conflict
                     if($conflict_bay !== null){
 
@@ -281,8 +279,8 @@ class BayAllocation implements ShouldQueue
                                 'ac_model' => $conflict_bay->FlightInfo,
                             ];
 
-                            // $conflict_bay->delete();
-                            // $conflict->delete();
+                            $conflict_bay->delete();
+                            $conflict->delete();
                     }
                 }
 
@@ -568,7 +566,7 @@ class BayAllocation implements ShouldQueue
 
                 // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Re-Assignment | ".$info['cs'].", ".$info['ac'], " Bay ".$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", 'fca503');
+                $discord->sendMessageWithEmbed('1448834567808090122', "Bay Re-Assignment | ".$info['cs'].", ".$info['ac'], " Bay ".$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", 'fca503');
 
 
                 // Hoppie CPDLC Message
