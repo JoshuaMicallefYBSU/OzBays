@@ -277,8 +277,6 @@ class BayAllocation implements ShouldQueue
                         ->with('FlightInfo')
                         ->first();
 
-                    // dd($inbound_aircraft);
-
                     // Loop through each conflict
                     if($conflict_bay !== null){
 
@@ -294,8 +292,8 @@ class BayAllocation implements ShouldQueue
                                 'ac_model' => $conflict_bay->FlightInfo,
                             ];
 
-                            // $conflict_bay->delete();
-                            // $conflict->delete();
+                            $conflict_bay->delete();
+                            $conflict->delete();
                     }
                 }
 
@@ -508,10 +506,12 @@ class BayAllocation implements ShouldQueue
     private function assignBay($cs, $aircraftJSON, $initial)
     {
 
-        $info = collect($cs)->first();
+        $info = collect($cs);
+        // dd($info);
+
         // dd($info['eibt']);
 
-        // try {
+        try {
             $value = $this->selectBay($cs, $aircraftJSON);
 
             // dd($value);
@@ -547,6 +547,12 @@ class BayAllocation implements ShouldQueue
                 $markBay->save();
             }
 
+            if(env('APP_DEBUG') == true){
+                $discordChannel = config('services.discord.OzBays_Local');
+            } else {
+                $discordChannel = config('services.discord.OzBays');
+            }
+
             // dd($findCoreBays);
 
             // Record Scheduled Bay in Flights Table
@@ -560,7 +566,7 @@ class BayAllocation implements ShouldQueue
 
                 // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Assigned | ".$info['cs'].", ".$info['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", '27F58B');
+                $discord->sendMessageWithEmbed($discordChannel, "Bay Assigned | ".$info['cs'].", ".$info['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", '27F58B');
 
 
                 // Hoppie CPDLC Message
@@ -581,7 +587,7 @@ class BayAllocation implements ShouldQueue
 
                 // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1447652387853566185', "Bay Re-Assignment | ".$info['cs'].", ".$info['ac'], " Bay ".$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", 'fca503');
+                $discord->sendMessageWithEmbed($discordChannel, "Bay Re-Assignment | ".$info['cs'].", ".$info['ac'], " Bay ".$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", 'fca503');
 
 
                 // Hoppie CPDLC Message
@@ -595,10 +601,10 @@ class BayAllocation implements ShouldQueue
             }
 
             return $value;
-        // } catch (\Throwable $e) {
-        //     Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
-        //     return null; // <-- This prevents the outer loop from crashing
-        // }
+        } catch (\Throwable $e) {
+            Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
+            return null; // <-- This prevents the outer loop from crashing
+        }
     }
 
     private function HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay)
@@ -612,7 +618,7 @@ class BayAllocation implements ShouldQueue
                 $hoppie->sendTelex($arr, $flight, $Uplink);
 
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed('1447652387853566185', $flight." | CPDLC UPLINK", $Uplink, '808080');
+                $discord->sendMessageWithEmbed($discordChannel, $flight." | CPDLC UPLINK", $Uplink, '808080');
             }
         }
         

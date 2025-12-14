@@ -5008,7 +5008,7 @@
                 "Terminal": "T1",
                 "AC": "A35K/B748",
                 "Type": "INTL",
-                "Priority": 1
+                "Priority": 3
                 },
                 "160A": {
                 "lat": -31.93870278,
@@ -5017,7 +5017,7 @@
                 "Terminal": "T1",
                 "AC": "E190",
                 "Type": "INTL",
-                "Priority": 1
+                "Priority": 3
                 },
                 "160B": {
                 "lat": -31.93871667,
@@ -5026,7 +5026,7 @@
                 "Terminal": "T1",
                 "AC": "E190",
                 "Type": "INTL",
-                "Priority": 1
+                "Priority": 3
                 },
                 "160C": {
                 "lat": -31.93819444,
@@ -5035,7 +5035,7 @@
                 "Terminal": "T1",
                 "AC": "E190",
                 "Type": "INTL",
-                "Priority": 1
+                "Priority": 3
                 },
                 "160D": {
                 "lat": -31.93817778,
@@ -5044,7 +5044,7 @@
                 "Terminal": "T1",
                 "AC": "B734/GLEX",
                 "Type": "E190",
-                "Priority": 1
+                "Priority": 3
                 },
                 "160R": {
                 "lat": -31.93809167,
@@ -5053,7 +5053,7 @@
                 "Terminal": "T1",
                 "AC": "A35K/B748",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "161": {
                 "lat": -31.93849722,
@@ -5062,7 +5062,7 @@
                 "Terminal": "T1",
                 "AC": "A35K/B748",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "161A": {
                 "lat": -31.93829722,
@@ -5071,7 +5071,7 @@
                 "Terminal": "T1",
                 "AC": "A35K/B748",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "162": {
                 "lat": -31.93815278,
@@ -5080,7 +5080,7 @@
                 "Terminal": "T1",
                 "AC": "A388",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "162A": {
                 "lat": -31.93826667,
@@ -5089,7 +5089,7 @@
                 "Terminal": "T1",
                 "AC": "A320/B738",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "162B": {
                 "lat": -31.93839722,
@@ -5098,7 +5098,7 @@
                 "Terminal": "T1",
                 "AC": "A320/B738",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "163": {
                 "lat": -31.93900556,
@@ -5107,7 +5107,7 @@
                 "Terminal": "T1",
                 "AC": "A388",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "163A": {
                 "lat": -31.93882222,
@@ -5116,7 +5116,7 @@
                 "Terminal": "T1",
                 "AC": "A320/B738",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "163B": {
                 "lat": -31.93896111,
@@ -5125,7 +5125,7 @@
                 "Terminal": "T1",
                 "AC": "A320/B738",
                 "Type": "INTL",
-                "Priority": 5
+                "Priority": 3
                 },
                 "17": {
                 "lat": -31.93460278,
