@@ -62,9 +62,16 @@ class BayAllocation implements ShouldQueue
             // dd($aircraftJSON);
             
             // Initialise all Variables
+            $allFlights = Flights::with('assignedBay')->get(); //Used to check for any slots that were assigned, and then the aircraft diverted.
             $flights = Flights::where('online', 1)->get();
             $airports = Airports::all()->keyBy('icao');
             $bays = Bays::all();
+
+            if(env('APP_DEBUG') == true){
+                $discordChannel = config('services.discord.OzBays_Local');
+            } else {
+                $discordChannel = config('services.discord.OzBays');
+            }
 
             $occupiedBays = []; //List of all bays currently with an Aircraft parked in them
             $unscheduledArrivals = []; //List of all Arrivals within 300NM with no gate assigned
@@ -76,6 +83,7 @@ class BayAllocation implements ShouldQueue
                 $bay->clear = 1;
                 $bay->save();
             }
+
 
             // Get all the Bay Data from All Flights
             foreach($flights as $ac){
@@ -98,6 +106,7 @@ class BayAllocation implements ShouldQueue
                             $ac->lat, $ac->lon, $bay->lat, $bay->lon
                         );
 
+                        // Find all bays within the 
                         if ($distance <= 30) {
 
                             $core = $this->bayCore($bay->bay);
@@ -141,14 +150,11 @@ class BayAllocation implements ShouldQueue
                 }
             }
 
-            // dd($occupiedBays);
-
             ## Bays that were blocked, but are now free from any aircraft --- Clear Bay & Delete AC Slot
             $clearBays = Bays::where('status', 2)->where('clear', 1)->get();
-
             foreach($clearBays as $bay){
-                // Remove all slots for Departure - They have now left the gate
 
+                // Remove all slots for Departure - They have now left the gate
                 $slotsClear = BayAllocations::where('callsign', $bay->FlightInfo->id)->get();
                 foreach($slotsClear as $slot){
                     $slot->delete();
@@ -158,14 +164,11 @@ class BayAllocation implements ShouldQueue
                 $bay->status = null;
                 $bay->callsign = null;
                 $bay->save();
-
-                // Log::channel('bays')->error($bay->FlightInfo->callsign." has left the bay, returning bay to clear status");
             }
 
 
             // Bays with planned arrivals. Check Slots and update status as required
             $bookedBays = Bays::where('status', 1)->get();
-
             foreach($bookedBays as $bay){
                 // Any slot allocations? if not, then set bay as available
                 if(empty($bay->arrivalSlots) || $bay->arrivalSlots->isEmpty()){
@@ -174,6 +177,27 @@ class BayAllocation implements ShouldQueue
                     $bay->save();
                 }
             }
+
+
+            // Check and see if a airport Airport does not match the FlightPlan Arrival. If that is the case, delete the slot
+            foreach ($allFlights as $flight) {
+
+            if (!$flight->relationLoaded('assignedBay') || $flight->assignedBay->isEmpty()) {
+                continue;
+            }
+
+            foreach ($flight->assignedBay as $bay) {
+                if ($bay->airport !== $flight->arr && $flight->arr !== null ) {
+                    echo "Found invalid bay for {$flight->callsign}\n";
+
+                    $bay->delete();
+
+                    $discord = new DiscordClient();
+                    $discord->sendMessageWithEmbed($discordChannel, "Aircraft Diversion / Refile | ".$flight->callsign, "Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay ".$bay->bay_core." at ".$bay->airport." has now been marked as available.", 'fc1c03');
+                    break;
+                }
+            }
+        }
         }
 
         ############ 2. Update Slot Infromation for Aircraft on the Ground!
@@ -213,30 +237,23 @@ class BayAllocation implements ShouldQueue
             // Loop through each $occupiedBays and see if there are any slots that do not match the Aircraft
                 // - If there are, we need to add the aircraft to the bay_conficts table, and later on do some reassignment.
             $data = [];
-            // dd($occupiedBays);
 
             foreach($occupiedBays as $departure){
                 // dd($departure);
-
+                
                 // Grab all planned future slots for the Aircraft that has now entered an occupied bay
                 $futureSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->with('BayInfo')->get();
                 foreach($futureSlots as $slots){
 
                     $data[] = $slots;
 
+                    ## Check Slot Status & Update accordingly.
                     if($slots->bay_core == $departure['bay_core']){
-                        // Nothing needed if correct bay, thank the lord himself - Update the slot to be a planned slot instead :)
+                        // Nothing needed if correct bay, thank the lord himself - Update the slot to be a OCCUPIED slot instead :)
                         echo "OMG {{$departure['callsign']}} went to the correct bay!";
-
-                        // $bay = $slots->BayInfo;
-                        // $bay->callsign = $departure['callsign'];
-                        // $bay->status = 2;
-                        // $bay->save();
 
                         $slots->status = "OCCUPIED";
                         $slots->save();
-
-                        // dd($departure);
 
                     } else {
                         ##### - Clear old assigned bay, and lookup if a aircraft was scheduled to be on the new bay the aircraft has arrived on.
@@ -253,7 +270,7 @@ class BayAllocation implements ShouldQueue
                         $slots->delete();
 
                         ##### - Check that no other aircraft is planned via the bay this aircraft has parked on.
-                        $conflictingSlot = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->first();
+                        $conflictingSlot = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->get();
                         foreach($conflictingSlot as $slot){
                             $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
                         }
@@ -545,12 +562,6 @@ class BayAllocation implements ShouldQueue
                 $markBay->status = 1;
                 $markBay->callsign = $info['cs'];
                 $markBay->save();
-            }
-
-            if(env('APP_DEBUG') == true){
-                $discordChannel = config('services.discord.OzBays_Local');
-            } else {
-                $discordChannel = config('services.discord.OzBays');
             }
 
             // dd($findCoreBays);
