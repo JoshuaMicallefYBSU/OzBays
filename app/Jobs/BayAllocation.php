@@ -189,7 +189,7 @@ class BayAllocation implements ShouldQueue
             }
 
             foreach ($flight->assignedBay as $bay) {
-                if ($bay->airport !== $flight->arr && $flight->arr !== null ) {
+                if ($bay->airport !== $flight->arr && $flight->arr !== null && $bay->status == 'PLANNED') {
                     echo "Found invalid bay for {$flight->callsign}\n";
 
                     $bay->delete();
