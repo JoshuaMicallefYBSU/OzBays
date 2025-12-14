@@ -189,7 +189,7 @@ class BayAllocation implements ShouldQueue
             }
 
             foreach ($flight->assignedBay as $bay) {
-                if ($bay->airport !== $flight->arr && $flight->arr !== null ) {
+                if ($bay->airport !== $flight->arr && $flight->arr !== null && $bay->status == 'PLANNED') {
                     echo "Found invalid bay for {$flight->callsign}\n";
 
                     $bay->delete();
@@ -323,7 +323,7 @@ class BayAllocation implements ShouldQueue
 
                     // Assign a bay to the Aircraft--
                     $initialAssignment = false;
-                    $bay = $this->assignBay($info2, $aircraftJSON, $initialAssignment);
+                    $bay = $this->assignBay($info2, $aircraftJSON, $initialAssignment, $discordChannel);
                 }
         }
         
@@ -334,7 +334,7 @@ class BayAllocation implements ShouldQueue
             foreach($unscheduledArrivals as $cs){
                 $initialAssignment = true;
                 // Assign a bay to the Aircraft
-                $bay = $this->assignBay($cs, $aircraftJSON, $initialAssignment);
+                $bay = $this->assignBay($cs, $aircraftJSON, $initialAssignment, $discordChannel);
 
                 // If assigning fails, skip and continue loop
                 if ($bay === null) {
@@ -522,7 +522,7 @@ class BayAllocation implements ShouldQueue
         return $selectedBay;
     }
 
-    private function assignBay($cs, $aircraftJSON, $initial)
+    private function assignBay($cs, $aircraftJSON, $initial, $discordChannel)
     {
 
         $info = collect($cs);
