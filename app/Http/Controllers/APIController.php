@@ -28,6 +28,7 @@ class APIController extends Controller
         $flights = Flights::select(['callsign', 'arr', 'distance', 'scheduled_bay'])
         ->where('online', 1)
         ->whereIn('arr', ['YBBN', 'YSSY', 'YMML', 'YPPH'])
+        // ->where('distance', '<', '35')
         ->orderBy('distance', 'asc')
         ->get();
 

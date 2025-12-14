@@ -44,3 +44,27 @@ Route::get('/logs/bays', function () {
         'Content-Type' => 'text/plain',
     ]);
 });
+
+Route::get('/logs/allocations', function () {
+    $path = storage_path('logs/allocations.log');
+
+    if (!file_exists($path)) {
+        abort(404, 'Log file not found.');
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'text/plain',
+    ]);
+});
+
+Route::get('/logs/laravel', function () {
+    $path = storage_path('logs/laravel.log');
+
+    if (!file_exists($path)) {
+        abort(404, 'Log file not found.');
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'text/plain',
+    ]);
+});
