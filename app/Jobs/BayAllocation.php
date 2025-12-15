@@ -427,7 +427,16 @@ class BayAllocation implements ShouldQueue
 
         $availableBays = Bays::where('airport', $info->arr)
             ->whereNull('callsign')
-            ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+            ->whereRaw("(pax_type = ? OR pax_type IS NULL OR pax_type = 'FRT')", [$info->type])
+
+            ->orderByRaw("
+                CASE
+                    WHEN pax_type = ? THEN 1
+                    WHEN pax_type IS NULL THEN 2
+                    WHEN pax_type = 'FRT' THEN 3
+                    ELSE 4
+                END
+            ", [$info->type])
 
             // Order by Bay Prioriies (1=most, 9=never?)
             ->orderBy('priority', 'asc')
@@ -460,7 +469,7 @@ class BayAllocation implements ShouldQueue
             ->orderByRaw("RAND()")
             
         ->get();
-
+        // dd($availableBays)
 
         ####### - Oh No, The Harder Rule returned no options!!!!!!!  We need to find something, so lets do a relaxed version.......
         if($availableBays !== null){
@@ -469,55 +478,11 @@ class BayAllocation implements ShouldQueue
 
         // 
         $candidates = $availableBays->take(7);
-
-        // dd($candidates);
-
         $selectedBay = $candidates->random();
-
         echo $availableBays."<br><br><br>";
-
-        ##### - Good code for just one Operator. 2 Doesnt work for this well....
-        {
-            // $availableBays = Bays::where('airport', $info->arr)
-            //     ->whereNull('callsign')
-            //     ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
-            //     ->where(function ($q) use ($operator) {
-            //         $q->where('operators', $operator)
-            //         ->orWhereNull('operators');
-            //     })
-            //     ->where(function ($q) use ($allowedTypes) {
-            //         foreach (array_keys($allowedTypes) as $type) {
-            //             $q->orWhereRaw(
-            //                 "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
-            //                 [$type]
-            //             );
-            //         }
-            //     })
-            //     // 1️⃣ Operator priority (JST first, then NULL)
-            //     ->orderByRaw("
-            //         CASE 
-            //             WHEN operators = ? THEN 0
-            //             WHEN operators IS NULL THEN 1
-            //             ELSE 2
-            //         END
-            //     ", [$operator])
-
-            //     // 2️⃣ Aircraft suitability priority
-            //     ->orderByRaw("FIELD(
-            //         SUBSTRING_INDEX(aircraft, '/', 1),
-            //         '" . implode("','", $priorityOrder) . "'
-            //     )")
-
-            //     // 3️⃣ RANDOMISATION inside equal groups
-            //     ->orderByRaw("RAND()")
-
-            // ->get();
-        }
 
         // Randomise selection within top 7 - Wamt it to be a bit random over time :)
         $selectedBay = $availableBays->first();
-        
-        // dd($selectedBay);
 
         return $selectedBay;
     }
