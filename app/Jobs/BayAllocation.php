@@ -427,16 +427,7 @@ class BayAllocation implements ShouldQueue
 
         $availableBays = Bays::where('airport', $info->arr)
             ->whereNull('callsign')
-            ->whereRaw("(pax_type = ? OR pax_type IS NULL OR pax_type = 'FRT')", [$info->type])
-
-            ->orderByRaw("
-                CASE
-                    WHEN pax_type = ? THEN 1
-                    WHEN pax_type IS NULL THEN 2
-                    WHEN pax_type = 'FRT' THEN 3
-                    ELSE 4
-                END
-            ", [$info->type])
+            ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
 
             // Order by Bay Prioriies (1=most, 9=never?)
             ->orderBy('priority', 'asc')
