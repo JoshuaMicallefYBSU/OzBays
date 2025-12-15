@@ -99,6 +99,8 @@ class FlightData implements ShouldQueue
                 ];
             }
 
+            // dd($OnGround);
+
             // Check FP - Changes what is done
             if($pilot->flight_plan == null){
                 continue;
@@ -184,6 +186,7 @@ class FlightData implements ShouldQueue
         foreach ($OnGround as $aa) {
                 Flights::updateOrCreate(['callsign' => $aa['callsign']], [
                     'id'        => $aa['cid'],
+                    'cid'      => $aa['cid'],
                     'hdg'       => $aa['hdg'],
                     'dep'       => $aa['dep'],
                     'arr'       => $aa['arr'],
@@ -202,6 +205,7 @@ class FlightData implements ShouldQueue
 
                 Flights::updateOrCreate(['callsign' => $ac['callsign']], [
                     'id'   => $ac['cid'],
+                    'cid'  => $ac['cid'],
                     'dep'  => $ac['dep'],
                     'ac'   => $ac['ac'],
                     'type' => $ac['type'],
