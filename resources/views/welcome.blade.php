@@ -8,7 +8,7 @@
             content="Automatic bay assignments for Brisbane, Sydney, Melbourne & Perth International Airports on the VATSIM Network.">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:image" content="{{ asset('img/favcon.png') }}>
+        <meta property="og:image" content="{{ asset('img/favcon.png') }}">
       <link rel="icon" type="image/png" href="{{ asset('img/favcon.png') }}">
 
 
