@@ -82,7 +82,7 @@ class HoppieClient
                     'from'   => strtoupper($from),
                     'to'     => strtoupper($to),
                     'type'   => 'cpdlc',
-                    'packet' => '/data2/2/1/Y/ '.$message,
+                    'packet' => '/data2/2/1/R/ '.$message,
                 ],
             ]);
 
