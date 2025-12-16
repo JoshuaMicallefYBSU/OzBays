@@ -1938,7 +1938,7 @@
                     "Terminal": "T1",
                     "AC": "B463",
                     "Type": "INTL",
-                    "Priority": 5
+                    "Priority": 1
                 },
                 "I21": {
                     "lat": -33.928453,
@@ -1947,7 +1947,7 @@
                     "Terminal": "T1",
                     "AC": "B463",
                     "Type": "INTL",
-                    "Priority": 5
+                    "Priority": 1
                 },
                 "I22": {
                     "lat": -33.927559,
@@ -2267,7 +2267,7 @@
                     "Terminal": "T1",
                     "AC": "A359/B744",
                     "Type": "INTL",
-                    "Priority": 1
+                    "Priority": 2
                 },
                 "I83A": {
                     "lat": -33.926913,
@@ -2276,7 +2276,7 @@
                     "Terminal": "T1",
                     "AC": "A320/B38M",
                     "Type": "INTL",
-                    "Priority": 1
+                    "Priority": 2
                 },
                 "I83B": {
                     "lat": -33.927303,
@@ -2285,7 +2285,7 @@
                     "Terminal": "T1",
                     "AC": "A320/B38M",
                     "Type": "INTL",
-                    "Priority": 1
+                    "Priority": 2
                 },
                 "I84": {
                     "lat": -33.927620,
@@ -2294,7 +2294,7 @@
                     "Terminal": "T1",
                     "AC": "A35K/B744",
                     "Type": "INTL",
-                    "Priority": 1
+                    "Priority": 2
                 },
                 "I85": {
                     "lat": -33.92807175,
@@ -2303,7 +2303,7 @@
                     "Terminal": "T1",
                     "AC": "A35K/B744",
                     "Type": "INTL",
-                    "Priority": 1
+                    "Priority": 2
                 },
                 "I85A": {
                     "lat": -33.927994,
@@ -2312,7 +2312,7 @@
                     "Terminal": "T1",
                     "AC": "A320/B38M",
                     "Type": "INTL",
-                    "Priority": 1
+                    "Priority": 2
                 },
                 "I85B": {
                     "lat": -33.92814577,
@@ -2321,7 +2321,7 @@
                     "Terminal": "T1",
                     "AC": "A320/B38M",
                     "Type": "INTL",
-                    "Priority": 3
+                    "Priority": 2
                 },
 
 
@@ -3865,7 +3865,7 @@
                     "Operator": null,
                     "Terminal": "T2",
                     "AC": "A388/B773",
-                    "Type": "INTL",
+                    "Type": null,
                     "Priority": 2
                 },
                 "D13A": {
@@ -5045,7 +5045,7 @@
                 "Operator": null,
                 "Terminal": "T1",
                 "AC": "B734/GLEX",
-                "Type": "E190",
+                "Type": "DOM",
                 "Priority": 3
                 },
                 "160R": {
