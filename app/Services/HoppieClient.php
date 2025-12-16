@@ -69,7 +69,7 @@ class HoppieClient
             return trim((string) $response->getBody()) === 'ok';
 
         } catch (GuzzleException $e) {
-            Log::Channel('hoppie')->error('Hoppie telex send failed', [
+            Log::error('Hoppie telex send failed', [
                 'from'  => $from,
                 'to'    => $to,
                 'error' => $e->getMessage(),
@@ -93,7 +93,7 @@ class HoppieClient
             return trim((string) $response->getBody()) === 'ok';
 
         } catch (GuzzleException $e) {
-            Log::Channel('hoppie')->error('CPDLC message send failed', [
+            Log::error('CPDLC message send failed', [
                 'from'  => $from,
                 'to'    => $to,
                 'error' => $e->getMessage(),
