@@ -66,16 +66,12 @@ class HoppieClient
                 ],
             ]);
 
-            return trim((string) $response->getBody()) === 'ok';
-
         } catch (GuzzleException $e) {
             Log::error('Hoppie telex send failed', [
                 'from'  => $from,
                 'to'    => $to,
                 'error' => $e->getMessage(),
             ]);
-
-            return false;
         }
 
         // CPDLC Message
