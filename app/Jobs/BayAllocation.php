@@ -600,6 +600,8 @@ class BayAllocation implements ShouldQueue
             1487719,  // Max
         ];
 
+        $cid = (int) $cid;
+
         // dd($cid);
 
         $hoppie = app(HoppieClient::class);
