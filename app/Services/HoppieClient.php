@@ -54,6 +54,7 @@ class HoppieClient
     
     public function sendTelex(string $from, string $to, string $message): bool
     {
+        // TELEX Message
         try {
             $response = $this->client->get('/acars/system/connect.html', [
                 'query' => [
@@ -69,6 +70,30 @@ class HoppieClient
 
         } catch (GuzzleException $e) {
             Log::Channel('hoppie')->error('Hoppie telex send failed', [
+                'from'  => $from,
+                'to'    => $to,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        // CPDLC Message
+        try {
+            $response = $this->client->get('/acars/system/connect.html', [
+                'query' => [
+                    'logon'  => $this->logon,
+                    'from'   => strtoupper($from),
+                    'to'     => strtoupper($to),
+                    'type'   => 'cpdlc',
+                    'packet' => '/data2/2/1/Y/ '.$message,
+                ],
+            ]);
+
+            return trim((string) $response->getBody()) === 'ok';
+
+        } catch (GuzzleException $e) {
+            Log::Channel('hoppie')->error('CPDLC message send failed', [
                 'from'  => $from,
                 'to'    => $to,
                 'error' => $e->getMessage(),

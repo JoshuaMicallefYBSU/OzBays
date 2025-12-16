@@ -63,7 +63,7 @@ class BayAllocation implements ShouldQueue
             
             // Initialise all Variables
             $allFlights = Flights::with('assignedBay')->get(); //Used to check for any slots that were assigned, and then the aircraft diverted.
-            $flights = Flights::where('online', 1)->get();
+            $flights = Flights::where('online', 1)->orderBy('distance', 'desc')->get();
             $airports = Airports::all()->keyBy('icao');
             $bays = Bays::all();
             
@@ -151,7 +151,7 @@ class BayAllocation implements ShouldQueue
                 }
 
                 // Does an arrival aircraft require bay assignment?
-                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
+                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->alt > 8000 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
                     $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
                 }
             }
@@ -380,7 +380,7 @@ class BayAllocation implements ShouldQueue
     ###########################
 
     # Assign a bay to aircraft (Either Reassign or Initial)
-    private function selectBay($cs, $aircraftJSON)
+    private function selectBay($cs, $aircraftJSON, $discordChannel)
     {
         ####### TO BE REWRITTEN
         // Needs to prioritise all Company Specific Bays over Non-Specific.
@@ -499,7 +499,7 @@ class BayAllocation implements ShouldQueue
         // dd($info['eibt']);
 
         // try {
-            $value = $this->selectBay($cs, $aircraftJSON);
+            $value = $this->selectBay($cs, $aircraftJSON, $discordChannel);
 
             // dd($value);
             
@@ -553,11 +553,12 @@ class BayAllocation implements ShouldQueue
                 // Hoppie CPDLC Message
                 $version = 1;
                 $flight = $aircraftBay->callsign;
+                $cid = $aircraftBay->cid;
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
                 $arrBay = $value->bay;
-                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
+                $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
             } elseif($initial == 2) {
                 // Update scheduled_bay to the assigned bay
@@ -574,11 +575,12 @@ class BayAllocation implements ShouldQueue
                 // Hoppie CPDLC Message
                 $version = 2;
                 $flight = $aircraftBay->callsign;
+                $cid = $aircraftBay->cid;
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
                 $arrBay = $value->bay;
-                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
+                $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
             }
 
             return $value;
@@ -588,18 +590,44 @@ class BayAllocation implements ShouldQueue
         // }
     }
 
-    private function HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay)
+    private function HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel)
     {
-        $hoppie = app(HoppieClient::class);
+        // Those on the CPDLC Message
+        $cids = [
+            1342084, // Joshua
+            1291605, // AJ
+            1695019, // David
+            1487719,  // Max
+        ];
 
+        // dd($cid);
+
+        $hoppie = app(HoppieClient::class);
         $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay);
 
-        if ($hoppie->isConnected($flight, $arr)) {
-            if(env('HOPPIE_ACTIVE')  == "yes"){
-                $hoppie->sendTelex($arr, $flight, $Uplink);
+        $send_message = false;
 
-                $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed($discordChannel, $flight." | CPDLC UPLINK", $Uplink, '808080');
+        if(env('HOPPIE_ACTIVE')  == "yes" || env('HOPPIE_ACTIVE')  == "testing"){
+            if ($hoppie->isConnected($flight, $arr)) {
+            
+                if(env('HOPPIE_ACTIVE')  == "testing"){
+                    // dd($cid);
+                    // Messages to send during testing mode
+                    if(in_array($cid, $cids, true)){
+                        
+                        $send_message = true;   
+                    }
+                } else {
+                    // Messages to send during normal operation mode
+                    $send_message = true;
+                }
+
+                if($send_message == true){
+                    $hoppie->sendTelex($arr, $flight, $Uplink);
+
+                    $discord = new DiscordClient();
+                    $discord->sendMessageWithEmbed($discordChannel, $flight." | CPDLC UPLINK", $Uplink, '808080');
+                }
             }
         }
         
@@ -612,9 +640,9 @@ class BayAllocation implements ShouldQueue
         if($version == 1){
             // Initial 
             $messageLines = [
-                "{$dep} ARRIVAL INFO \ ",
-                "{$flight}, {$dep}-{$arr} \ ",
-                "ARR BAY: {$bayType}, {$arrBay} \\ ",
+                "{$arr} ARRIVAL INFO \ ",
+                "@{$flight}@, {$dep}-{$arr} \ ",
+                "ARR BAY: @{$bayType}, {$arrBay}@ \\ ",
                 'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
                 "RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \ ",
                 "RMK/ ACK NOT REQUIRED WITH ATC",
@@ -624,7 +652,7 @@ class BayAllocation implements ShouldQueue
         } elseif($version == 2){
             // REVISED BAY ()
             $messageLines = [
-                "{$dep} ARRIVAL UPDATE \ ",
+                "{$arr} ARRIVAL UPDATE \ ",
                 "{$flight}, {$dep}-{$arr} \ ",
                 "ARR BAY: {$bayType}, {$arrBay} \ ",
                 'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
