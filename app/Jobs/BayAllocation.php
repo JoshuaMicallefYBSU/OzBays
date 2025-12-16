@@ -323,12 +323,6 @@ class BayAllocation implements ShouldQueue
                     // Find all potential bay conflicts - Change each bay to unscheduled, and then delete the slot & conflict.
                     $slots = BayAllocations::where('callsign', $reschedule['cs_id'])->get();
                     foreach ($slots as $slot){
-                        // Update the Bay to Clear
-                        $bay = Bays::where('id', $slot['bay'])->first();
-                        $bay->callsign = null;
-                        $bay->status = null;
-                        $bay->save();
-
                         // Delete the BayAllocations table
                         $slot->delete();
 
