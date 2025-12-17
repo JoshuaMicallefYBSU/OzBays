@@ -651,7 +651,7 @@
                 "25": {
                     "lat": -27.38530278,
                     "lon": 153.12115278,
-                    "Operator": null,
+                    "Operator": "QFA, QLK, JST",
                     "Terminal": "Domestic",
                     "AC": "A321",
                     "Type": "DOM",
@@ -660,7 +660,7 @@
                 "25B": {
                     "lat": -27.38551389,
                     "lon": 153.12165278,
-                    "Operator": null,
+                    "Operator": "QFA, QLK, JST",
                     "Terminal": "Domestic",
                     "AC": "B738",
                     "Type": "DOM",
@@ -732,7 +732,7 @@
                 "38": {
                     "lat": -27.38610556,
                     "lon": 153.12068611,
-                    "Operator": "VOZ",
+                    "Operator": "JST, VOZ",
                     "Terminal": "Domestic",
                     "AC": "A321",
                     "Type": "DOM",
@@ -741,7 +741,7 @@
                 "38B": {
                     "lat": -27.38646389,
                     "lon": 153.12116944,
-                    "Operator": null,
+                    "Operator": "JST, VOZ",
                     "Terminal": "Domestic",
                     "AC": "B738",
                     "Type": "DOM",
@@ -750,7 +750,7 @@
                 "39": {
                     "lat": -27.38649444,
                     "lon": 153.120325,
-                    "Operator": "VOZ",
+                    "Operator": "VOZ, JST",
                     "Terminal": "Domestic",
                     "AC": "A321/B738",
                     "Type": "DOM",
