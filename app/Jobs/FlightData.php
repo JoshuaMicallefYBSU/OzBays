@@ -233,6 +233,8 @@ class FlightData implements ShouldQueue
         // Delete entries once offline for 15 minutes
         $offlineFlights = Flights::whereNull('online')->where('updated_at', '<', now()->subMinutes(6))->with('bayConflict')->get();
 
+        // dd($offlineFlights);
+
         foreach ($offlineFlights as $flight) {
 
             // Clear Bay Assignments

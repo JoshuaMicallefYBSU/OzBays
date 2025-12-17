@@ -63,9 +63,10 @@ class BayAllocation implements ShouldQueue
             
             // Initialise all Variables
             $allFlights = Flights::with('assignedBay')->get(); //Used to check for any slots that were assigned, and then the aircraft diverted.
-            $flights = Flights::where('online', 1)->get();
+            $flights = Flights::where('online', 1)->orderBy('distance', 'desc')->get();
             $airports = Airports::all()->keyBy('icao');
             $bays = Bays::all();
+            
 
             if(env('APP_DEBUG') == true){
                 $discordChannel = config('services.discord.OzBays_Local');
@@ -73,6 +74,7 @@ class BayAllocation implements ShouldQueue
                 $discordChannel = config('services.discord.OzBays');
             }
 
+            $initialAssignment = false;
             $occupiedBays = []; //List of all bays currently with an Aircraft parked in them
             $baysInside = [];
             $unscheduledArrivals = []; //List of all Arrivals within 300NM with no gate assigned
@@ -85,6 +87,7 @@ class BayAllocation implements ShouldQueue
                 $bay->save();
             }
 
+            // dd($flights);
 
             // Get all the Bay Data from All Flights
             foreach($flights as $ac){
@@ -125,6 +128,7 @@ class BayAllocation implements ShouldQueue
                                     'callsign_id'   => $ac->id, //ID
                                     'callsign'      => $ac->callsign, //ID
                                     'bay_id'        => $acb->id,
+                                    'bay_name'      => $acb->bay,
                                     'bay_core'      => $core,
                                     'type'          => $ac->type,
                                     'airport'       => $dist['ICAO'],
@@ -147,7 +151,7 @@ class BayAllocation implements ShouldQueue
                 }
 
                 // Does an arrival aircraft require bay assignment?
-                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
+                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->alt > 8000 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
                     $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
                 }
             }
@@ -202,6 +206,8 @@ class BayAllocation implements ShouldQueue
         }
         }
 
+
+
         ############ 2. Update Slot Infromation for Aircraft on the Ground!
         {
             // Slot Allocation - Check it exists for the aircraft at the bay 
@@ -230,7 +236,8 @@ class BayAllocation implements ShouldQueue
             }
         }
 
-        // dd($occupiedBays);
+
+
 
         ############ 3. Check Planned Slots for Bay Conflicts & Reassignment
         {
@@ -241,44 +248,35 @@ class BayAllocation implements ShouldQueue
             $data = [];
 
             foreach($occupiedBays as $departure){
-                // dd($departure);
-                
-                // Grab all planned future slots for the Aircraft that has now entered an occupied bay
-                $futureSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->with('BayInfo')->get();
-                foreach($futureSlots as $slots){
+                $futureSlots = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->with('BayInfo')->get();
+                if(empty($futureSlots) || $futureSlots->isEmpty()){
+                    
+                    // Aircraft has parked at bay that is either their scheduled, or a unscheduled bay
+                    echo "No Planned Slots for ".$departure['airport'].", ".$departure['bay_name']. " where ". $departure['callsign'] ." is parked <br>";
 
-                    $data[] = $slots;
+                } else {
 
-                    ## Check Slot Status & Update accordingly.
-                    if($slots->bay_core == $departure['bay_core']){
-                        // Nothing needed if correct bay, thank the lord himself - Update the slot to be a OCCUPIED slot instead :)
-                        echo "OMG {{$departure['callsign']}} went to the correct bay!";
+                    // Bay Aircraft is parked at has planned aircraft in the database
+                    echo "Planned Slots Exist on ".$departure['bay_name']." where ".$departure['callsign']." has spawned/parked <br>";
 
-                        $slots->status = "OCCUPIED";
-                        $slots->save();
+                    foreach($futureSlots as $slot){
 
-                    } else {
-                        ##### - Clear old assigned bay, and lookup if a aircraft was scheduled to be on the new bay the aircraft has arrived on.
-                        echo "damn it, wrong bay {{$departure['callsign']}}<br>";
+                        if($slot['callsign'] == $departure['callsign_id']){
+                            Echo " - Aircraft is parked on the correct bay! <br> ";
 
-                        ##### - Delete the planned slot & clear the bay. Aircraft has not used it.
-                        // Clear the bay status
-                        $bay = $slots->BayInfo;
-                        $bay->callsign = null;
-                        $bay->status = null;
-                        $bay->save();
-
-                        // Delete the slot
-                        $slots->delete();
-
-                        ##### - Check that no other aircraft is planned via the bay this aircraft has parked on.
-                        $conflictingSlot = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->get();
-                        foreach($conflictingSlot as $slot){
+                            $slot->status = "OCCUPIED";
+                            $slot->save();
+                        } else {
+                            Echo " - Aircraft has caused a conflict with an arrival aircraft! Add to be checked in 4 Minutes <br> ";
+                            $data[] = $slot;
                             $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
                         }
                     }
                 }
+                // Search through all
             }
+
+            // dd($data);
 
 
             // Loop through the reassignment aircraft. Waits for min 3 mins before checking
@@ -290,6 +288,8 @@ class BayAllocation implements ShouldQueue
                 $info2 = [];
                 foreach($conflicts as $conflict){
 
+                    // dd($conflict);
+
                     // Find all entries which are not the same as the Aircraft on the ground
                     $conflict_bay = BayAllocations::where('status', 'PLANNED')
                         ->where('bay', $conflict->bay)
@@ -299,7 +299,7 @@ class BayAllocation implements ShouldQueue
                     // Loop through each conflict
                     if($conflict_bay !== null){
 
-                            // Time to generate the $cs file
+                            // Time to generate the $cs variable for the assignment Script
                             $info2[$conflict_bay->FlightInfo->callsign] = [
                                 'cs' => $conflict_bay->FlightInfo->callsign,
                                 'cs_id' => $conflict_bay->FlightInfo->id,
@@ -310,20 +310,34 @@ class BayAllocation implements ShouldQueue
                                 'OLD_BAY' => $conflict_bay->BayInfo->bay,
                                 'ac_model' => $conflict_bay->FlightInfo,
                             ];
-
-                            $conflict_bay->delete();
-                            $conflict->delete();
                     }
                 }
 
+
                 // dd($info2);
+                echo "<br><br>";
 
                 foreach($info2 as $reschedule){
                     // dd($reschedule);
 
-                    // Assign a bay to the Aircraft--
-                    $initialAssignment = false;
-                    $bay = $this->assignBay($info2, $aircraftJSON, $initialAssignment, $discordChannel);
+                    // Find all potential bay conflicts - Change each bay to unscheduled, and then delete the slot & conflict.
+                    $slots = BayAllocations::where('callsign', $reschedule['cs_id'])->get();
+                    foreach ($slots as $slot){
+                        // Delete the BayAllocations table
+                        $slot->delete();
+
+                        // Delete the BayConflicts Entry
+                        $conflict = BayConflicts::where('bay', $slot['bay'])->first();
+                        $conflict->delete();
+                    }
+
+                    // Assign a bay to the Aircraft--\
+                    echo "4 Minutes has elapsed. Reassigning ENR Aircraft ".$reschedule['cs']." new bay";
+
+                    $bay = $this->assignBay($reschedule, $aircraftJSON, 2, $discordChannel);
+                    // dd($bay);
+
+                    // dd($info2);
                 }
         }
         
@@ -332,9 +346,8 @@ class BayAllocation implements ShouldQueue
             $assignedBays = [];
 
             foreach($unscheduledArrivals as $cs){
-                $initialAssignment = true;
                 // Assign a bay to the Aircraft
-                $bay = $this->assignBay($cs, $aircraftJSON, $initialAssignment, $discordChannel);
+                $bay = $this->assignBay($cs, $aircraftJSON, 1, $discordChannel);
 
                 // If assigning fails, skip and continue loop
                 if ($bay === null) {
@@ -367,7 +380,7 @@ class BayAllocation implements ShouldQueue
     ###########################
 
     # Assign a bay to aircraft (Either Reassign or Initial)
-    private function selectBay($cs, $aircraftJSON)
+    private function selectBay($cs, $aircraftJSON, $discordChannel)
     {
         ####### TO BE REWRITTEN
         // Needs to prioritise all Company Specific Bays over Non-Specific.
@@ -389,8 +402,6 @@ class BayAllocation implements ShouldQueue
                 break;
             }
         }
-
-        echo $info->ac;
 
         $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
 
@@ -427,16 +438,7 @@ class BayAllocation implements ShouldQueue
 
         $availableBays = Bays::where('airport', $info->arr)
             ->whereNull('callsign')
-            ->whereRaw("(pax_type = ? OR pax_type IS NULL OR pax_type = 'FRT')", [$info->type])
-
-            ->orderByRaw("
-                CASE
-                    WHEN pax_type = ? THEN 1
-                    WHEN pax_type IS NULL THEN 2
-                    WHEN pax_type = 'FRT' THEN 3
-                    ELSE 4
-                END
-            ", [$info->type])
+            ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
 
             // Order by Bay Prioriies (1=most, 9=never?)
             ->orderBy('priority', 'asc')
@@ -479,6 +481,7 @@ class BayAllocation implements ShouldQueue
         // 
         $candidates = $availableBays->take(7);
         $selectedBay = $candidates->random();
+        echo "Available bays for ".$cs['cs']."<br>";
         echo $availableBays."<br><br><br>";
 
         // Randomise selection within top 7 - Wamt it to be a bit random over time :)
@@ -491,12 +494,12 @@ class BayAllocation implements ShouldQueue
     {
 
         $info = collect($cs);
-        // dd($info);
+        // dd($cs);
 
         // dd($info['eibt']);
 
-        try {
-            $value = $this->selectBay($cs, $aircraftJSON);
+        // try {
+            $value = $this->selectBay($cs, $aircraftJSON, $discordChannel);
 
             // dd($value);
             
@@ -534,7 +537,7 @@ class BayAllocation implements ShouldQueue
             // dd($findCoreBays);
 
             // Record Scheduled Bay in Flights Table
-            if($initial == true) {
+            if($initial == 1) {
                 #### - Initial Bay Assignment
                 // Update scheduled_bay to the assigned bay
                 $aircraftBay = Flights::find($info['cs_id']);
@@ -550,13 +553,14 @@ class BayAllocation implements ShouldQueue
                 // Hoppie CPDLC Message
                 $version = 1;
                 $flight = $aircraftBay->callsign;
+                $cid = $aircraftBay->cid;
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
                 $arrBay = $value->bay;
-                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
+                $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
-            } else {
+            } elseif($initial == 2) {
                 // Update scheduled_bay to the assigned bay
                 $aircraftBay = Flights::find($info['cs_id']);
                 $aircraftBay->scheduled_bay = $value->id;
@@ -571,32 +575,63 @@ class BayAllocation implements ShouldQueue
                 // Hoppie CPDLC Message
                 $version = 2;
                 $flight = $aircraftBay->callsign;
+                $cid = $aircraftBay->cid;
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
                 $arrBay = $value->bay;
-                $telex = $this->HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay);
+                $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
             }
 
             return $value;
-        } catch (\Throwable $e) {
-            Log::channel('bays')->error("assignBay() failed for {$cs['cs']}: {$e->getMessage()}");
-            return null; // <-- This prevents the outer loop from crashing
-        }
+        // } catch (\Throwable $e) {
+        //     Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
+        //     return null; // <-- This prevents the outer loop from crashing
+        // }
     }
 
-    private function HoppieFunction($version, $flight, $dep, $arr, $bayType, $arrBay)
+    private function HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel)
     {
-        $hoppie = app(HoppieClient::class);
+        // Those on the CPDLC Message
+        $cids = [
+            1342084, // Joshua
+            1291605, // AJ
+            1695019, // David
+            1487719,  // Max
+            1596254, // Jamie
+            1750979, // Kyle
+        ];
 
+        $cid = (int) $cid;
+
+        // dd($cid);
+
+        $hoppie = app(HoppieClient::class);
         $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay);
 
-        if ($hoppie->isConnected($flight, $arr)) {
-            if(env('HOPPIE_ACTIVE')  == "yes"){
-                $hoppie->sendTelex($arr, $flight, $Uplink);
+        $send_message = false;
 
-                $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed($discordChannel, $flight." | CPDLC UPLINK", $Uplink, '808080');
+        if(env('HOPPIE_ACTIVE')  == "yes" || env('HOPPIE_ACTIVE')  == "testing"){
+            if ($hoppie->isConnected($flight, $arr)) {
+            
+                if(env('HOPPIE_ACTIVE')  == "testing"){
+                    // dd($cid);
+                    // Messages to send during testing mode
+                    if(in_array($cid, $cids, true)){
+                        
+                        $send_message = true;   
+                    }
+                } else {
+                    // Messages to send during normal operation mode
+                    $send_message = true;
+                }
+
+                if($send_message == true){
+                    $hoppie->sendTelex($arr, $flight, $Uplink);
+
+                    $discord = new DiscordClient();
+                    $discord->sendMessageWithEmbed($discordChannel, $flight." | CPDLC UPLINK", $Uplink, '808080');
+                }
             }
         }
         
@@ -609,9 +644,9 @@ class BayAllocation implements ShouldQueue
         if($version == 1){
             // Initial 
             $messageLines = [
-                "{$dep} ARRIVAL INFO \ ",
-                "{$flight}, {$dep}-{$arr} \ ",
-                "ARR BAY: {$bayType}, {$arrBay} \\ ",
+                "{$arr} ARRIVAL INFO \ ",
+                "@{$flight}@, {$dep}-{$arr} \ ",
+                "ARR BAY: @{$bayType}, {$arrBay}@ \\ ",
                 'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
                 "RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \ ",
                 "RMK/ ACK NOT REQUIRED WITH ATC",
@@ -621,7 +656,7 @@ class BayAllocation implements ShouldQueue
         } elseif($version == 2){
             // REVISED BAY ()
             $messageLines = [
-                "{$dep} ARRIVAL UPDATE \ ",
+                "{$arr} ARRIVAL UPDATE \ ",
                 "{$flight}, {$dep}-{$arr} \ ",
                 "ARR BAY: {$bayType}, {$arrBay} \ ",
                 'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',

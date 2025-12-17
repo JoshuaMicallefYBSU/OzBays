@@ -41,6 +41,8 @@ class DiscordClient
 
     public function sendMessageWithEmbed($channelId, $title, $description, $color)
     {
+        sleep(0.2);
+        
         $response = $this->client->post("channels/{$channelId}/messages", [
             'json' => [
                 "tts" => false,
