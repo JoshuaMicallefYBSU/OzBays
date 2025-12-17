@@ -12,7 +12,11 @@
             "name": "Brisbane INTL",
             "lat": -27.3842,
             "lon": 153.1175,
-            "color": "#F54927",
+            "settings": {
+                "color": "#F54927",
+                "eibt_config": "1.4",
+                "taxi_time": "15"
+            },
             "parking": {
                 "100": {
                     "lat": -27.38136944,
@@ -1750,7 +1754,11 @@
             "name": "Sydney INTL",
             "lat": -33.94750908,
             "lon": 151.18021628,
-            "color": "yellow",
+            "settings": {
+                "color": "yellow",
+                "eibt_config": "1.4",
+                "taxi_time": "15"
+            },
             "parking": {
                 "I1": {
                     "lat": -33.928656,
@@ -3533,7 +3541,11 @@
             "name": "Melbourne INTL",
             "lat": -37.6733,
             "lon": 144.8433,
-            "color": "green",
+            "settings": {
+                "color": "green",
+                "eibt_config": "1.4",
+                "taxi_time": "10"
+            },
             "parking": {
                 "B21": {
                     "lat": -37.667953,
@@ -4701,10 +4713,14 @@
 
         "YPPH": {
             "icao": "YPPH",
-            "name": "Perth INTL",
+            "name": "Perth",
             "lat": -31.9403,
             "lon": 115.9669,
-            "color": "pink",
+            "settings": {
+                "color": "pink",
+                "eibt_config": "1.4",
+                "taxi_time": "10"
+            },
             "parking": {
                 "10": {
                     "lat": -31.93218333,

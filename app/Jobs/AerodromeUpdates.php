@@ -55,7 +55,9 @@ class AerodromeUpdates implements ShouldQueue
                 'lat' => $airport['lat'],
                 'lon' => $airport['lon'],
                 'name' => $airport['name'],
-                'color' => $airport['color'],
+                'color' => $airport['settings']['color'],
+                'eibt_variable' => $airport['settings']['eibt_config'],
+                'taxi_time' => $airport['settings']['taxi_time'],
                 'check_exist' => 1,
             ]);
 

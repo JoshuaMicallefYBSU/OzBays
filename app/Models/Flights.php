@@ -42,4 +42,9 @@ class Flights extends Model
     {
         return $this->hasOne(BayConflicts::class, 'id', 'callsign');
     }
+
+    public function arrivalAirport()
+    {
+        return $this->hasOne(Airports::class, 'icao', 'arr');
+    }
 }
