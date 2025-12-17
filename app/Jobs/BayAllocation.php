@@ -193,7 +193,7 @@ class BayAllocation implements ShouldQueue
             }
 
             foreach ($flight->assignedBay as $bay) {
-                if ($bay->airport !== $flight->arr && $flight->arr !== null && $bay->status == 'PLANNED') {
+                if ($bay->airport !== $flight->arr && $flight->arr !== null && $bay->status == 'PLANNED'  && $flight->id == $bay->callsign) {
                     echo "Found invalid bay for {$flight->callsign}\n";
 
                     $bay->delete();
@@ -601,6 +601,7 @@ class BayAllocation implements ShouldQueue
             1596254, // Jamie
             1750979, // Kyle
             1363418, // Corey
+            1686135,
         ];
 
         $cid = (int) $cid;
