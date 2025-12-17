@@ -600,6 +600,7 @@ class BayAllocation implements ShouldQueue
             1487719,  // Max
             1596254, // Jamie
             1750979, // Kyle
+            1363418, // Corey
         ];
 
         $cid = (int) $cid;
