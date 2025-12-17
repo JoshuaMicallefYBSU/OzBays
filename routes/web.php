@@ -7,12 +7,11 @@ use App\Http\Controllers\MapController;
 
 
 Route::get('/', [PagesController::class, 'Home'])->name('home');
-
 Route::get('/map', [MapController::class, 'index']);
+Route::get('/update/airports', [PagesController::class, 'AirportUpdate'])->name('airportsupdate');
 
+// Local Running Only - Runs on server every 60s
 Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi');;
-
-Route::get('/hoppie', [PagesController::class, 'Hoppie'])->name('hoppie');
 
 
 

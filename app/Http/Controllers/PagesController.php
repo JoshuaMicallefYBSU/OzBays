@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Jobs\FlightData;
 use App\Models\Flights;
 use App\Services\HoppieClient;
+use App\Jobs\AerodromeUpdates;
 
 class PagesController extends Controller
 {
@@ -37,18 +38,14 @@ class PagesController extends Controller
         return view('welcome', compact('ybbn', 'yssy', 'ymml', 'ypph'));
     }
 
-    public function Hoppie()
+    public function AirportUpdate()
     {
-        $hoppie = app(HoppieClient::class);
-
-        if ($hoppie->isConnected($flight->callsign)) {
-            $hoppie->sendTelex(
-                'YSSY',
-                $flight->callsign,
-                'GATE ASSIGNED E11'
-            );
-        }
-
+        $job = AerodromeUpdates::dispatch();
+        $result = $job->handle();
+        return response()->json([
+            'message' => 'Job executed successfully',
+            'data' => $result,
+        ]);
     }
 
     public function Logs()

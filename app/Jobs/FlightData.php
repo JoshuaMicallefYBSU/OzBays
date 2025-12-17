@@ -114,7 +114,7 @@ class FlightData implements ShouldQueue
                 
 
                 // Do not interest yourself in Aircraft > 400NM from the Airport oh little one
-                if($distanceToArrival > 1200){
+                if($distanceToArrival > 1500){
                     continue;
                 }
                 
