@@ -12,6 +12,8 @@ class Airports extends Model
         'lon',
         'name',
         'color',
-        'check_exist'
+        'check_exist',
+        'eibt_variable',
+        'taxi_time'
     ];
 }

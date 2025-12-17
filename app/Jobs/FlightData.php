@@ -114,7 +114,7 @@ class FlightData implements ShouldQueue
                 
 
                 // Do not interest yourself in Aircraft > 400NM from the Airport oh little one
-                if($distanceToArrival > 1200){
+                if($distanceToArrival > 1500){
                     continue;
                 }
                 
@@ -125,11 +125,11 @@ class FlightData implements ShouldQueue
                     if ($pilot->groundspeed > 80 && $distanceToArrival < 200 && $aircraft->elt == null) {
                         $TimeRemaining = (($distanceToArrival / $pilot->groundspeed) * 60);
 
-                        $TimeAdditional = $TimeRemaining * 1.4;
+                        $TimeAdditional = $TimeRemaining * $aircraft->arrivalAirport->eibt_variable;
 
                         $elt = Carbon::now('UTC')->addMinutes((int) round($TimeAdditional)); //Adds time for slowdown during descent
 
-                        $eibt = Carbon::now('UTC')->addMinutes((int) round($TimeAdditional) + 15); //Adds further time for taxi to the bay - This is the time the bay is considered 'blocked' from.
+                        $eibt = Carbon::now('UTC')->addMinutes((int) round($TimeAdditional) + $aircraft->arrivalAirport->taxi_time); //Adds further time for taxi to the bay - This is the time the bay is considered 'blocked' from.
 
                         $landingCalcs[] = ['cs' => $pilot->callsign, 'elt' => $elt, 'eibt' => $eibt];
                     }

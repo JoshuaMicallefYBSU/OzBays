@@ -193,7 +193,7 @@ class BayAllocation implements ShouldQueue
             }
 
             foreach ($flight->assignedBay as $bay) {
-                if ($bay->airport !== $flight->arr && $flight->arr !== null && $bay->status == 'PLANNED') {
+                if ($bay->airport !== $flight->arr && $flight->arr !== null && $bay->status == 'PLANNED'  && $flight->id == $bay->callsign) {
                     echo "Found invalid bay for {$flight->callsign}\n";
 
                     $bay->delete();
@@ -593,7 +593,7 @@ class BayAllocation implements ShouldQueue
     private function HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel)
     {
         // Those on the CPDLC Message
-        $cids = [
+        $testers = [
             1342084, // Joshua
             1291605, // AJ
             1695019, // David
@@ -601,6 +601,7 @@ class BayAllocation implements ShouldQueue
             1596254, // Jamie
             1750979, // Kyle
             1363418, // Corey
+            1686135,
         ];
 
         $cid = (int) $cid;
@@ -614,16 +615,13 @@ class BayAllocation implements ShouldQueue
 
         if(env('HOPPIE_ACTIVE')  == "yes" || env('HOPPIE_ACTIVE')  == "testing"){
             if ($hoppie->isConnected($flight, $arr)) {
-            
                 if(env('HOPPIE_ACTIVE')  == "testing"){
-                    // dd($cid);
-                    // Messages to send during testing mode
-                    if(in_array($cid, $cids, true)){
-                        
+                    // Messages to send during testing mode - Only those who are in the testing list
+                    if(in_array($cid, $testers, true)){
                         $send_message = true;   
                     }
                 } else {
-                    // Messages to send during normal operation mode
+                    // Messages to send during normal operation mode - Anyone connected
                     $send_message = true;
                 }
 
