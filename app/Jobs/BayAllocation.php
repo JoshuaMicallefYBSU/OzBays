@@ -601,7 +601,8 @@ class BayAllocation implements ShouldQueue
             1596254, // Jamie
             1750979, // Kyle
             1363418, // Corey
-            1686135,
+            1686135, // Alex B
+            1569950, // Nikola
         ];
 
         $cid = (int) $cid;
@@ -609,7 +610,9 @@ class BayAllocation implements ShouldQueue
         // dd($cid);
 
         $hoppie = app(HoppieClient::class);
-        $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay);
+        $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
+
+        dd($Uplink);
 
         $send_message = false;
 
@@ -638,33 +641,49 @@ class BayAllocation implements ShouldQueue
 
     }
 
-    private function BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay): string
+    private function BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid): string
     {
-        if($version == 1){
-            // Initial 
+        if ($version == 1) {
             $messageLines = [
-                "{$arr} ARRIVAL INFO \ ",
-                "@{$flight}@, {$dep}-{$arr} \ ",
-                "ARR BAY: @{$bayType}, {$arrBay}@ \\ ",
-                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
-                "RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \ ",
+                "{$arr} ARRIVAL INFO \\",
+                "@{$flight}@, {$dep}-{$arr} \\",
+                "ARR BAY: @{$bayType}, {$arrBay}@ \\",
+                "IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \\",
+                "RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \\",
                 "RMK/ ACK NOT REQUIRED WITH ATC",
-                'END BAY UPLINK'
+                "END BAY UPLINK",
             ];
-
-        } elseif($version == 2){
-            // REVISED BAY ()
+        } elseif ($version == 2) {
             $messageLines = [
-                "{$arr} ARRIVAL UPDATE \ ",
-                "{$flight}, {$dep}-{$arr} \ ",
-                "ARR BAY: {$bayType}, {$arrBay} \ ",
-                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \ ',
-                "RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY \ ",
-                "RMK/ ACK NOT REQUIRED",
-                'END BAY UPLINK'
+                "{$arr} ARRIVAL UPDATE \\",
+                "@{$flight}@, {$dep}-{$arr} \\",
+                "ARR BAY: @{$bayType}, {$arrBay}@ \\",
+                "IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \\",
+                "RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY \\",
+                "RMK/ ACK NOT REQUIRED WITH ATC",
+                "END BAY UPLINK",
             ];
         }
-        
+
+        // 👋 MSG FOR COREY
+        if ((int)$cid === 1363418) {
+            array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ HELLO COREY");
+        }
+
+        // 👋 MSG FOR NIKOLA
+        if ((int)$cid === 1569950) {
+            array_splice($messageLines, count($messageLines) - 1, 0, "RGDS/ BRITT FRM OPS");
+        }
+
+        // 👋 MSG FOR AJ
+        if ((int)$cid === 1291605) {
+            array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ HIIIIIII AJ XXX");
+        }
+
+        // 👋 MSG FOR AJ
+        if ((int)$cid === 1291605) {
+            array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ ENSURE APP CHECKLIST COMPLETE B4 PASSING 1000FT");
+        }
 
         return implode("\n", $messageLines);
     }

@@ -651,7 +651,7 @@
                 "25": {
                     "lat": -27.38530278,
                     "lon": 153.12115278,
-                    "Operator": "QFA,JST",
+                    "Operator": null,
                     "Terminal": "Domestic",
                     "AC": "A321",
                     "Type": "DOM",
