@@ -70,6 +70,12 @@ return [
             'level' => 'debug',
         ],
 
+        'hoppie' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/hoppie.log'),
+            'level' => 'debug',
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
