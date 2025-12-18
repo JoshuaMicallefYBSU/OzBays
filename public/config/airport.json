@@ -516,7 +516,7 @@
                 "15": {
                     "lat": -27.38167778,
                     "lon": 153.12381944,
-                    "Operator": null,
+                    "Operator": "QFA",
                     "Terminal": "Domestic",
                     "AC": "A321",
                     "Type": "DOM",
@@ -525,7 +525,7 @@
                 "15A": {
                     "lat": -27.38149167,
                     "lon": 153.123475,
-                    "Operator": null,
+                    "Operator": "QFA",
                     "Terminal": "Domestic",
                     "AC": "A321",
                     "Type": "DOM",
@@ -534,7 +534,7 @@
                 "15B": {
                     "lat": -27.38126944,
                     "lon": 153.12310556,
-                    "Operator": null,
+                    "Operator": "QFA",
                     "Terminal": "Domestic",
                     "AC": "B738",
                     "Type": "DOM",
@@ -543,7 +543,7 @@
                 "15C": {
                     "lat": -27.38155833,
                     "lon": 153.123825,
-                    "Operator": null,
+                    "Operator": "QFA",
                     "Terminal": "Domestic",
                     "AC": "A332",
                     "Type": "DOM",
