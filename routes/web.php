@@ -18,8 +18,6 @@ Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi'
 
 // Error File Checks
 Route::get('/logs', [PagesController::class, 'logs']);
-
-
 Route::get('/logs/aircraft', function () {
     $path = storage_path('logs/aircraft.log');
 
@@ -31,19 +29,6 @@ Route::get('/logs/aircraft', function () {
         'Content-Type' => 'text/plain',
     ]);
 });
-
-Route::get('/logs/bays', function () {
-    $path = storage_path('logs/bays.log');
-
-    if (!file_exists($path)) {
-        abort(404, 'Log file not found.');
-    }
-
-    return response()->file($path, [
-        'Content-Type' => 'text/plain',
-    ]);
-});
-
 Route::get('/logs/allocations', function () {
     $path = storage_path('logs/allocations.log');
 
@@ -55,7 +40,28 @@ Route::get('/logs/allocations', function () {
         'Content-Type' => 'text/plain',
     ]);
 });
+Route::get('/logs/bays', function () {
+    $path = storage_path('logs/bays.log');
 
+    if (!file_exists($path)) {
+        abort(404, 'Log file not found.');
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'text/plain',
+    ]);
+});
+Route::get('/logs/hoppie', function () {
+    $path = storage_path('logs/hoppie.log');
+
+    if (!file_exists($path)) {
+        abort(404, 'Log file not found.');
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'text/plain',
+    ]);
+});
 Route::get('/logs/laravel', function () {
     $path = storage_path('logs/laravel.log');
 
