@@ -682,7 +682,7 @@ class BayAllocation implements ShouldQueue
         }
 
         // 👋 MSG FOR AJ
-        if ((int)$cid === 1291605) {
+        if ((int)$cid === 1686135) {
             array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ ENSURE APP CHECKLIST COMPLETE B4 PASSING 1000FT");
         }
 
