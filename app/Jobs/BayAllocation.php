@@ -498,7 +498,7 @@ class BayAllocation implements ShouldQueue
 
         // dd($info['eibt']);
 
-        // try {
+        try {
             $value = $this->selectBay($cs, $aircraftJSON, $discordChannel);
 
             // dd($value);
@@ -582,10 +582,10 @@ class BayAllocation implements ShouldQueue
             }
 
             return $value;
-        // } catch (\Throwable $e) {
-        //     Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
-        //     return null; // <-- This prevents the outer loop from crashing
-        // }
+        } catch (\Throwable $e) {
+            Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
+            return null; // <-- This prevents the outer loop from crashing
+        }
     }
 
     private function HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel)
