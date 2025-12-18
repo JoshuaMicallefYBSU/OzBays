@@ -534,8 +534,6 @@ class BayAllocation implements ShouldQueue
                 $markBay->save();
             }
 
-            // dd($findCoreBays);
-
             // Record Scheduled Bay in Flights Table
             if($initial == 1) {
                 #### - Initial Bay Assignment
@@ -547,7 +545,7 @@ class BayAllocation implements ShouldQueue
 
                 // Send Discord Embed Message
                 $discord = new DiscordClient();
-                $discord->sendMessageWithEmbed($discordChannel, "Bay Assigned | ".$info['cs'].", ".$info['ac'], " ".$value->bay." inbound ".$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", '27F58B');
+                $discord->sendMessageWithEmbed($discordChannel, "Bay Assigned | ".$info['cs'].", ".$info['ac'], " ".$value->bay." inbound ".$info['arr']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi')."z", '27F58B');
 
 
                 // Hoppie CPDLC Message
@@ -604,27 +602,34 @@ class BayAllocation implements ShouldQueue
             1686135, // Alex B
             1569950, // Nikola
             1773586, // CCruize
+            1638887, // Max
         ];
 
         $cid = (int) $cid;
 
-        // dd($cid);
-
         $hoppie = app(HoppieClient::class);
         $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
-
-        dd($Uplink);
 
         $send_message = false;
 
         if(env('HOPPIE_ACTIVE')  == "yes" || env('HOPPIE_ACTIVE')  == "testing"){
+            Log::channel('hoppie')->error("Attempting Hoppie Message for Flight ".$flight);
+
+
             if ($hoppie->isConnected($flight, $arr)) {
                 if(env('HOPPIE_ACTIVE')  == "testing"){
+                    Log::channel('hoppie')->error($flight." connected to the Hoppie Network & site is in tester mode.");
+
                     // Messages to send during testing mode - Only those who are in the testing list
                     if(in_array($cid, $testers, true)){
-                        $send_message = true;   
+                        $send_message = true;
+                        Log::channel('hoppie')->error($flight." CID in tester list - Send it off!");   
+                    } else {
+                        $send_message = false;
+                        Log::channel('hoppie')->error($flight." CID not in the tester list.");   
                     }
                 } else {
+                    Log::channel('hoppie')->error($flight." connected to the Hoppie Network in normal mode - Send the Message!");
                     // Messages to send during normal operation mode - Anyone connected
                     $send_message = true;
                 }
@@ -635,6 +640,8 @@ class BayAllocation implements ShouldQueue
                     $discord = new DiscordClient();
                     $discord->sendMessageWithEmbed($discordChannel, $flight." | CPDLC UPLINK", $Uplink, '808080');
                 }
+            } else {
+                Log::channel('hoppie')->error($flight." not connected to Hoppie Network. Exiting.");
             }
         }
         
