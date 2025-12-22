@@ -11,7 +11,7 @@ use App\Jobs\AerodromeUpdates;
 
 class PagesController extends Controller
 {
-    public function Home()
+    public function Lander()
     {
         $flight = Flights::all();
         
@@ -35,7 +35,12 @@ class PagesController extends Controller
             }
         }
 
-        return view('welcome', compact('ybbn', 'yssy', 'ymml', 'ypph'));
+        return view('lander', compact('ybbn', 'yssy', 'ymml', 'ypph'));
+    }
+
+    public function newHome()
+    {
+        return view('home');
     }
 
     public function AirportUpdate()

@@ -9,7 +9,7 @@
     {
         "YBBN": {
             "icao": "YBBN",
-            "name": "Brisbane INTL",
+            "name": "Brisbane",
             "lat": -27.3842,
             "lon": 153.1175,
             "settings": {
@@ -1708,7 +1708,7 @@
 
         "YSSY": {
             "icao": "YSSY",
-            "name": "Sydney INTL",
+            "name": "Sydney",
             "lat": -33.94750908,
             "lon": 151.18021628,
             "settings": {
@@ -3495,7 +3495,7 @@
 
         "YMML": {
             "icao": "YMML",
-            "name": "Melbourne INTL",
+            "name": "Melbourne",
             "lat": -37.6733,
             "lon": 144.8433,
             "settings": {

@@ -248,11 +248,26 @@ class BayAllocation implements ShouldQueue
             $data = [];
 
             foreach($occupiedBays as $departure){
+
+                // dd($occupiedBays);
+                
                 $futureSlots = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->with('BayInfo')->get();
                 if(empty($futureSlots) || $futureSlots->isEmpty()){
                     
                     // Aircraft has parked at bay that is either their scheduled, or a unscheduled bay
-                    echo "No Planned Slots for ".$departure['airport'].", ".$departure['bay_name']. " where ". $departure['callsign'] ." is parked <br>";
+                    echo "No Planned Slots for ".$departure['airport'].", ".$departure['bay_name']. " where ". $departure['callsign'] ." is parked ";
+
+                    // Check for any Old Planned Slots, and delete them if so
+                    $oldSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->get();
+                    if(empty($oldSlots) || $oldSlots->isEmpty()){
+                        // Don't need to do anything. They parked and do not have an arrival slot
+                    } else {
+                        echo " - Checked: Aicraft has arrived and parked on incorrect bay <br>";
+                        foreach($oldSlots as $slots){
+                            $slots->delete();
+                        }
+                        Log::channel('allocations')->error($departure['callsign']." has parked at an incorrect bay at ".$departure['airport']);
+                    }
 
                 } else {
 
@@ -263,6 +278,8 @@ class BayAllocation implements ShouldQueue
 
                         if($slot['callsign'] == $departure['callsign_id']){
                             Echo " - Aircraft is parked on the correct bay! <br> ";
+
+                            Log::channel('allocations')->error($departure['callsign']." parked correctly  at ".$departure['airport']."! Fuck yeah");
 
                             $slot->status = "OCCUPIED";
                             $slot->save();
@@ -279,7 +296,7 @@ class BayAllocation implements ShouldQueue
             // dd($data);
 
 
-            // Loop through the reassignment aircraft. Waits for min 3 mins before checking
+            // Loop through the reassignment aircraft. Waits for min 4 mins before checking
                 // - Does conflict still exist (e.g. is bay occupied) - Yes, reassign | No, delete entry and continue.
                 // - Set assigned bay to null, and
 
@@ -600,8 +617,9 @@ class BayAllocation implements ShouldQueue
             1750979, // Kyle
             1363418, // Corey
             1686135, // Alex B
+            1687954, // Alex D
             1569950, // Nikola
-            1773586, // CCruize
+            1773586, // Cruize
             1638887, // Max
         ];
 
