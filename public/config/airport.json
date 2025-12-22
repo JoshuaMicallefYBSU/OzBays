@@ -3613,8 +3613,8 @@
                     "Priority": 1
                 },
                 "C4": {
-                    "lat": -37.667940,
-                    "lon": 144.849381,
+                    "lat": -37.66795451,
+                    "lon": 144.84923874,
                     "Operator":  "QFA, QLK",
                     "Terminal": "T1",
                     "AC": "B738",
@@ -3622,8 +3622,8 @@
                     "Priority": 1
                 },
                 "C6": {
-                    "lat": -37.667553,
-                    "lon": 144.849311,
+                    "lat": -37.66754496,
+                    "lon": 144.84914785,
                     "Operator":  "QFA, QLK",
                     "Terminal": "T1",
                     "AC": "B738",
@@ -3640,8 +3640,8 @@
                     "Priority": 1
                 },
                 "C8": {
-                    "lat": -37.667150,
-                    "lon": 144.849233,
+                    "lat": -37.66714435,
+                    "lon": 144.84908516,
                     "Operator":  "QFA, QLK",
                     "Terminal": "T1",
                     "AC": "B738",
@@ -3658,8 +3658,8 @@
                     "Priority": 1
                 },
                 "C10": {
-                    "lat": -37.666764,
-                    "lon": 144.849158,
+                    "lat": -37.66674907,
+                    "lon": 144.84894823,
                     "Operator":  "QFA, QLK",
                     "Terminal": "T1",
                     "AC": "A321/B738",
@@ -4074,7 +4074,7 @@
                 "F11": {
                     "lat": -37.672672,
                     "lon": 144.847683,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B738",
                     "Type": "DOM",
@@ -4083,7 +4083,7 @@
                 "F12": {
                     "lat": -37.673250,
                     "lon": 144.847978,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "A321/B39M",
                     "Type": "DOM",
@@ -4092,7 +4092,7 @@
                 "F13": {
                     "lat": -37.672700,
                     "lon": 144.847164,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B738",
                     "Type": "DOM",
@@ -4101,7 +4101,7 @@
                 "F14": {
                     "lat": -37.673228,
                     "lon": 144.847194,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B738",
                     "Type": "DOM",
@@ -4110,7 +4110,7 @@
                 "F15": {
                     "lat": -37.672756,
                     "lon": 144.846622,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B38M",
                     "Type": "DOM",
@@ -4119,7 +4119,7 @@
                 "F16": {
                     "lat": -37.673347,
                     "lon": 144.846744,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B739",
                     "Type": "DOM",
@@ -4128,7 +4128,7 @@
                 "F17": {
                     "lat": -37.672800,
                     "lon": 144.846181,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B38M",
                     "Type": "DOM",
@@ -4137,7 +4137,7 @@
                 "F18": {
                     "lat": -37.673403,
                     "lon": 144.846306,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B39M",
                     "Type": "DOM",
@@ -4146,7 +4146,7 @@
                 "F19": {
                     "lat": -37.672856,
                     "lon": 144.845678,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "B38M",
                     "Type": "DOM",
@@ -4155,7 +4155,7 @@
                 "F20": {
                     "lat": -37.673456,
                     "lon": 144.845819,
-                    "Operator":  "VOZ",
+                    "Operator":  null,
                     "Terminal": "T3",
                     "AC": "A321/B39M",
                     "Type": "DOM",

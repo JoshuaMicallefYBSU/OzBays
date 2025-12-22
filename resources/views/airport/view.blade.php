@@ -22,7 +22,7 @@
     loadLadder();
 
     // Then run every 5 seconds
-    setInterval(loadLadder, 1000);
+    setInterval(loadLadder, 15000);
 </script>
 
 
