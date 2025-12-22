@@ -29,6 +29,8 @@
         @endif
     </div>
 
+    <br><br>
+
     <div class="col-md-6">
         <h3>On Final Approach (<30NM)</h3>
         @if($arrival->isEmpty())
