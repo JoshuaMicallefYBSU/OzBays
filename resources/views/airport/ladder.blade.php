@@ -16,7 +16,7 @@
             </thead>
             <tbody>
                 @foreach($taxing as $aircraft)
-                    @if($aircraft->mapBay->status === 1)
+                    @if(optional($aircraft->mapBay)->status === 1)
                         <tr>  
                             <td>{{$aircraft->callsign}}</td>
                             <td>{{$aircraft->ac}}</td>
