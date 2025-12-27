@@ -255,7 +255,7 @@ class BayAllocation implements ShouldQueue
                 if(empty($futureSlots) || $futureSlots->isEmpty()){
                     
                     // Aircraft has parked at bay that is either their scheduled, or a unscheduled bay
-                    echo "No Planned Slots for ".$departure['airport'].", ".$departure['bay_name']. " where ". $departure['callsign'] ." is parked ";
+                    echo "No Planned Slots for ".$departure['airport'].", ".$departure['bay_name']. " where ". $departure['callsign'] ." is parked <br>";
 
                     // Check for any Old Planned Slots, and delete them if so
                     $oldSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->get();
@@ -368,7 +368,7 @@ class BayAllocation implements ShouldQueue
 
                 // If assigning fails, skip and continue loop
                 if ($bay === null) {
-                    Log::channel('bays')->error("Failed to assign bay for {$cs['cs']}({$cs['ac']}) — skipping");
+                    Log::channel('bays')->error("Failed to assign bay for {$cs['cs']}({$cs['ac']}) at {$cs['arr']} — skipping");
                     continue;
                 }
 
@@ -629,14 +629,15 @@ class BayAllocation implements ShouldQueue
         $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
 
         $send_message = false;
+        $arrival = Airports::where('icao', $arr)->first();
 
-        if(env('HOPPIE_ACTIVE')  == "yes" || env('HOPPIE_ACTIVE')  == "testing"){
+        // Only run the check on Production with an Active Airport
+        if(env('APP_ENV')  == "production"){
             Log::channel('hoppie')->error("Attempting Hoppie Message for Flight ".$flight);
 
-
             if ($hoppie->isConnected($flight, $arr)) {
-                if(env('HOPPIE_ACTIVE')  == "testing"){
-                    Log::channel('hoppie')->error($flight." connected to the Hoppie Network & site is in tester mode.");
+                if($arrival->status == "testing"){
+                    Log::channel('hoppie')->error($flight." connected to the Hoppie Network & airport is in tester mode.");
 
                     // Messages to send during testing mode - Only those who are in the testing list
                     if(in_array($cid, $testers, true)){
@@ -661,6 +662,8 @@ class BayAllocation implements ShouldQueue
             } else {
                 Log::channel('hoppie')->error($flight." not connected to Hoppie Network. Exiting.");
             }
+        } else {
+            echo "- Not on the Production Server: Skipping Hoppie Message";
         }
         
         return $Uplink;
@@ -689,26 +692,6 @@ class BayAllocation implements ShouldQueue
                 "RMK/ ACK NOT REQUIRED WITH ATC",
                 "END BAY UPLINK",
             ];
-        }
-
-        // 👋 MSG FOR COREY
-        if ((int)$cid === 1363418) {
-            array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ HELLO COREY");
-        }
-
-        // 👋 MSG FOR NIKOLA
-        if ((int)$cid === 1569950) {
-            array_splice($messageLines, count($messageLines) - 1, 0, "RGDS/ BRITT FRM OPS");
-        }
-
-        // 👋 MSG FOR AJ
-        if ((int)$cid === 1291605) {
-            array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ HIIIIIII AJ XXX");
-        }
-
-        // 👋 MSG FOR AJ
-        if ((int)$cid === 1686135) {
-            array_splice($messageLines, count($messageLines) - 1, 0, "RMK/ ENSURE APP CHECKLIST COMPLETE B4 PASSING 1000FT");
         }
 
         return implode("\n", $messageLines);

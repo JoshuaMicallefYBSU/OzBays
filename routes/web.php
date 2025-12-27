@@ -10,10 +10,10 @@ use App\Http\Controllers\PagesController;
 use App\Http\Controllers\TestController;
 
 
-Route::get('/', [PagesController::class, 'lander'])->name('lander');
+Route::get('/old-lander', [PagesController::class, 'lander'])->name('lander');
 
 // New Homepage
-Route::get('/home', [PagesController::class, 'newHome'])->name('home');
+Route::get('/', [PagesController::class, 'newHome'])->name('home');
 
 // Privacy Policy - Required for VATSIM SSO
 Route::prefix('policy')->group(function () {

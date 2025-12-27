@@ -113,7 +113,7 @@ class FlightData implements ShouldQueue
                 $distanceToArrival = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports[$pilot->flight_plan->arrival]['lat'], $airports[$pilot->flight_plan->arrival]['lon']);
                 
 
-                // Do not interest yourself in Aircraft > 400NM from the Airport oh little one
+                // Do not interest yourself in Aircraft > 1500NM from the Airport oh little one
                 if($distanceToArrival > 1500){
                     continue;
                 }
