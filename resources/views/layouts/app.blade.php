@@ -9,7 +9,7 @@ use Carbon\Carbon;
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{config('app.name', 'QFA100 Team')}}</title>
+        <title>{{config('app.name', 'OzBays')}}</title>
 
         <!-- Bootstrap Content -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
@@ -23,7 +23,6 @@ use Carbon\Carbon;
         <!-- Navbar Links -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
         <script>
@@ -190,8 +189,68 @@ use Carbon\Carbon;
                 </a>
             </li>
 
-          <ul class="navbar-nav ">
+            <!-- Airports Button -->
+            <li class="nav-item">
+                <a class="nav-link {{ str_contains(request()->url(), 'map') == true ? 'active' : '' }} " target="_blank" href="{{route('mapIndex')}}">
+                    <i class="fa fa-map"></i>Map
+                    <span class="sr-only"></span>
+                </a>
+            </li>
+          </ul>
 
+          <ul class="navbar-nav ">
+            @can('view data')
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-cog">
+                </i>
+                Manage Data
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item disabled" href="#">Airports</a>
+                <a class="dropdown-item disabled" href="#">Aircraft</a>
+                <a class="dropdown-item disabled" href="#">Bays</a>
+                @can('approve changes')
+                  <div class="dropdown-divider"></div> {{-- Divider --}}
+                  <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>
+                @endcan
+
+                @can('view users')
+                  <div class="dropdown-divider"></div> {{-- Divider --}}
+                  <a class="dropdown-item disabled" href="#">View All Users</a>
+                @endcan
+              </div>
+            </li>
+          @endcan
+
+            @if(Auth::guest())
+            <!-- Login/Signup if not logged in-->
+            <li class="nav-item">
+              <a class="nav-link disabled" href="{{ route('auth.sso.login') }}">
+                <i class="fa fa-user-circle-o">
+                </i>
+                Login/Register
+              </a>
+            </li>
+
+            @else
+            <!-- My Account & Notifications -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-user">
+                </i>
+                {{Auth::user()->fullName('FLC')}}
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item">{{Auth::user()->highestRole()->name}}</a>
+                <div class="dropdown-divider"></div> {{-- Divider --}}
+                <a class="dropdown-item" href="{{route('dashboard.index')}}">Dashboard</a>
+                <a class="dropdown-item disabled" href="#">My Data</a>
+                <div class="dropdown-divider"></div> {{-- Divider --}}
+                <a class="dropdown-item" href="{{ route('auth.logout') }}"onclick="event.preventDefault();document.getElementById('logout-form').submit();">{{ __('Logout') }}</a><form id="logout-form" action="{{ route('auth.logout') }}" method="GET" class="d-none">@csrf</form>
+              </div>
+            </li>
+          @endif
         </ul>
         </div>
       </nav>
@@ -200,26 +259,9 @@ use Carbon\Carbon;
     <body>
       <div id="content-wrapper">
         <div class="container" style="padding-top: 50px;">
-
-          <div style="margin-bottom: 20px;" class="shadow-lg mx-4">
-            {{-- Success --}}
-            @if(session('success'))
-            <div class="alert alert-success">
-            <b>SUCCESS!</b> {{session('success')}}
-            </div>
-            @endif
-        
-            {{-- Error --}}
-            @if(session('error'))
-            <div class="alert alert-danger">
-            <b>ERROR:</b> {{session('error')}}
-            </div>
-            @endif
-        </div>
-
+            @include('layouts.messages')  
             @yield('content')
-
-            {{-- @include('layouts.footer') --}}
+            @include('layouts.footer')
         </div>
       </div>
         

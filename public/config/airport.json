@@ -15,7 +15,8 @@
             "settings": {
                 "color": "#F54927",
                 "eibt_config": "1.4",
-                "taxi_time": "15"
+                "taxi_time": "15",
+                "status": "testing"
             },
             "parking": {     
                 "R1": {
@@ -1714,7 +1715,8 @@
             "settings": {
                 "color": "yellow",
                 "eibt_config": "1.4",
-                "taxi_time": "15"
+                "taxi_time": "15",
+                "status": "testing"
             },
             "parking": {
                 "I1": {
@@ -2513,7 +2515,8 @@
                     "Terminal": "T3",
                     "AC": "DH8D",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "D17B": {
                     "lat": -33.932994,
@@ -2540,7 +2543,8 @@
                     "Terminal": "T3",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "D19": {
                     "lat": -33.93368410,
@@ -2556,7 +2560,7 @@
                     "lon": 151.17741738,
                     "Operator": "QLK",
                     "Terminal": "T3",
-                    "AC": "DH8D",
+                    "AC": "DH8C",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -2565,7 +2569,7 @@
                     "lon": 151.17730089,
                     "Operator": "QLK",
                     "Terminal": "T3",
-                    "AC": "DH8D",
+                    "AC": "DH8C",
                     "Type": "DOM",
                     "Priority": 1
                 },
@@ -2585,7 +2589,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D53": {
                     "lat": -33.934648,
@@ -2603,7 +2607,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D55": {
                     "lat": -33.935161,
@@ -2621,7 +2625,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D57": {
                     "lat": -33.935614,
@@ -2639,7 +2643,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D57B": {
                     "lat": -33.935475,
@@ -2648,7 +2652,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D59": {
                     "lat": -33.93604330,
@@ -2817,7 +2821,7 @@
                     "Terminal": "T2",
                     "AC": "AT72",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D31B": {
                     "lat": -33.934703,
@@ -2826,7 +2830,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D33": {
@@ -2845,7 +2849,7 @@
                     "Terminal": "T2",
                     "AC": "AT72",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D33B": {
                     "lat": -33.935189,
@@ -2854,7 +2858,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D35": {
@@ -2873,7 +2877,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D39": {
@@ -2892,7 +2896,7 @@
                     "Terminal": "T2",
                     "AC": "AT72",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D39B": {
                     "lat": -33.936220,
@@ -2901,7 +2905,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D41": {
@@ -2950,7 +2954,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D52B": {
                     "lat": -33.934900,
@@ -2959,7 +2963,7 @@
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D54": {
@@ -2978,7 +2982,7 @@
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D56": {
@@ -3008,7 +3012,7 @@
                     "Terminal": "T2",
                     "AC": "A321/B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
 
                 "D44": {
@@ -3027,7 +3031,7 @@
                     "Terminal": "T2",
                     "AC": "A321/B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D32": {
                     "lat": -33.934772,
@@ -3045,7 +3049,7 @@
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D34": {
                     "lat": -33.935075,
@@ -3063,7 +3067,7 @@
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "D36": {
                     "lat": -33.935542,
@@ -3105,7 +3109,7 @@
                 "F3": {
                     "lat": -33.935517,
                     "lon": 151.181206,
-                    "Operator": null,
+                    "Operator": "RXA, VOZ",
                     "Terminal": "T1",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -3118,7 +3122,7 @@
                     "Terminal": "T1",
                     "AC": "A320/B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 5
                 },
                 "F4A": {
                     "lat": -33.935947,
@@ -3127,12 +3131,13 @@
                     "Terminal": "T1",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "F4B": {
                     "lat": -33.935986,
                     "lon": 151.181044,
-                    "Operator": null,
+                    "Operator": "RXA, VOZ",
                     "Terminal": "T1",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -3145,7 +3150,7 @@
                     "Terminal": "T2",
                     "AC": "A320/B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 5
                 },
                 "F5A": {
                     "lat": -33.936325,
@@ -3154,12 +3159,13 @@
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "F5B": {
                     "lat": -33.936367,
                     "lon": 151.180950,
-                    "Operator": null,
+                    "Operator": "RXA, VOZ",
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -3172,7 +3178,7 @@
                     "Terminal": "T2",
                     "AC": "A320/B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 5
                 },
                 "F6A": {
                     "lat": -33.936728,
@@ -3181,12 +3187,13 @@
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "F6B": {
                     "lat": -33.936811,
                     "lon": 151.181092,
-                    "Operator": null,
+                    "Operator": "RXA, VOZ",
                     "Terminal": "T2",
                     "AC": "SF34",
                     "Type": "DOM",
@@ -3272,16 +3279,17 @@
                     "Terminal": "DOM3B",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "F13B": {
                     "lat": -33.935986,
                     "lon": 151.183503,
-                    "Operator": "RXA",
+                    "Operator": null,
                     "Terminal": "DOM3B",
                     "AC": "A320/B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "F14": {
                     "lat": -33.935975,
@@ -3295,11 +3303,11 @@
                 "F15": {
                     "lat": -33.936034,
                     "lon": 151.184078,
-                    "Operator": "RXA",
+                    "Operator": null,
                     "Terminal": "T2",
                     "AC": "DH8C",
                     "Type": "DOM3B",
-                    "Priority": 1
+                    "Priority": 5
                 },
                 "F15A": {
                     "lat": -33.936194,
@@ -3308,7 +3316,8 @@
                     "Terminal": "DOM3B",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "F15B": {
                     "lat": -33.936044,
@@ -3322,11 +3331,11 @@
                 "F15C": {
                     "lat": -33.935964,
                     "lon": 151.184367,
-                    "Operator": "RXA",
+                    "Operator": null,
                     "Terminal": "DOM3B",
                     "AC": "B738",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 9
                 },
                 "F16": {
                     "lat": -33.935975,
@@ -3344,7 +3353,8 @@
                     "Terminal": "DOM3B",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 1
+                    "Priority": 1,
+                    "Inactive": 1
                 },
                 "D90": {
                     "lat": -33.935214,
@@ -3371,7 +3381,8 @@
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 5,
+                    "Inactive": 1
                 },
                 "D90C": {
                     "lat": -33.935261,
@@ -3407,7 +3418,8 @@
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 5,
+                    "Inactive": 1
                 },
                 "D92": {
                     "lat": -33.935519,
@@ -3434,7 +3446,8 @@
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 5,
+                    "Inactive": 1
                 },
                 "D93": {
                     "lat": -33.935252,
@@ -3470,16 +3483,17 @@
                     "Terminal": "DOM4",
                     "AC": "SF34",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 5,
+                    "Inactive": 1
                 },
                 "D94": {
                     "lat": -33.935357,
                     "lon": 151.186614,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 1
                 },
                 "D94B": {
                     "lat": -33.935525,
@@ -3487,6 +3501,61 @@
                     "Operator": null,
                     "Terminal": "DOM4",
                     "AC": "DH8C",
+                    "Type": "DOM",
+                    "Priority": 5,
+                    "Inactive": 1
+                },
+                "D96": {
+                    "lat": -33.93516111,
+                    "lon": 151.18783333,
+                    "Operator": null,
+                    "Terminal": "DOM5",
+                    "AC": "A321/B738",
+                    "Type": "DOM",
+                    "Priority": 9
+                },
+                "D96B": {
+                    "lat": -33.93608611,
+                    "lon": 151.18791667,
+                    "Operator": "RXA, SKP",
+                    "Terminal": "DOM5",
+                    "AC": "SF34",
+                    "Type": "DOM",
+                    "Priority": 2
+                },
+                "D96C": {
+                    "lat": -33.93488056,
+                    "lon": 151.18809444,
+                    "Operator": "RXA, SKP",
+                    "Terminal": "DOM5",
+                    "AC": "DH8C",
+                    "Type": "DOM",
+                    "Priority": 2
+                },
+                "D97B": {
+                    "lat": -33.93512222,
+                    "lon": 151.18910833,
+                    "Operator": null,
+                    "Terminal": "DOM6",
+                    "AC": "A321/B738",
+                    "Type": "DOM",
+                    "Priority": 5
+                },
+                "D98A": {
+                    "lat": -33.93492222,
+                    "lon": 151.19036944,
+                    "Operator": null,
+                    "Terminal": "DOM6",
+                    "AC": "A321/B738",
+                    "Type": "DOM",
+                    "Priority": 5
+                },
+                "D99A": {
+                    "lat": -33.93475833,
+                    "lon": 151.19106111,
+                    "Operator": null,
+                    "Terminal": "DOM6",
+                    "AC": "A321/B738",
                     "Type": "DOM",
                     "Priority": 5
                 }
@@ -3501,7 +3570,8 @@
             "settings": {
                 "color": "green",
                 "eibt_config": "1.4",
-                "taxi_time": "10"
+                "taxi_time": "10",
+                "status": "testing"
             },
             "parking": {
                 "B21": {
@@ -4667,7 +4737,8 @@
             "settings": {
                 "color": "pink",
                 "eibt_config": "1.4",
-                "taxi_time": "10"
+                "taxi_time": "10",
+                "status": "testing"
             },
             "parking": {
                 "10": {
