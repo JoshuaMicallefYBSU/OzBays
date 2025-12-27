@@ -226,7 +226,7 @@ use Carbon\Carbon;
             @if(Auth::guest())
             <!-- Login/Signup if not logged in-->
             <li class="nav-item">
-              <a class="nav-link " href="{{ route('auth.sso.login') }}">
+              <a class="nav-link disabled" href="{{ route('auth.sso.login') }}">
                 <i class="fa fa-user-circle-o">
                 </i>
                 Login/Register
