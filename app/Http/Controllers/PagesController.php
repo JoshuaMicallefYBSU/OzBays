@@ -57,4 +57,9 @@ class PagesController extends Controller
     {
         return view('logs');
     }
+
+        public function PrivacyPolicy()
+    {
+        return view('privacy-policy');
+    }
 }

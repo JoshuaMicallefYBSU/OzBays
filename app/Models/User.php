@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +19,17 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'id',
+        'fname',
+        'lname',
         'email',
-        'password',
+        'permissions',
+        'gdpr_subscriped_emails',
+        'deleted',
+        'init',
+        'discord_username',
+        'discord_member',
+        'discord_avatar'
     ];
 
     /**
@@ -38,11 +47,45 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+
+    public function fullName($format)
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        if ($format == 'FLC') {
+            if($this->display_last_name == 0) {
+                return $this->fname.' - '.$this->id;
+            } elseif ($this->display_last_name == 1) {
+                return $this->fname.' '.$this->lname.' - '.$this->id;
+            } elseif($this->display_last_name == 2){
+                return $this->fname.' '.substr($this->lname, 0, 1).' - '.$this->id;
+            }
+        } elseif ($format === 'FL') {
+            if($this->display_last_name == 0) {
+                return $this->fname;
+            } elseif ($this->display_last_name == 1) {
+                return $this->fname.' '.$this->lname;
+            } elseif($this->display_last_name == 2){
+                return $this->fname.' '.substr($this->lname, 0, 1);
+            }
+        } elseif ($format === 'F') {
+            return $this->fname;
+        }
+
+        return null;
+    }
+
+    public function highestRole()
+    {
+        //If the user doesnt have a role, then give them one temporarily.
+        if (count($this->roles) == 0) {
+            //Assign them guest
+            $this->assignRole('Member');
+        }
+
+        return $this->roles[0];
+    }
+
+    public function isFlying()
+    {
+        return $this->hasOne(Flights::class, 'cid', 'id')->withDefault();
     }
 }

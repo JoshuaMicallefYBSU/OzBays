@@ -12,6 +12,7 @@ class Airports extends Model
         'lon',
         'name',
         'color',
+        'status',
         'check_exist',
         'eibt_variable',
         'taxi_time'
