@@ -8,7 +8,7 @@
     </div>
 
     <div class="col-md-6">
-        <h2>Airport Options</h2>
+        <h2>Airport List</h2>
         <p>All OzBays airports will appear here. Select from the below options to view the indiviual airport information.</p>
         <table class="table" style="text-align: center; font-size: 12px;">
             <thead>
@@ -36,6 +36,13 @@
                 @endforeach
             </tbody>
         </table>
+
+        <h4>Airport Status:</h4>
+        <ul>
+            <li><x style="color: green;"><b>Active:</b></x> Bay calculations are completed. Bay assignments are sent to OzStrips & Hoppies for controller/pilot notification.</li>
+            <li><x style="color: rgb(255, 179, 0)"><b>In Testing:</b></x> Bay calculations are completed. Hoppie messages sent only to those on testing list. No OzStrips notification.</li>
+            <li><x style="color: red"><b>Disabled:</b></x> Flights are not registered on the system for this airport, so no calculations are completed.</li>
+        </ul>
     </div>
 </div>
 

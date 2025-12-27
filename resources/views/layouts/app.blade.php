@@ -161,7 +161,7 @@ use Carbon\Carbon;
 
     <div name="navigation-bar">
       <nav class="navbar navbar-icon-top navbar-expand-lg navbar-dark bg-dark">
-        <a style="margin-right: 20px;" class="navbar-brand" href="">
+        <a style="margin-right: 20px;" class="navbar-brand" href="{{route('home')}}">
             <img style="height: 60px;" src="{{ asset('img/logo - Text.png') }}"></img>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" 

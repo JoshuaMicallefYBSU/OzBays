@@ -18,7 +18,7 @@
 
     <div class="col-md-4" style="text-align: justify">
         <div class="card card-body">
-            @if(Auth::guest())
+            {{-- @if(Auth::guest())
                 <h2>Discord Server</h2>
                 <p>OzBays has a dedicated Discord Server for VATSIM Community Members. This server is a place for announcements, discussion, as well as feedback to be provided from the community directly to those developing & maintaining the program.</p>
                 <p>Sign in with VATSIM SSO in order to link your Discord Account, to access the OzBays Discord Server.</p>
@@ -29,7 +29,10 @@
             @else
                 <h2>OzBays Discord</h2>
                 <p>You are already a member of the OzBays Server, use this to report any issues you come across, or recommend any potential new features to the devs.</p>
-            @endif
+            @endif --}}
+
+            <h2>Discord/VATSIM SSO</h2>
+            <p>In the coming days, OzBays will release with VATSIM SSO - When this happens, we will also be introducing a Discord where members can frequest features, report issues, and chat with the developers and maintainers. All to come :)</p>
         </div>
     </div>
 </div>

@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Flights;
+use App\Models\Airports;
 use App\Models\Bays;
+use App\Models\Flights;
 
 class APIController extends Controller
 {
@@ -13,24 +14,23 @@ class APIController extends Controller
      * Display the specified resource.
      */
 
-
-    #### EXAMPLE FOR REDUCING API OUTPUT
-    // $flights = Flights::select(['id', 'callsign', 'dep', 'arr', 'lat', 'lon'])
-    //     ->where('online', 1)
-    //     ->with([
-    //         'mapBay:id,bay,airport' // limit related model fields
-    //     ])
-    //     ->get();
-
     // OzStrips API
     public function OzStrips()
     {
+        $airports = Airports::where('status', 'active')->pluck('icao');
+
         $flights = Flights::select(['callsign', 'arr', 'distance', 'scheduled_bay'])
-        ->where('online', 1)
-        ->whereIn('arr', ['YBBN', 'YSSY', 'YMML', 'YPPH'])
-        // ->where('distance', '<', '35')
-        ->orderBy('distance', 'asc')
-        ->get();
+            ->where('online', 1)
+            ->whereIn('arr', $airports)
+            ->where('distance', '<', 150)
+            ->with(['mapBay:id,bay'])
+            ->orderBy('distance', 'asc')
+            ->get()
+            ->map(function ($flight) {
+                $flight->scheduled_bay = $flight->mapBay->bay ?? null;
+                unset($flight->mapBay);
+                return $flight;
+            });
 
         return $flights;
     }
