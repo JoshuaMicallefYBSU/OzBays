@@ -2663,7 +2663,7 @@
                     "Type": "DOM",
                     "Priority": 1
                 },
-                "D120": {
+                "120": {
                     "lat": -33.943539,
                     "lon": 151.180106,
                     "Operator": null,
@@ -2672,7 +2672,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D120A": {
+                "120A": {
                     "lat": -33.943038,
                     "lon": 151.179936,
                     "Operator": null,
@@ -2681,7 +2681,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D120B": {
+                "120B": {
                     "lat": -33.943186,
                     "lon": 151.180478,
                     "Operator": null,
@@ -2691,7 +2691,7 @@
                     "Priority": 5
                 },
 
-                "D121": {
+                "121": {
                     "lat": -33.943312,
                     "lon": 151.181017,
                     "Operator": null,
@@ -2700,7 +2700,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D121A": {
+                "121A": {
                     "lat": -33.942833,
                     "lon": 151.180850,
                     "Operator": null,
@@ -2709,7 +2709,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D121B": {
+                "121B": {
                     "lat": -33.942972,
                     "lon": 151.181389,
                     "Operator": null,
@@ -2719,7 +2719,7 @@
                     "Priority": 5
                 },
 
-                "D122": {
+                "122": {
                     "lat": -33.943108,
                     "lon": 151.181928,
                     "Operator": null,
@@ -2728,7 +2728,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D122A": {
+                "122A": {
                     "lat": -33.942755,
                     "lon": 151.181928,
                     "Operator": null,
@@ -2738,7 +2738,7 @@
                     "Priority": 5
                 },
 
-                "D123": {
+                "123": {
                     "lat": -33.942911,
                     "lon": 151.182761,
                     "Operator": null,
@@ -2747,7 +2747,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D123A": {
+                "123A": {
                     "lat": -33.942428,
                     "lon": 151.182678,
                     "Operator": null,
@@ -2756,7 +2756,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D123B": {
+                "123B": {
                     "lat": -33.942833,
                     "lon": 151.182817,
                     "Operator": null,
@@ -2766,7 +2766,7 @@
                     "Priority": 5
                 },
 
-                "D124": {
+                "124": {
                     "lat": -33.942733,
                     "lon": 151.183514,
                     "Operator": null,
@@ -2775,7 +2775,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D124A": {
+                "124A": {
                     "lat": -33.942383,
                     "lon": 151.183756,
                     "Operator": null,
@@ -2784,7 +2784,7 @@
                     "Type": null,
                     "Priority": 5
                 },
-                "D124B": {
+                "124B": {
                     "lat": -33.94225370,
                     "lon": 151.18415964,
                     "Operator": null,
@@ -2794,7 +2794,7 @@
                     "Priority": 5
                 },
 
-                "D125": {
+                "125": {
                     "lat": -33.942556,
                     "lon": 151.184269,
                     "Operator": null,
