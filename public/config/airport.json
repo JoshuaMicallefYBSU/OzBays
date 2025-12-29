@@ -6136,7 +6136,7 @@
                 "Type": null,
                 "Priority": 7
                 },
-                "MAR1": {
+                "MB1": {
                 "lat": -31.92799167,
                 "lon": 115.95596111,
                 "Operator": "MB",
@@ -6145,7 +6145,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR1A": {
+                "MB1A": {
                 "lat": -31.92808333,
                 "lon": 115.95598056,
                 "Operator": "MB",
@@ -6154,7 +6154,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR2": {
+                "MB2": {
                 "lat": -31.92783333,
                 "lon": 115.95613056,
                 "Operator": "MB",
@@ -6163,7 +6163,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR3A": {
+                "MB3A": {
                 "lat": -31.92765,
                 "lon": 115.95561111,
                 "Operator": "MB",
@@ -6172,7 +6172,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR4": {
+                "MB4": {
                 "lat": -31.92756389,
                 "lon": 115.95596389,
                 "Operator": "MB",
@@ -6181,7 +6181,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR5": {
+                "MB5": {
                 "lat": -31.92725,
                 "lon": 115.95608056,
                 "Operator": "MB",
@@ -6190,7 +6190,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR5A": {
+                "MB5A": {
                 "lat": -31.92736667,
                 "lon": 115.95618056,
                 "Operator": "MB",
@@ -6199,7 +6199,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR6": {
+                "MB6": {
                 "lat": -31.92761389,
                 "lon": 115.95660556,
                 "Operator": "MB",
@@ -6208,7 +6208,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR7": {
+                "MB7": {
                 "lat": -31.92748889,
                 "lon": 115.95646111,
                 "Operator": "MB",
@@ -6217,7 +6217,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR8": {
+                "MB8": {
                 "lat": -31.92736111,
                 "lon": 115.95631667,
                 "Operator": "MB",
