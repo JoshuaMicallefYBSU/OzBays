@@ -22,6 +22,10 @@ class AirportsController extends Controller
     public function airportLadder($icao)
     {
         $airport = Airports::where('icao', $icao)->first();
+
+        if($airport == null){
+            return redirect()->route('airportIndex')->with('info', "Airport ".$icao.' is not supported by OzBays. Please see all supported airports in the below table');
+        }
         return view('airport.view', compact('airport'));
     }
 
