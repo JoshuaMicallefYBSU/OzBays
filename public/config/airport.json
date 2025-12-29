@@ -3359,11 +3359,11 @@
                 "D90": {
                     "lat": -33.935214,
                     "lon": 151.184958,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 1
                 },
                 "D90A": {
                     "lat": -33.935094,
@@ -3396,11 +3396,11 @@
                 "D91": {
                     "lat": -33.935269,
                     "lon": 151.185347,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D91A": {
                     "lat": -33.935158,
@@ -3424,11 +3424,11 @@
                 "D92": {
                     "lat": -33.935519,
                     "lon": 151.186083,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 2
                 },
                 "D92A": {
                     "lat": -33.935319,
