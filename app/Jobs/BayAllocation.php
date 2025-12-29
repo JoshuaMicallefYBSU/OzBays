@@ -143,15 +143,13 @@ class BayAllocation implements ShouldQueue
                                     'clear'    => 0,
                                 ]);
                             });
-
-                            // break;
                         }
 
                     }
                 }
 
                 // Does an arrival aircraft require bay assignment?
-                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->alt > 8000 && $ac->distance < 200 && $ac->status !== "Arrived" && $airports->has($ac->arr) && $ac->eibt !== null){
+                if((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 &&$ac->status == "On Approach"){
                     $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
                 }
             }
