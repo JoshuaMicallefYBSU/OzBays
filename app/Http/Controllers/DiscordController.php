@@ -26,7 +26,7 @@ class DiscordController extends Controller
     {
         $query = http_build_query([
             'client_id' => env('DISCORD_CLIENT_ID'),
-            'redirect_uri' => env('APP_URL') . '/dashboard/discord/link/callback',
+            'redirect_uri' => env('APP_URL') . "/dashboard/discord/link/callback",
             'response_type' => 'code',
             'scope' => 'identify',
         ]);
@@ -46,7 +46,7 @@ class DiscordController extends Controller
                     'client_secret' => env('DISCORD_CLIENT_SECRET'),
                     'grant_type' => 'authorization_code',
                     'code' => $request->code,
-                    'redirect_uri' => env('APP_URL') . '/dashboard/discord/link/callback',
+                    'redirect_uri' => env('APP_URL') . "/dashboard/discord/link/callback",
                     'scope' => 'identify'
                 ],
                 'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']

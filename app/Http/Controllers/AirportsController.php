@@ -28,11 +28,11 @@ class AirportsController extends Controller
     // Update Fucntion to rended the Ladder for the Airport
     public function updateLadder($icao)
     {
-        $taxing = Flights::where('arr', $icao)->where('distance', '<', 4)->where('Online', 1)->with('mapBay')->orderBy('callsign', 'asc')->get();
+        $taxing = Flights::where('arr', $icao)->where('status', 'Arrived')->where('Online', 1)->with('mapBay')->orderBy('callsign', 'asc')->get();
 
-        $arrival = Flights::where('arr', $icao)->where('distance', '>', 4)->where('distance', '<', 31)->where('Online', 1)->with('mapBay')->orderBy('callsign', 'asc')->get();
+        // return $taxing;
 
-        // return $arrival;
+        $arrival = Flights::where('arr', $icao)->where('status', 'On Approach')->where('Online', 1)->with('mapBay')->orderBy('distance', 'asc')->get();
 
         $occupied_bays = Bays::where('airport', $icao)
             ->where('status', 2)->whereIn('id', function ($q) {

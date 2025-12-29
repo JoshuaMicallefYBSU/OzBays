@@ -28,7 +28,7 @@
         <div class="row align-items-center justify-content-lg-between">
             <div class="col-lg-6 mb-lg-0 mb-4">
                 <div class="copyright text-left text-sm text-lg-start" style="color: black;">
-                    OzBays V0.8.1 <br>© Joshua Micallef | 2025 -
+                    OzBays V0.8.2 <br>© Joshua Micallef | 2025 -
                     <script>
                         document.write(new Date().getFullYear())
                     </script>.
