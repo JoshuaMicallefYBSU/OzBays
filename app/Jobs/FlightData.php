@@ -136,20 +136,18 @@ class FlightData implements ShouldQueue
                 }
 
                 // Status Calculation
-                if($pilot->groundspeed < 80 && $distanceToArrival > 3 && $pilot->altitude < 4500){
+                if($pilot->groundspeed < 80 && $distanceToArrival > 2 && $pilot->altitude < 8500){
                     $status = 'Departing another Airport';
-                }elseif($pilot->groundspeed < 80 && $distanceToArrival > 3){
+                }elseif($pilot->groundspeed < 80 && $distanceToArrival > 2){
                     $status = 'Paused';
-                } elseif($pilot->groundspeed < 80 && $distanceToArrival <= 3){
+                } elseif($pilot->groundspeed < 80 && $distanceToArrival <= 2){
                     $status = 'Arrived';
-                } elseif($pilot->groundspeed > 80 && $distanceToArrival < 10){
-                    $status = 'Final Approach';
-                }  elseif($pilot->groundspeed > 80 && $distanceToArrival >= 10 && $distanceToArrival < 200){
-                    $status = 'Inbound (Assigned Gate)';
+                }  elseif($pilot->groundspeed > 80 && $distanceToArrival >= 2 && $distanceToArrival < 200){
+                    $status = 'On Approach';
                 } elseif($pilot->groundspeed > 80 && $distanceToArrival >= 200){
                     $status = 'Inbound';
                 } else {
-                    $status = null;
+                    $status = "Unknown";
                 }
 
                 $departure = strtoupper(trim($pilot->flight_plan->departure));

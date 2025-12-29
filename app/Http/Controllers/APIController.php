@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\Airports;
 use App\Models\Bays;
@@ -29,6 +30,10 @@ class APIController extends Controller
             ->map(function ($flight) {
                 $flight->scheduled_bay = $flight->mapBay->bay ?? null;
                 unset($flight->mapBay);
+
+                if ($flight->scheduled_bay !== null) {
+                    $flight->scheduled_bay = Str::substr($flight->scheduled_bay, 0, 4);
+                }
                 return $flight;
             });
 
