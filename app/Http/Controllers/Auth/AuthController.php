@@ -80,8 +80,6 @@ class AuthController extends Controller
         }
         $response = json_decode($response->getBody());
 
-        // return $response;
-
         if (!isset($response->data->cid)) {
             return redirect()->route('home')->with('error', 'There was an error processing data from Connect (No CID)');
         }
@@ -95,7 +93,7 @@ class AuthController extends Controller
         ]);
 
         $user->save();
-        Auth::login($user, true);
+        Auth::loginUsingId($user->id, true);
 
         return redirect()->route('home')->with('success', "Welcome back, {$user->fullName('F')}!");
     }

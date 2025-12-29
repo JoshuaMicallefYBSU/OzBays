@@ -11,7 +11,7 @@
     const airportIcao = @json($airport->icao);
 
     function loadLadder() {
-        fetch(`/api/v1/airport/ladder/${airportIcao}`)
+        fetch(`/partial/airport/ladder/${airportIcao}`)
             .then(res => res.text())
             .then(html => {
                 document.getElementById('controller-info').innerHTML = html;

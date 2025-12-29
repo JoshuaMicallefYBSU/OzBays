@@ -16,6 +16,15 @@
     </div>
 @endif
 
+@if(session()->has('info'))
+    <div class="alert-wrapper auto-close alert-raised">
+        <div class="alert alert-info">
+            {{ session('info') }}
+            <button type="button" class="alert-close">&times;</button>
+        </div>
+    </div>
+@endif
+
 <style>
 .alert-wrapper {
     overflow: hidden;

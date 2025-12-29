@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Airports;
 use App\Models\Bays;
@@ -15,7 +16,7 @@ class APIController extends Controller
      * Display the specified resource.
      */
 
-    // OzStrips API
+    // OzStrips API Endpoint
     public function OzStrips()
     {
         $airports = Airports::where('status', 'active')->pluck('icao');
@@ -40,6 +41,7 @@ class APIController extends Controller
         return $flights;
     }
     
+    // Current Flights Recorded by the OzBays Server
     public function liveFlights()
     {
         $flights = Flights::where('online', 1)->with('mapBay')->get();
@@ -47,6 +49,7 @@ class APIController extends Controller
         return $flights;
     }
 
+    // Live Bays for all Airports
     public function liveBays()
     {
         $bays = Bays::with('arrivalSlots')->get();

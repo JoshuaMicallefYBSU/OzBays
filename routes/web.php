@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PagesController;
+use App\Http\Controllers\PartialsController;
 use App\Http\Controllers\TestController;
 
 
@@ -52,6 +53,13 @@ Route::prefix('auth')->group(function () {
     Route::get('/connect/login', [AuthController::class, 'connectLogin'])->middleware('guest')->name('auth.connect.login');
     Route::get('/connect/validate', [AuthController::class, 'validateConnectLogin'])->middleware('guest');
     Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('auth.logout');
+});
+
+
+// PARTIALS SECTIONS
+Route::prefix('partial')->group(function () {
+    Route::get('/airport/ladder/{icao}', [PartialsController::class, 'updateLadder']);
+    Route::get('/dashboard/flight-info', [PartialsController::class, 'updateFlights']);
 });
 
 
