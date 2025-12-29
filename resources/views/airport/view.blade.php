@@ -21,8 +21,8 @@
     // Run immediately on page load
     loadLadder();
 
-    // Then run every 5 seconds
-    setInterval(loadLadder, 1000);
+    // Then run update every 30s
+    setInterval(loadLadder, 30000);
 </script>
 
 
