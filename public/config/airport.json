@@ -2127,7 +2127,7 @@
                     "Priority": 1
                 },
 
-                "I71": {
+                "71": {
                     "lat": -33.944222,
                     "lon": 151.172292,
                     "Operator": null,
@@ -2136,7 +2136,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I72": {
+                "72": {
                     "lat": -33.944389,
                     "lon": 151.171434,
                     "Operator": null,
@@ -2145,7 +2145,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I73": {
+                "73": {
                     "lat": -33.945378,
                     "lon": 151.170806,
                     "Operator": null,
@@ -2154,7 +2154,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I73A": {
+                "73A": {
                     "lat": -33.944797,
                     "lon": 151.170592,
                     "Operator": null,
@@ -2163,7 +2163,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I74": {
+                "74": {
                     "lat": -33.945608,
                     "lon": 151.169878,
                     "Operator": null,
@@ -2172,7 +2172,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I74A": {
+                "74A": {
                     "lat": -33.944753,
                     "lon": 151.169600,
                     "Operator": null,
@@ -2181,7 +2181,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I75": {
+                "75": {
                     "lat": -33.945786,
                     "lon": 151.169126,
                     "Operator": null,
@@ -2190,7 +2190,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I75A": {
+                "75A": {
                     "lat": -33.94490163,
                     "lon": 151.16891701,
                     "Operator": null,
@@ -2199,7 +2199,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I76": {
+                "76": {
                     "lat": -33.946017,
                     "lon": 151.168370,
                     "Operator": null,
@@ -2208,7 +2208,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I77": {
+                "77": {
                     "lat": -33.946131,
                     "lon": 151.167614,
                     "Operator": null,
@@ -2217,7 +2217,7 @@
                     "Type": "INTL",
                     "Priority": 1
                 },
-                "I77A": {
+                "77A": {
                     "lat": -33.94522396,
                     "lon": 151.16767305,
                     "Operator": null,
@@ -2227,7 +2227,7 @@
                     "Priority": 1
                 },
 
-                "I83": {
+                "83": {
                     "lat": -33.926982,
                     "lon": 151.174861,
                     "Operator": null,
@@ -2236,7 +2236,7 @@
                     "Type": "INTL",
                     "Priority": 2
                 },
-                "I83A": {
+                "83A": {
                     "lat": -33.926913,
                     "lon": 151.174747,
                     "Operator": null,
@@ -2245,7 +2245,7 @@
                     "Type": "INTL",
                     "Priority": 2
                 },
-                "I83B": {
+                "83B": {
                     "lat": -33.927303,
                     "lon": 151.174694,
                     "Operator": null,
@@ -2254,7 +2254,7 @@
                     "Type": "INTL",
                     "Priority": 2
                 },
-                "I84": {
+                "84": {
                     "lat": -33.927620,
                     "lon": 151.175037,
                     "Operator": null,
@@ -2263,7 +2263,7 @@
                     "Type": "INTL",
                     "Priority": 2
                 },
-                "I85": {
+                "85": {
                     "lat": -33.92807175,
                     "lon": 151.17513561,
                     "Operator": null,
@@ -2272,7 +2272,7 @@
                     "Type": "INTL",
                     "Priority": 2
                 },
-                "I85A": {
+                "85A": {
                     "lat": -33.927994,
                     "lon": 151.174877,
                     "Operator": null,
@@ -2281,7 +2281,7 @@
                     "Type": "INTL",
                     "Priority": 2
                 },
-                "I85B": {
+                "85B": {
                     "lat": -33.92814577,
                     "lon": 151.17517213,
                     "Operator": null,
@@ -3356,16 +3356,16 @@
                     "Priority": 1,
                     "Inactive": 1
                 },
-                "D90": {
+                "90": {
                     "lat": -33.935214,
                     "lon": 151.184958,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 1
                 },
-                "D90A": {
+                "90A": {
                     "lat": -33.935094,
                     "lon": 151.185275,
                     "Operator": null,
@@ -3374,7 +3374,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D90B": {
+                "90B": {
                     "lat": -33.935339,
                     "lon": 151.184803,
                     "Operator": null,
@@ -3384,7 +3384,7 @@
                     "Priority": 5,
                     "Inactive": 1
                 },
-                "D90C": {
+                "90C": {
                     "lat": -33.935261,
                     "lon": 151.184939,
                     "Operator": null,
@@ -3393,16 +3393,16 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D91": {
+                "91": {
                     "lat": -33.935269,
                     "lon": 151.185347,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 2
                 },
-                "D91A": {
+                "91A": {
                     "lat": -33.935158,
                     "lon": 151.185428,
                     "Operator": null,
@@ -3411,7 +3411,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D91B": {
+                "91B": {
                     "lat": -33.935444,
                     "lon": 151.185394,
                     "Operator": null,
@@ -3421,16 +3421,16 @@
                     "Priority": 5,
                     "Inactive": 1
                 },
-                "D92": {
+                "92": {
                     "lat": -33.935519,
                     "lon": 151.186083,
-                    "Operator": null,
+                    "Operator": "SKP",
                     "Terminal": "DOM4",
                     "AC": "DH8C",
                     "Type": "DOM",
-                    "Priority": 5
+                    "Priority": 2
                 },
-                "D92A": {
+                "92A": {
                     "lat": -33.935319,
                     "lon": 151.186064,
                     "Operator": null,
@@ -3439,7 +3439,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D92B": {
+                "92B": {
                     "lat": -33.935689,
                     "lon": 151.186081,
                     "Operator": null,
@@ -3449,7 +3449,7 @@
                     "Priority": 5,
                     "Inactive": 1
                 },
-                "D93": {
+                "93": {
                     "lat": -33.935252,
                     "lon": 151.186133,
                     "Operator": null,
@@ -3458,7 +3458,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D93A": {
+                "93A": {
                     "lat": -33.935136,
                     "lon": 151.186606,
                     "Operator": null,
@@ -3467,7 +3467,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D93B": {
+                "93B": {
                     "lat": -33.935414,
                     "lon": 151.186153,
                     "Operator": null,
@@ -3476,7 +3476,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D93C": {
+                "93C": {
                     "lat": -33.935542,
                     "lon": 151.186186,
                     "Operator": null,
@@ -3486,7 +3486,7 @@
                     "Priority": 5,
                     "Inactive": 1
                 },
-                "D94": {
+                "94": {
                     "lat": -33.935357,
                     "lon": 151.186614,
                     "Operator": "SKP",
@@ -3495,7 +3495,7 @@
                     "Type": "DOM",
                     "Priority": 1
                 },
-                "D94B": {
+                "94B": {
                     "lat": -33.935525,
                     "lon": 151.186636,
                     "Operator": null,
@@ -3505,7 +3505,7 @@
                     "Priority": 5,
                     "Inactive": 1
                 },
-                "D96": {
+                "96": {
                     "lat": -33.93516111,
                     "lon": 151.18783333,
                     "Operator": null,
@@ -3514,7 +3514,7 @@
                     "Type": "DOM",
                     "Priority": 9
                 },
-                "D96B": {
+                "96B": {
                     "lat": -33.93608611,
                     "lon": 151.18791667,
                     "Operator": "RXA, SKP",
@@ -3523,7 +3523,7 @@
                     "Type": "DOM",
                     "Priority": 2
                 },
-                "D96C": {
+                "96C": {
                     "lat": -33.93488056,
                     "lon": 151.18809444,
                     "Operator": "RXA, SKP",
@@ -3532,7 +3532,7 @@
                     "Type": "DOM",
                     "Priority": 2
                 },
-                "D97B": {
+                "97B": {
                     "lat": -33.93512222,
                     "lon": 151.18910833,
                     "Operator": null,
@@ -3541,7 +3541,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D98A": {
+                "98A": {
                     "lat": -33.93492222,
                     "lon": 151.19036944,
                     "Operator": null,
@@ -3550,7 +3550,7 @@
                     "Type": "DOM",
                     "Priority": 5
                 },
-                "D99A": {
+                "99A": {
                     "lat": -33.93475833,
                     "lon": 151.19106111,
                     "Operator": null,
@@ -6136,7 +6136,7 @@
                 "Type": null,
                 "Priority": 7
                 },
-                "MAR1": {
+                "MB1": {
                 "lat": -31.92799167,
                 "lon": 115.95596111,
                 "Operator": "MB",
@@ -6145,7 +6145,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR1A": {
+                "MB1A": {
                 "lat": -31.92808333,
                 "lon": 115.95598056,
                 "Operator": "MB",
@@ -6154,7 +6154,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR2": {
+                "MB2": {
                 "lat": -31.92783333,
                 "lon": 115.95613056,
                 "Operator": "MB",
@@ -6163,7 +6163,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR3A": {
+                "MB3A": {
                 "lat": -31.92765,
                 "lon": 115.95561111,
                 "Operator": "MB",
@@ -6172,7 +6172,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR4": {
+                "MB4": {
                 "lat": -31.92756389,
                 "lon": 115.95596389,
                 "Operator": "MB",
@@ -6181,7 +6181,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR5": {
+                "MB5": {
                 "lat": -31.92725,
                 "lon": 115.95608056,
                 "Operator": "MB",
@@ -6190,7 +6190,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR5A": {
+                "MB5A": {
                 "lat": -31.92736667,
                 "lon": 115.95618056,
                 "Operator": "MB",
@@ -6199,7 +6199,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR6": {
+                "MB6": {
                 "lat": -31.92761389,
                 "lon": 115.95660556,
                 "Operator": "MB",
@@ -6208,7 +6208,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR7": {
+                "MB7": {
                 "lat": -31.92748889,
                 "lon": 115.95646111,
                 "Operator": "MB",
@@ -6217,7 +6217,7 @@
                 "Type": null,
                 "Priority": 3
                 },
-                "MAR8": {
+                "MB8": {
                 "lat": -31.92736111,
                 "lon": 115.95631667,
                 "Operator": "MB",
