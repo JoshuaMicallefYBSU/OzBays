@@ -1716,7 +1716,7 @@
                 "color": "yellow",
                 "eibt_config": "1.4",
                 "taxi_time": "15",
-                "status": "active"
+                "status": "testing"
             },
             "parking": {
                 "I1": {
@@ -3571,7 +3571,7 @@
                 "color": "green",
                 "eibt_config": "1.4",
                 "taxi_time": "10",
-                "status": "active"
+                "status": "testing"
             },
             "parking": {
                 "B21": {
