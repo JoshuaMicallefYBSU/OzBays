@@ -241,8 +241,8 @@ use Carbon\Carbon;
                 {{Auth::user()->fullName('FLC')}}
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item">{{Auth::user()->highestRole()->name}}</a>
-                <div class="dropdown-divider"></div> {{-- Divider --}}
+                {{-- <a class="dropdown-item">{{Auth::user()->highestRole()->name}}</a>
+                <div class="dropdown-divider"></div> --}}
                 <a class="dropdown-item" href="{{route('dashboard.index')}}">Dashboard</a>
                 <a class="dropdown-item disabled" href="#">My Data</a>
                 <div class="dropdown-divider"></div> {{-- Divider --}}
