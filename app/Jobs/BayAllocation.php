@@ -14,10 +14,13 @@ use App\Models\Bays;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
 use App\Models\Flights;
+use App\Models\Airline;
 
 class BayAllocation implements ShouldQueue
 {
     use Queueable;
+
+    protected array $freightOnlyTypes = [];
 
     /**
      * Create a new job instance.
@@ -41,6 +44,11 @@ class BayAllocation implements ShouldQueue
             $jsonPath = public_path('config/aircraft.json');
             $rawJson  = json_decode(File::get($jsonPath), true);
 
+            $this->freightOnlyTypes = [];
+            if (is_array($rawJson) && isset($rawJson['FreightOnly']) && is_array($rawJson['FreightOnly'])) {
+                $this->freightOnlyTypes = array_values(array_unique(array_map('strtoupper', $rawJson['FreightOnly'])));
+            }
+
             $aircraftJSON = [];
             $priorityIndex = 0;
 
@@ -48,6 +56,14 @@ class BayAllocation implements ShouldQueue
 
                 // Skip allocation metadata
                 if (str_starts_with($groupKey, 'AllocationInfo_')) {
+                    continue;
+                }
+
+                if ($groupKey === 'FreightOnly') {
+                    continue;
+                }
+
+                if (!is_array($types)) {
                     continue;
                 }
 
@@ -387,8 +403,8 @@ class BayAllocation implements ShouldQueue
         ### END OF THE JOB - THIS IS WHERE END DATA LIVES BITCHES
         // dd($bayChecker);
         // dd($occupiedBays);
-        dd($unscheduledArrivals);
-    }
+        // dd($unscheduledArrivals);
+        }
 
     ###########################
     # PRIVATE FUNCTIONS - YOLO AND HOPE FOR A PRAYER BOIS THIS STUFF IS CONFUSING
@@ -403,10 +419,18 @@ class BayAllocation implements ShouldQueue
 
 
         // Need to also ensure that the system doesn't give a stupid bay before 
-        $info = Flights::where('callsign', $cs)->first();
+        $callsign = is_array($cs) ? ($cs['cs'] ?? null) : $cs;
+        $info = $callsign !== null ? Flights::where('callsign', $callsign)->first() : null;
+
+        if ($info === null) {
+            return null;
+        }
 
         $operator = substr($info->callsign, 0, 3); // Cuts off the Callsign
         // dd($operator);
+
+        $acType = strtoupper((string) $info->ac);
+        $isFreight = in_array($acType, $this->freightOnlyTypes, true) || Airline::isFreightCallsign($info->callsign);
 
         // Index the AC so it can 
         $aircraftIndex = null;
@@ -451,9 +475,20 @@ class BayAllocation implements ShouldQueue
         // dd($aircraftPrioritySql);
 
 
-        $availableBays = Bays::where('airport', $info->arr)
+        $availableBaysQuery = Bays::where('airport', $info->arr)
             ->whereNull('callsign')
-            ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+
+            ->when(!$isFreight, function ($q) use ($info) {
+                $q->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type]);
+            })
+
+            ->when($isFreight, function ($q) {
+                $q->where('pax_type', 'FRT');
+            }, function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
+                });
+            })
 
             // Order by Bay Prioriies (1=most, 9=never?)
             ->orderBy('priority', 'asc')
@@ -485,7 +520,40 @@ class BayAllocation implements ShouldQueue
 
             ->orderByRaw("RAND()")
             
-        ->get();
+        ;
+
+        $availableBays = $availableBaysQuery->get();
+
+        if ($isFreight && ($availableBays === null || $availableBays->isEmpty())) {
+            $availableBays = Bays::where('airport', $info->arr)
+                ->whereNull('callsign')
+                ->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type])
+                ->orderBy('priority', 'asc')
+                ->where(function ($q) use ($allowedTypes) {
+                    foreach ($allowedTypes as $type) {
+                        $q->orWhereRaw(
+                            "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
+                            [$type]
+                        );
+                    }
+                })
+                ->where(function ($q) use ($operator) {
+                    $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                    ->orWhereNull('operators');
+                })
+                ->where(function ($q2) {
+                    $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
+                })
+                ->orderByRaw($aircraftPrioritySql)
+                ->orderByRaw("
+                    CASE 
+                        WHEN operators IS NULL THEN 4
+                        ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
+                    END
+                ", [$operator])
+                ->orderByRaw("RAND()")
+            ->get();
+        }
         // dd($availableBays)
 
         ####### - Oh No, The Harder Rule returned no options!!!!!!!  We need to find something, so lets do a relaxed version.......
@@ -496,8 +564,10 @@ class BayAllocation implements ShouldQueue
         // 
         $candidates = $availableBays->take(7);
         $selectedBay = $candidates->random();
-        echo "Available bays for ".$cs['cs']."<br>";
-        echo $availableBays."<br><br><br>";
+        if (!app()->runningUnitTests()) {
+            echo "Available bays for ".$cs['cs']."<br>";
+            echo $availableBays."<br><br><br>";
+        }
 
         // Randomise selection within top 7 - Wamt it to be a bit random over time :)
         $selectedBay = $availableBays->first();
