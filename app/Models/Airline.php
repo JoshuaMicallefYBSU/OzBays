@@ -45,7 +45,7 @@ class Airline extends Model
 
         $patterns = $raw;
 
-        // Backward compatibility: allow a single string pattern (or JSON stored as a string).
+        // Protection against invalid data. Allow a single string pattern (or JSON stored as a string).
         if (is_string($patterns)) {
             $patterns = trim($patterns);
 
