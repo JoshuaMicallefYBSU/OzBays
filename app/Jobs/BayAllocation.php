@@ -20,6 +20,8 @@ class BayAllocation implements ShouldQueue
 {
     use Queueable;
 
+    protected array $freightOnlyTypes = [];
+
     /**
      * Create a new job instance.
      */
@@ -42,6 +44,11 @@ class BayAllocation implements ShouldQueue
             $jsonPath = public_path('config/aircraft.json');
             $rawJson  = json_decode(File::get($jsonPath), true);
 
+            $this->freightOnlyTypes = [];
+            if (is_array($rawJson) && isset($rawJson['FreightOnly']) && is_array($rawJson['FreightOnly'])) {
+                $this->freightOnlyTypes = array_values(array_unique(array_map('strtoupper', $rawJson['FreightOnly'])));
+            }
+
             $aircraftJSON = [];
             $priorityIndex = 0;
 
@@ -49,6 +56,14 @@ class BayAllocation implements ShouldQueue
 
                 // Skip allocation metadata
                 if (str_starts_with($groupKey, 'AllocationInfo_')) {
+                    continue;
+                }
+
+                if ($groupKey === 'FreightOnly') {
+                    continue;
+                }
+
+                if (!is_array($types)) {
                     continue;
                 }
 
@@ -414,7 +429,8 @@ class BayAllocation implements ShouldQueue
         $operator = substr($info->callsign, 0, 3); // Cuts off the Callsign
         // dd($operator);
 
-        $isFreight = Airline::isFreightCallsign($info->callsign);
+        $acType = strtoupper((string) $info->ac);
+        $isFreight = in_array($acType, $this->freightOnlyTypes, true) || Airline::isFreightCallsign($info->callsign);
 
         // Index the AC so it can 
         $aircraftIndex = null;
