@@ -19,16 +19,16 @@
     <div class="col-md-4" style="text-align: justify">
         <div class="card card-body">
             @if(Auth::guest())
-                <h2>Discord Server</h2>
+                <h2>OzBays Discord</h2>
                 <p>OzBays has a dedicated Discord Server for VATSIM Community Members. This server is a place for announcements, discussion, as well as feedback to be provided from the community directly to those developing & maintaining the program.</p>
                 <p>Sign in with VATSIM SSO in order to link your Discord Account, to access the OzBays Discord Server.</p>
-            @elseif(Auth::user()->discord_member !== 1)
-                <h2>Join Our Discord</h2>
-                <p>OzBays has a dedicated Discord Server for VATSIM Community Members. This server is a place for announcements, discussion, as well as feedback to be provided from the community directly to those developing & maintaining the program.</p>
-                <p>Access your Dashboard and link your Discord Account to access the Server</p>
-            @else
+            @elseif(Auth::user()->discord_user_id !== null && Auth::user()->discord_member == false)
                 <h2>OzBays Discord</h2>
-                <p>You are already a member of the OzBays Server, use this to report any issues you come across, or recommend any potential new features to the devs.</p>
+                <p>OzBays has a dedicated Discord Server for VATSIM Community Members. This server is a place for announcements, discussion, as well as feedback to be provided from the community directly to those developing & maintaining the program.</p>
+                <p><b>Access your Dashboard and link your Discord Account to access the Server</b></p>
+            @elseif(Auth::user()->discord_user_id !== null && Auth::user()->discord_member == true)
+                <h2>OzBays Discord</h2>
+                <p>You are already a member of the OzBays Server, use this to report any issues you come across, or recommend any potential new features to the OzBays Team!</p>
             @endif
         </div>
     </div>

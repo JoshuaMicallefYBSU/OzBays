@@ -7,7 +7,7 @@
 
 <div class="alert-wrapper auto-close">
     <div class="alert alert-info">
-        Clearly, it's like a baron wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. <br><i>Announcements for new functionality will be released in the OzBays Discord.</i>
+        Clearly, it's like a barren wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. <br><i>Announcements for new functionality will be released in the OzBays Discord.</i>
         <button type="button" class="alert-close">&times;</button>
     </div>
 </div>
