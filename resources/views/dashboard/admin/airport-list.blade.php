@@ -2,7 +2,7 @@
 
 @section('content')
     <h1>Airport Admin View</h1>
-    <p>View all airports maintained by OzBays</p>
+    <p>View all airports maintained by OzBays. <i>Data is updated hourly via the <u>airports.json</u> file housed on the OzBays Servers.</i></p>
 
     <table id="dataTable" class="table table-hover" style="text-align: center; font-size: 12px;">
             <thead>

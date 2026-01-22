@@ -40,9 +40,14 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
 
     // Administration Actions
     Route::prefix('admin')->group(function () {
+
+        // Airport Information
         Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
         Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
         Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
+        Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
+        // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
+        // Route::post('airport/{icao}/approve', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.approve.change');
     });
 });
 

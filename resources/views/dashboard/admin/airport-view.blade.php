@@ -18,8 +18,8 @@
         </div>
         <div class="col-md-5">
             {{-- Create quick disable button incase something goes wrong in production --}}
-            @if($airport->status == 'testing' && Auth::user()->hasRole('Maintainer'))
-                <a href="#/sudden-disable">
+            @if($airport->status == 'active' && Auth::user()->hasRole('Maintainer'))
+                <a data-target="#disableAirportModal" data-toggle="modal" style="cursor: pointer">
                     <img style="height: 125px; width: auto;" src="https://png.pngtree.com/png-clipart/20231114/original/pngtree-panic-button-shutdown-picture-image_13260836.png">
                 </a>
                 <b>< Disables Airport</b>
@@ -121,6 +121,34 @@
             ></iframe>
         </div>
 
+    </div>
+
+    {{-- Disable Airport Modal --}}
+    <div class="modal fade" id="disableAirportModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Are you sure?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                
+                <form action="{{route('dashboard.admin.airport.disable')}}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>This will mark the airport as 'In Testing', which will stop it from active interaction with <u>OzStrips</u> and <u>Hoppie</u> Servers.<br><br><b>This Function should only be used when OzBays is having a meltdown or a moment, and needs to be taken offline for investigation.</b></p>
+
+                        <input required type="hidden" value={{$airport->icao}} name="icao" maxlength="9" id="" class="form-control">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-primary" value="Add">
+                    </div>
+                </form>
+
+            </div>
+        </div>
     </div>
     
 @endsection

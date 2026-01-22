@@ -41,4 +41,15 @@ class DashboardController extends Controller
 
         return view('dashboard.admin.bay-view', compact('bay'));
     }
+
+    // Disable Airport Function
+    public function disableAirport(Request $request)
+    {
+        $airport = Airports::where('icao', $request->icao)->first();
+
+        $airport->status = 'testing';
+        $airport->save();
+
+        return back()->with('info', 'Airport has successfully been disabled!');
+    }
 }

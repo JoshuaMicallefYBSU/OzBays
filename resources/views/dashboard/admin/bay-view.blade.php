@@ -10,7 +10,7 @@
 
 @include('partials.message', [
         'type' => 'info',
-        'message' => "NOTE: Information on this page is not yet editable. This is for viewing purposes only."
+        'message' => "NOTE: Information on this page is not yet editable. This is for viewing purposes only but will shortly have this functionality."
 ])
 
 <div class="row">
