@@ -25,6 +25,10 @@ use Carbon\Carbon;
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
+        {{-- DataTable --}}
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.js"></script>
+
         <script>
           document.addEventListener("DOMContentLoaded", function () {
             document.body.classList.add("loaded");
@@ -183,7 +187,7 @@ use Carbon\Carbon;
 
             <!-- Airports Button -->
             <li class="nav-item">
-                <a class="nav-link {{ str_contains(request()->url(), 'airport') == true ? 'active' : '' }} " href="{{route('airportIndex')}}">
+                <a class="nav-link {{ str_contains(request()->url(), 'airports') == true ? 'active' : '' }} " href="{{route('airportIndex')}}">
                     <i class="fa fa-plane"></i>Airports
                     <span class="sr-only"></span>
                 </a>
@@ -207,7 +211,7 @@ use Carbon\Carbon;
                 Manage Data
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item disabled" href="#">Airports</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">Airports</a>
                 <a class="dropdown-item disabled" href="#">Aircraft</a>
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
@@ -265,4 +269,11 @@ use Carbon\Carbon;
       </div>
         
     </body>
+
+    <script>
+        $(document).ready(function() {
+            $('#dataTable').DataTable();
+        } );
+    </script>
+
 </html>

@@ -3,6 +3,9 @@
 @section('content')
 
 <h1>{{$airport->icao}} - {{$airport->name}} Airport Information</h1>
+<div class="pb-3">
+    <a href="{{route('airportIndex')}}" style="color: black;"> <i class="fas fa-arrow-left"></i> See All Airports</a>
+</div>
 <x id="controller-info">
     
 </x>

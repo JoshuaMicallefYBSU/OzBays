@@ -17,4 +17,9 @@ class Airports extends Model
         'eibt_variable',
         'taxi_time'
     ];
+
+    public function allBays()
+    {
+        return $this->hasMany(Bays::class, 'airport', 'icao');
+    }
 }

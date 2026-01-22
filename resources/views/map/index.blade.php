@@ -49,11 +49,43 @@
  * -------------------------------------------------------- */
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaHVhbWljYWxsZWZ5YnN1IiwiYSI6ImNsb241cndobzB6Y2oyam5ya3JvdzVndGMifQ.EEFitNQf_9gmMdnQO4ywXw';
 
+const qs = new URLSearchParams(window.location.search);
+
+const EMBED_DEFAULTS = {
+    center: [133.7751, -25.2744], // [lon, lat]
+    zoom: 3.8,
+    hide_info: false,
+};
+
+// parse float safely
+const floatOr = (value, fallback) => {
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : fallback;
+};
+
+// parse boolean safely (supports 1/0, true/false, yes/no, on/off)
+const boolOr = (value, fallback) => {
+    if (value === null || value === undefined) return fallback;
+    const v = String(value).toLowerCase();
+    if (['1', 'true', 'yes', 'y', 'on'].includes(v)) return true;
+    if (['0', 'false', 'no', 'n', 'off'].includes(v)) return false;
+    return fallback;
+};
+
+// If provided, use ?lat=...&lon=... otherwise default center
+const lat = floatOr(qs.get('lat') ?? null, EMBED_DEFAULTS.center[1]);
+const lon = floatOr(qs.get('lon') ?? null, EMBED_DEFAULTS.center[0]);
+const zoom = floatOr(qs.get('zoom') ?? null, EMBED_DEFAULTS.zoom);
+
+// hide_info override (e.g. hide_info=1 / true)
+const hideInfo = boolOr(qs.get('hide_info'), EMBED_DEFAULTS.hide_info);
+
+// --- Your existing map init, now using resolved values ---
 const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/dark-v11',
-    center: [133.7751, -25.2744],
-    zoom: 3.8,
+    center: [lon, lat],
+    zoom: zoom,
     pitch: 0,
     bearing: 0,
     projection: 'mercator'
@@ -82,6 +114,10 @@ const map = new mapboxgl.Map({
         </x>
         
     `;
+
+    if (eventOverlay && hideInfo) {
+    eventOverlay.style.display = "none";
+}
 
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();

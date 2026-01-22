@@ -5,12 +5,11 @@
 <h3>Welcome to your OzBays Dashboard, {{Auth::user()->fullName('F')}}</h3>
 <p>Your one stop shop for everything for your OzBays Experience,</p>
 
-<div class="alert-wrapper auto-close">
-    <div class="alert alert-info">
-        Clearly, it's like a barren wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. <br><i>Announcements for new functionality will be released in the OzBays Discord.</i>
-        <button type="button" class="alert-close">&times;</button>
-    </div>
-</div>
+@include('partials.message', [
+    'type' => 'info',
+    'message' => "Clearly, it's like a barren wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. 
+    <br><i>Announcements for new functionality will be released in the OzBays Discord in the <u>#ozbays-changes</u> channel.</i>"
+])
 
     <div class="row">
         <div class="col-md-8">
@@ -25,6 +24,21 @@
         </div>
 
         <div class="col-md-4">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">My Profile</h3>
+                    <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{route('dashboard.discord.link')}}" class="card-link" style="color: black;">
+                                <h6 class="card-title mb-1"><i class="fa fa-sign-in"></i> {{Auth::user()->fullName('FLC')}}</h6>
+                                <small class="text-muted">Role: {{Auth::user()->highestRole()->name}}</small><br>
+                                <small class="text-muted">Discord: @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small>
+                            </a>
+                        </div>
+                    </li>
+                </div>
+            </div>
+
             <div class="card mt-4">
                 <div class="card-body">
                     <h3 class="card-title">My Actions</h3>

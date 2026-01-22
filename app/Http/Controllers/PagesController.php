@@ -11,34 +11,7 @@ use App\Jobs\AerodromeUpdates;
 
 class PagesController extends Controller
 {
-    public function Lander()
-    {
-        $flight = Flights::all();
-        
-        $ybbn = 0;
-        $yssy = 0;
-        $ymml = 0;
-        $ypph = 0;
-
-        foreach($flight as $f){
-            if($f->arr == "YBBN" && $f->online !== null){
-                $ybbn++;
-            }
-            if($f->arr == "YSSY" && $f->online !== null){
-                $yssy++;
-            }
-            if($f->arr == "YMML" && $f->online !== null){
-                $ymml++;
-            }
-            if($f->arr == "YPPH" && $f->online !== null){
-                $ypph++;
-            }
-        }
-
-        return view('lander', compact('ybbn', 'yssy', 'ymml', 'ypph'));
-    }
-
-    public function newHome()
+    public function Home()
     {
         return view('home');
     }
