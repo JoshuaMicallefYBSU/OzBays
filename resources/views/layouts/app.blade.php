@@ -212,7 +212,7 @@ use Carbon\Carbon;
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">Airports</a>
-                <a class="dropdown-item disabled" href="#">Aircraft</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">Aircraft</a>
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>

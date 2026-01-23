@@ -48,6 +48,9 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
         Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
         // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
         // Route::post('airport/{icao}/approve', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.approve.change');
+
+        // Aircraft Information
+        Route::get('aircraft', [DashboardController::class, 'aircraftList'])->name('dashboard.admin.aircraft.all');
     });
 });
 

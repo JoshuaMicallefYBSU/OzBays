@@ -29,10 +29,10 @@
                     <h3 class="card-title">My Profile</h3>
                     <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{route('dashboard.discord.link')}}" class="card-link" style="color: black;">
+                            <a href="" class="card-link" style="color: black; cursor:default">
                                 <h6 class="card-title mb-1"><i class="fa fa-sign-in"></i> {{Auth::user()->fullName('FLC')}}</h6>
-                                <small class="text-muted">Role: {{Auth::user()->highestRole()->name}}</small><br>
-                                <small class="text-muted">Discord: @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small>
+                                <small class="text-muted"><b>Role: </b>{{Auth::user()->highestRole()->name}}</small><br>
+                                <small class="text-muted"><b>Discord: </b> @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small>
                             </a>
                         </div>
                     </li>
@@ -112,7 +112,7 @@
     loadLadder();
 
     // Then run update every 30s
-    setInterval(loadLadder, 30000);
+    setInterval(loadLadder, 15000);
 </script>
 
 @endsection
