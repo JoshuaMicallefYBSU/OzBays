@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('airports', function (Blueprint $table) {
-            $table->string('status',12)->nullable();
+            $table->boolean('live_bays')->nullable();
+            $table->string('live_type')->nullable();
+            $table->string('live_update_times')->nullable();
         });
     }
 
@@ -26,7 +28,9 @@ return new class extends Migration
     public function down()
     {
         Schema::table('airports', function (Blueprint $table) {
-            $table->dropColumn(['status']);
+            $table->dropColumn(['live_bays']);
+            $table->dropColumn(['live_type']);
+            $table->dropColumn(['live_update_times']);
         });
     }
 };

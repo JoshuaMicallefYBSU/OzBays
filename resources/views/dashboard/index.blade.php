@@ -29,7 +29,7 @@
                     <h3 class="card-title">My Profile</h3>
                     <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="" class="card-link" style="color: black; cursor:default">
+                            <a disabled class="card-link" style="color: black; cursor:default">
                                 <h6 class="card-title mb-1"><i class="fa fa-sign-in"></i> {{Auth::user()->fullName('FLC')}}</h6>
                                 <small class="text-muted"><b>Role: </b>{{Auth::user()->highestRole()->name}}</small><br>
                                 <small class="text-muted"><b>Discord: </b> @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small>
@@ -98,21 +98,25 @@
 
 <script>
     function loadLadder() {
-
-        const user = @json(Auth::user());
-
-        fetch(`/partial/dashboard/flight-info`)
+        fetch('/partial/dashboard/flight-info')
             .then(res => res.text())
             .then(html => {
-                document.getElementById('flight-info').innerHTML = html;
+                const container = document.getElementById('flight-info');
+
+                // Create temp wrapper
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+
+                // Replace children in one operation
+                container.replaceChildren(...temp.children);
             });
-    }
+        }
 
-    // Run immediately on page load
-    loadLadder();
+        // Initial load
+        loadLadder();
 
-    // Then run update every 30s
-    setInterval(loadLadder, 15000);
+        // Refresh every 15s
+        setInterval(loadLadder, 15000);
 </script>
 
 @endsection
