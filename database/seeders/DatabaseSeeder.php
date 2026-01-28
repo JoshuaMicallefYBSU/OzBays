@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
         $developer = Role::create(['id' => 1, 'name' => 'Developer']);
         $maintainer = Role::create(['id' => 2, 'name' => 'Maintainer']);
         $contributor = Role::create(['id' => 3, 'name' => 'Contributor']);
-        $member = Role::create(['id' => 99, 'name' => 'Member']);
+        $member = Role::create(['id' => 99, 'name' => 'Pilot']);
 
         ### Create permissions...
         // System

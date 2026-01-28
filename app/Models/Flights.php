@@ -47,4 +47,9 @@ class Flights extends Model
     {
         return $this->hasOne(Airports::class, 'icao', 'arr');
     }
+
+    public function liveBay()
+    {
+        return $this->hasOne(FlightLiveBays::class, 'callsign', 'callsign')->withDefault();
+    }
 }

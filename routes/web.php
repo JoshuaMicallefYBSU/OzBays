@@ -11,10 +11,8 @@ use App\Http\Controllers\PartialsController;
 use App\Http\Controllers\TestController;
 
 
-Route::get('/old-lander', [PagesController::class, 'lander'])->name('lander');
-
 // New Homepage
-Route::get('/', [PagesController::class, 'newHome'])->name('home');
+Route::get('/', [PagesController::class, 'Home'])->name('home');
 
 // Privacy Policy - Required for VATSIM SSO
 Route::prefix('policy')->group(function () {
@@ -22,8 +20,8 @@ Route::prefix('policy')->group(function () {
 });
 
 // Airport Arrival Ladders
-Route::get('/airport', [AirportsController::class, 'index'])->name('airportIndex');
-Route::get('/airport/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder');
+Route::get('/airports', [AirportsController::class, 'index'])->name('airportIndex');
+Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder');
 
 // Maps
 Route::get('/map', [MapController::class, 'index'])->name('mapIndex');
@@ -39,6 +37,21 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('/discord/link', [DiscordController::class, 'linkRedirectDiscord'])->name('dashboard.discord.link');
     Route::get('/discord/server/join', [DiscordController::class, 'joinRedirectDiscord'])->name('dashboard.discord.join');
     Route::get('/discord/server/join/callback', [DiscordController::class, 'joinCallbackDiscord']);
+
+    // Administration Actions
+    Route::prefix('admin')->group(function () {
+
+        // Airport Information
+        Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
+        Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
+        Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
+        Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
+        // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
+        // Route::post('airport/{icao}/approve', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.approve.change');
+
+        // Aircraft Information
+        Route::get('aircraft', [DashboardController::class, 'aircraftList'])->name('dashboard.admin.aircraft.all');
+    });
 });
 
 // Updates

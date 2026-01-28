@@ -10,7 +10,7 @@
 @if(session()->has('error'))
     <div class="alert-wrapper auto-close alert-raised">
         <div class="alert alert-danger">
-            <b>An error has occured with the requested action.</b> {{ session('error') }} <br><i>This has been forwarded to the Developer for further investigation.</i>
+            <b>ERR.</b> {{ session('error') }}
             <button type="button" class="alert-close">&times;</button>
         </div>
     </div>

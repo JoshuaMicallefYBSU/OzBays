@@ -5,12 +5,11 @@
 <h3>Welcome to your OzBays Dashboard, {{Auth::user()->fullName('F')}}</h3>
 <p>Your one stop shop for everything for your OzBays Experience,</p>
 
-<div class="alert-wrapper auto-close">
-    <div class="alert alert-info">
-        Clearly, it's like a baron wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. <br><i>Announcements for new functionality will be released in the OzBays Discord.</i>
-        <button type="button" class="alert-close">&times;</button>
-    </div>
-</div>
+@include('partials.message', [
+    'type' => 'info',
+    'message' => "Clearly, it's like a barren wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. 
+    <br><i>Announcements for new functionality will be released in the OzBays Discord in the <u>#ozbays-changes</u> channel.</i>"
+])
 
     <div class="row">
         <div class="col-md-8">
@@ -25,6 +24,21 @@
         </div>
 
         <div class="col-md-4">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">My Profile</h3>
+                    <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a disabled class="card-link" style="color: black; cursor:default">
+                                <h6 class="card-title mb-1"><i class="fa fa-sign-in"></i> {{Auth::user()->fullName('FLC')}}</h6>
+                                <small class="text-muted"><b>Role: </b>{{Auth::user()->highestRole()->name}}</small><br>
+                                <small class="text-muted"><b>Discord: </b> @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small>
+                            </a>
+                        </div>
+                    </li>
+                </div>
+            </div>
+
             <div class="card mt-4">
                 <div class="card-body">
                     <h3 class="card-title">My Actions</h3>
@@ -84,21 +98,25 @@
 
 <script>
     function loadLadder() {
-
-        const user = @json(Auth::user());
-
-        fetch(`/partial/dashboard/flight-info`)
+        fetch('/partial/dashboard/flight-info')
             .then(res => res.text())
             .then(html => {
-                document.getElementById('flight-info').innerHTML = html;
+                const container = document.getElementById('flight-info');
+
+                // Create temp wrapper
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+
+                // Replace children in one operation
+                container.replaceChildren(...temp.children);
             });
-    }
+        }
 
-    // Run immediately on page load
-    loadLadder();
+        // Initial load
+        loadLadder();
 
-    // Then run update every 30s
-    setInterval(loadLadder, 30000);
+        // Refresh every 15s
+        setInterval(loadLadder, 15000);
 </script>
 
 @endsection

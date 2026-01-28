@@ -55,10 +55,12 @@ class AerodromeUpdates implements ShouldQueue
                 'lat' => $airport['lat'],
                 'lon' => $airport['lon'],
                 'name' => $airport['name'],
-                'color' => $airport['settings']['color'],
-                'status' => $airport['settings']['status'],
-                'eibt_variable' => $airport['settings']['eibt_config'],
-                'taxi_time' => $airport['settings']['taxi_time'],
+                'color' => $airport['settings']['color'] ?? 'purple',
+                'status' => $airport['settings']['status'] ?? 'disabled',
+                'eibt_variable' => $airport['settings']['eibt_config'] ?? 1.4,
+                'taxi_time' => $airport['settings']['taxi_time'] ?? 15,
+                'live_type' => $airport['settings']['airport_type'] ?? null,
+                'live_update_times' => $airport['settings']['update_time_utc'] ?? '0,2,4,6,8,10,12,14,20,22,24',
                 'check_exist' => 1,
             ]);
 
@@ -72,6 +74,7 @@ class AerodromeUpdates implements ShouldQueue
                     'priority'  => $bay['Priority'],
                     'lat'       => $bay['lat'],
                     'check_exist'   => 1,
+                    'terminal'  => $bay['Terminal'],
                 ]);   
             }
         }

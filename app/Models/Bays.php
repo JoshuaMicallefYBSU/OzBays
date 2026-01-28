@@ -22,7 +22,8 @@ class Bays extends Model
         'priority',
         'callsign',
         'clear',
-        'check_exist'
+        'check_exist',
+        'terminal',
     ];
 
     public function scopeForAirport($query, $icao)
