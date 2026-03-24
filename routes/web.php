@@ -11,10 +11,8 @@ use App\Http\Controllers\PartialsController;
 use App\Http\Controllers\TestController;
 
 
-Route::get('/old-lander', [PagesController::class, 'lander'])->name('lander');
-
 // New Homepage
-Route::get('/', [PagesController::class, 'newHome'])->name('home');
+Route::get('/', [PagesController::class, 'Home'])->name('home');
 
 // Privacy Policy - Required for VATSIM SSO
 Route::prefix('policy')->group(function () {
@@ -22,12 +20,31 @@ Route::prefix('policy')->group(function () {
 });
 
 // Airport Arrival Ladders
-Route::get('/airport', [AirportsController::class, 'index'])->name('airportIndex');
-Route::get('/airport/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder');
+Route::get('/airports', [AirportsController::class, 'index'])->name('airportIndex');
+Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder');
 
 // Maps
 Route::get('/map', [MapController::class, 'index'])->name('mapIndex');
 Route::get('/map/{icao}', [MapController::class, 'airportMap']);
+
+// Administration Actions
+    Route::prefix('admin')->group(function () {
+
+        // Airport Information
+        Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
+        Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
+        Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
+        Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
+        Route::post('airport/activate', [DashboardController::class, 'activateAirport'])->name('dashboard.admin.airport.activate');
+        // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
+        // Route::post('airport/{icao}/approve', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.approve.change');
+
+        // User Information
+        Route::get('users', [DashboardController::class, 'userList'])->name('dashboard.admin.users.list');
+
+        // Aircraft Information
+        Route::get('aircraft', [DashboardController::class, 'aircraftList'])->name('dashboard.admin.aircraft.all');
+    });
 
 // Dashboard
 Route::prefix('dashboard')->middleware('auth')->group(function () {
@@ -60,6 +77,8 @@ Route::prefix('auth')->group(function () {
 Route::prefix('partial')->group(function () {
     Route::get('/airport/ladder/{icao}', [PartialsController::class, 'updateLadder']);
     Route::get('/dashboard/flight-info', [PartialsController::class, 'updateFlights']);
+    Route::get('/home/airport-stats', [PartialsController::class, 'updateAirportStats']);
+    
 });
 
 

@@ -15,6 +15,16 @@ class Airports extends Model
         'status',
         'check_exist',
         'eibt_variable',
-        'taxi_time'
+        'taxi_time',
+        'live_bays',
+        'live_type',
+        'live_update_times',
+        'stats_ground',
+        'stats_inbound',
     ];
+
+    public function allBays()
+    {
+        return $this->hasMany(Bays::class, 'airport', 'icao');
+    }
 }

@@ -29,7 +29,8 @@ class User extends Authenticatable
         'init',
         'discord_username',
         'discord_member',
-        'discord_avatar'
+        'discord_avatar',
+        'last_seen',
     ];
 
     /**
@@ -41,6 +42,13 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'last_seen_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get the attributes that should be cast.

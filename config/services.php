@@ -36,8 +36,26 @@ return [
     ],
 
     'discord' => [
-        'OzBays' => 1454375050886123550,
-        'OzBays_Local' => 1454375087473168405,
+        // Local System Logic
+        'local' => [
+            'bay_assign'    => 1454375087473168405,
+            'bay_errors'    => 1454375087473168405,
+            'ac_errors'     => 1454375087473168405,
+            'error_logs'    => 1454375087473168405,
+            'server_logs'   => 1454375087473168405,
+            'github_logs'   => 1454375087473168405,
+        ],
+
+        // Live Server Channels
+        'production' => [
+            'bay_assign'    => 1454375050886123550,
+            'bay_errors'    => 1485503079439925391,
+            'ac_errors'     => 1485796516168990830,
+            'error_logs'    => 1454268931467640983,
+            'server_logs'   => 1454272548790468639,
+            'github_logs'   => 1454272577668124782,
+        ]
+        
     ]
 
 ];

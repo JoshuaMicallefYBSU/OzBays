@@ -16,7 +16,9 @@
                 "color": "#F54927",
                 "eibt_config": "1.4",
                 "taxi_time": "15",
-                "status": "testing"
+                "status": "testing",
+                "airport_type": "Major1",
+                "update_time_utc": "0,2,4,6,8,10,12,14,20,22"
             },
             "parking": {     
                 "R1": {
@@ -1716,7 +1718,9 @@
                 "color": "yellow",
                 "eibt_config": "1.4",
                 "taxi_time": "15",
-                "status": "testing"
+                "status": "testing",
+                "airport_type": "Major1",
+                "update_time_utc": "0,1,2,3,4,5,6,7,8,9,10,12,20,21,22,23"
             },
             "parking": {
                 "I1": {
@@ -3571,7 +3575,9 @@
                 "color": "green",
                 "eibt_config": "1.4",
                 "taxi_time": "10",
-                "status": "testing"
+                "status": "testing",
+                "airport_type": "Major2",
+                "update_time_utc": "0,1,2,3,4,5,6,8,10,12,20,22,23"
             },
             "parking": {
                 "B21": {
@@ -4738,7 +4744,9 @@
                 "color": "pink",
                 "eibt_config": "1.4",
                 "taxi_time": "10",
-                "status": "testing"
+                "status": "testing",
+                "airport_type": "Major2",
+                "update_time_utc": "0,2,4,6,8,10,12,14,20,22"
             },
             "parking": {
                 "10": {

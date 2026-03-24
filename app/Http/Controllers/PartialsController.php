@@ -37,4 +37,12 @@ class PartialsController extends Controller
     {
         return view('partials.dashboard-flight')->render();
     }
+
+    public function updateAirportStats()
+    {
+        $stats_ground = Airports::whereIn('status', ['testing', 'active'])->where('stats_ground', '>', 0)->orderBy('stats_ground', 'desc')->limit(3)->get();
+        $stats_inbound = Airports::whereIn('status', ['testing', 'active'])->where('stats_inbound', '>', 0)->orderBy('stats_inbound', 'desc')->limit(3)->get();
+
+        return view('partials.airport-stats', compact('stats_ground','stats_inbound'))->render();
+    }
 }

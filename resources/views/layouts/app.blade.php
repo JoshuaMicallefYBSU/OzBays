@@ -25,6 +25,10 @@ use Carbon\Carbon;
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
+        {{-- DataTable --}}
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.js"></script>
+
         <script>
           document.addEventListener("DOMContentLoaded", function () {
             document.body.classList.add("loaded");
@@ -183,7 +187,7 @@ use Carbon\Carbon;
 
             <!-- Airports Button -->
             <li class="nav-item">
-                <a class="nav-link {{ str_contains(request()->url(), 'airport') == true ? 'active' : '' }} " href="{{route('airportIndex')}}">
+                <a class="nav-link {{ str_contains(request()->url(), 'airports') == true ? 'active' : '' }} " href="{{route('airportIndex')}}">
                     <i class="fa fa-plane"></i>Airports
                     <span class="sr-only"></span>
                 </a>
@@ -201,14 +205,14 @@ use Carbon\Carbon;
           <ul class="navbar-nav ">
             @can('view data')
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'admin') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-cog">
                 </i>
-                Manage Data
+                Administration
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item disabled" href="#">Airports</a>
-                <a class="dropdown-item disabled" href="#">Aircraft</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">Airports</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">Aircraft</a>
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>
@@ -216,7 +220,7 @@ use Carbon\Carbon;
 
                 @can('view users')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item disabled" href="#">View All Users</a>
+                  <a class="dropdown-item" href="{{route('dashboard.admin.users.list')}}">View All Users</a>
                 @endcan
               </div>
             </li>
@@ -235,7 +239,7 @@ use Carbon\Carbon;
             @else
             <!-- My Account & Notifications -->
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'dashboard') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-user">
                 </i>
                 {{Auth::user()->fullName('FLC')}}
@@ -265,4 +269,11 @@ use Carbon\Carbon;
       </div>
         
     </body>
+
+    <script>
+        $(document).ready(function() {
+            $('#dataTable').DataTable();
+        } );
+    </script>
+
 </html>

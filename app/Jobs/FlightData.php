@@ -11,6 +11,7 @@ use GuzzleHttp\Client;
 use App\Services\VATSIMClient;
 use App\Services\DiscordClient;
 use Carbon\Carbon;
+use App\Models\Airports;
 use App\Models\Flights;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
@@ -60,42 +61,60 @@ class FlightData implements ShouldQueue
         $pilots = $vatsimData->getPilots();
 
         // Bay Allocation Airports - Only These Flights get filtered
-        $jsonPath = public_path('config/airport.json');
-        $rawJson = json_decode(File::get($jsonPath), true);
-        $airports = $rawJson['Airports'] ?? [];
+        $airports = Airports::whereIn('status', ['active', 'testing'])->get()->keyBy('icao');
 
+        // dd($airports);
 
-        $arrivalAircraft = array_fill_keys(array_keys($airports), []);
+        $stats = [];
+        $arrivalAircraft = array_fill_keys($airports->keys()->toArray(), []);
+
         $OnGround = [];
         $landingCalcs = [];
+
+        foreach($airports as $airport){
+                $stats[$airport->icao] = [
+                    'ground' => 0,
+                    'inbound' => 0,
+                ];
+        }
 
         foreach($pilots as $pilot){
 
             $aircraft = Flights::where('callsign', $pilot->callsign)->first();
 
 
-            // Check each Aircraft (See if they are on the ground)
-            $distanceToYBBN = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YBBN']['lat'], $airports['YBBN']['lon']);
-            $distanceToYSSY = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YSSY']['lat'], $airports['YSSY']['lon']);
-            $distanceToYMML = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YMML']['lat'], $airports['YMML']['lon']);
-            $distanceToYPPH = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports['YPPH']['lat'], $airports['YPPH']['lon']);
+            $airportMatch = null;
+            foreach ($airports as $icao => $airport) {
+                $distance = $this->calculateDistance(
+                    $pilot->latitude,
+                    $pilot->longitude,
+                    $airport->lat,
+                    $airport->lon
+                );
 
-            // Check if Aircraft is on the Ground - Either Departing from the Airport, or 
-            if($distanceToYBBN < 3 || $distanceToYSSY < 3 || $distanceToYMML < 3 || $distanceToYPPH <3 && $pilot->groundspeed < 80){
+                if ($distance < 3) {
+                    $airportMatch = $icao;
+                    break;
+                }
+            }
+
+            // Check if on ground
+            if ($airportMatch && $pilot->groundspeed < 80) {
                 $OnGround[] = [
-                    'callsign'  => $pilot->callsign,
-                    'cid'       => $pilot->cid,
-                    'hdg'       => $pilot->heading,
-                    'dep' => data_get($pilot, 'flight_plan.departure') ?: null,
-                    'arr' => data_get($pilot, 'flight_plan.arrival') ?: null,
-                    'ac'  => data_get($pilot, 'flight_plan.aircraft_short') ?: null,
-                    'lat'       => $pilot->latitude,
-                    'lon'       => $pilot->longitude,
-                    'speed'     => $pilot->groundspeed,
-                    'alt'       => $pilot->altitude,
-                    'status_id' => null,
-                    'status'    => 'Departing',
-                    'online'    => 1,
+                    'callsign'   => $pilot->callsign,
+                    'cid'        => $pilot->cid,
+                    'hdg'        => $pilot->heading,
+                    'at_airport' => $airportMatch,
+                    'dep'        => data_get($pilot, 'flight_plan.departure') ?: null,
+                    'arr'        => data_get($pilot, 'flight_plan.arrival') ?: null,
+                    'ac'         => data_get($pilot, 'flight_plan.aircraft_short') ?: null,
+                    'lat'        => $pilot->latitude,
+                    'lon'        => $pilot->longitude,
+                    'speed'      => $pilot->groundspeed,
+                    'alt'        => $pilot->altitude,
+                    'status_id'  => null,
+                    'status'     => 'Departing',
+                    'online'     => 1,
                 ];
             }
 
@@ -107,22 +126,29 @@ class FlightData implements ShouldQueue
             }
 
             // Flight Scheduled at a ozBays Airport
-            if(in_array($pilot->flight_plan->arrival, array_column($airports, 'icao'), true)){
+            if ($airports->has($pilot->flight_plan->arrival)) {
 
                 // Calculate distance from Airport
-                $distanceToArrival = $this->calculateDistance($pilot->latitude, $pilot->longitude, $airports[$pilot->flight_plan->arrival]['lat'], $airports[$pilot->flight_plan->arrival]['lon']);
+                $arrivalAirport = $airports[$pilot->flight_plan->arrival];
+
+                $distanceToArrival = $this->calculateDistance(
+                    $pilot->latitude,
+                    $pilot->longitude,
+                    $arrivalAirport->lat,
+                    $arrivalAirport->lon
+                );
                 
 
                 // Do not interest yourself in Aircraft > 1500NM from the Airport oh little one
                 if($distanceToArrival > 1500){
                     continue;
                 }
-                
-                // dd($aircraft->elt);
 
                 // Calculate Landing and Block Time (Estimates)
+
                 if($aircraft){
                     if ($pilot->groundspeed > 80 && $distanceToArrival < 200 && $aircraft->elt == null) {
+                        // dd($aircraft);
                         $TimeRemaining = (($distanceToArrival / $pilot->groundspeed) * 60);
 
                         $TimeAdditional = $TimeRemaining * $aircraft->arrivalAirport->eibt_variable;
@@ -195,6 +221,8 @@ class FlightData implements ShouldQueue
                     'alt'       => $aa['alt'],
                     'online'    => 1,
                 ]);
+
+                $stats[$aa['at_airport']]['ground']++;
         }
 
         // Update the Entries in the Database
@@ -217,8 +245,12 @@ class FlightData implements ShouldQueue
                     'status'  => $ac['status'],
                     'online'    => 1,
                 ]);
+
+                $stats[$ac['arr']]['inbound']++;
             }
         }
+
+        // dd($arrivalAircraft);
 
         // Input the ELT & EIBT Values only once at the beginning
         foreach($landingCalcs as $calc){
@@ -251,10 +283,18 @@ class FlightData implements ShouldQueue
             $flight->delete();
         }
 
+        // Statistics Updates
+        foreach($airports as $airport){
+            $airport->stats_ground = $stats[$airport->icao]['ground'];
+            $airport->stats_inbound = $stats[$airport->icao]['inbound'];
+            $airport->save();
+        }
+
         // dd($offlineFlights);
         // dd($)
         // dd($OnGround);
         // dd($landingCalcs);
+        // dd($stats);
 
     }
 
@@ -279,5 +319,3 @@ class FlightData implements ShouldQueue
         return $distanceNm;
     }
 }
-
-

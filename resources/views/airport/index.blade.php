@@ -3,14 +3,14 @@
 @section('content')
 
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <p></p>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-8">
         <h2>Airport List</h2>
         <p>All OzBays airports will appear here. Select from the below options to view the indiviual airport information.</p>
-        <table class="table" style="text-align: center; font-size: 12px;">
+        <table id="dataTable" class="table table-hover" style="text-align: center; font-size: 12px;">
             <thead>
                 <tr>
                     <th width="25%">ICAO</th>
@@ -37,7 +37,7 @@
             </tbody>
         </table>
 
-        <h4>Airport Status:</h4>
+        <h4 class="mt-4">Airport Status:</h4>
         <ul>
             <li><x style="color: green;"><b>Active:</b></x> Bay calculations are completed. Bay assignments are sent to OzStrips & Hoppies for controller/pilot notification.</li>
             <li><x style="color: rgb(255, 179, 0)"><b>In Testing:</b></x> Bay calculations are completed. Hoppie messages sent only to those on testing list. No OzStrips notification.</li>

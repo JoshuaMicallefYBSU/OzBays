@@ -14,7 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('airports', function (Blueprint $table) {
-            $table->string('status',12)->nullable();
+            $table->string('stats_ground')->nullable();
+            $table->string('stats_inbound')->nullable();
         });
     }
 
@@ -26,7 +27,8 @@ return new class extends Migration
     public function down()
     {
         Schema::table('airports', function (Blueprint $table) {
-            $table->dropColumn(['status']);
+            $table->dropColumn(['stats_ground']);
+            $table->dropColumn(['stats_inbound']);
         });
     }
 };
