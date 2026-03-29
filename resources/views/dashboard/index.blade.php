@@ -18,7 +18,7 @@
                 </div>
             </div>
 
-            <div class="card mt-4">
+            {{-- <div class="card mt-4">
                 <div class="card-body">
                     <h3 class="card-title">Your Statistics, {{Auth::user()->fullName('F')}}</h3>
                     <p>Check out where you have flown on VATSIM in VATPAC Airspace. Records are updated once per day at approximatley 0030z. <br>Please Note: <i>Records only exist from April 2026, and only show for airports supported by OzBays.</i></p>
@@ -33,14 +33,11 @@
                         </div>
 
                         <div class="col-md-4">
-                            <p style="font-weight: bold; font-size: 18px;">Top Airport</p>
+                            <p style="font-weight: bold; font-size: 18px;">Top Arrival</p>
                         </div>
                     </div>
-                    
-
-                    {{-- Bay Assignment Options --}}
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <div class="col-md-4">

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use App\Services\VATSIMClient;
 use App\Services\DiscordClient;
@@ -250,14 +251,27 @@ class FlightData implements ShouldQueue
             }
         }
 
-        // dd($arrivalAircraft);
-
         // Input the ELT & EIBT Values only once at the beginning
         foreach($landingCalcs as $calc){
             Flights::updateOrCreate(['callsign' => $calc['cs']], [
                     'elt' => $calc['elt'],
                     'eibt' => $calc['eibt'],
                 ]);
+        }
+
+        // Alrighty. Need to record that the aircraft arrived at the Airport of choice
+        $arrivals = Flights::where('status', 'Arrived')->where('flight_recorded', 0)->where('online', 1)->get();
+        foreach($arrivals as $arr){
+            $stats = FlightLogs::create(['callsign' => $arr->callsign], [
+                'airline'   => preg_replace('/^[A-Za-z]+/', '', $arr->callsign),
+                'arrival'   => $arr->arr,
+                'type'      => $arr->type,
+                'aircraft'  => $arr->ac,
+                'user_id'   => $arr->cid,
+            ]);
+
+            $arr->flight_recorded = 1;
+            $arr->save();
         }
 
         // Delete entries once offline for 15 minutes
