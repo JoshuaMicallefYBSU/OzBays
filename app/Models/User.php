@@ -59,14 +59,40 @@ class User extends Authenticatable
     public function fullName($format)
     {
         if ($format == 'FLC') {
-            return $this->fname.' '.substr($this->lname, 0, 1).' - '.$this->id;
+            if($this->userPreferences->name_format == 0){
+                return $this->id;
+            } elseif($this->userPreferences->name_format == 1) {
+                return $this->fname.' - '.$this->id;
+            } elseif($this->userPreferences->name_format == 2) {
+                return $this->fname.' '.substr($this->lname, 0, 1).' - '.$this->id;
+            } elseif($this->userPreferences->name_format == 3) {
+                return $this->fname.' '.$this->lname.' - '.$this->id;
+            }
+            
         } elseif ($format === 'FL') {
-            return $this->fname.' '.substr($this->lname, 0, 1);
+            if($this->userPreferences->name_format == 0){
+                return $this->id;
+            } elseif($this->userPreferences->name_format == 1) {
+                return $this->fname;
+            } elseif($this->userPreferences->name_format == 2) {
+                return $this->fname.' '.substr($this->lname, 0, 1);
+            } elseif($this->userPreferences->name_format == 3) {
+                return $this->fname.' '.$this->lname;
+            }
         } elseif ($format === 'F') {
-            return $this->fname;
+            if($this->userPreferences->name_format == 0){
+                return $this->id;
+            } elseif($this->userPreferences->name_format == 1 && $this->userPreferences->name_format == 2 && $this->userPreferences->name_format == 3) {
+                return $this->fname;
+            }
         }
 
         return null;
+    }
+
+    public function userPreferences()
+    {
+        return $this->hasOne(UserPreference::class, 'user_id', 'id');
     }
 
     public function highestRole()

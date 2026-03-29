@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
 
         // Airport & Aircraft Data
         Permission::create(['name' => 'approve changes']);
+        Permission::create(['name' => 'update status']);
         Permission::create(['name' => 'view data']);
 
 
@@ -50,12 +51,13 @@ class DatabaseSeeder extends Seeder
             'delete users',
 
             'approve changes',
+            'update status',
             'view data'
         ]);
 
         $maintainer->syncPermissions([
             'approve changes',
-
+            'update status',
             'view data'
         ]);
         $contributor->syncPermissions([

@@ -16,6 +16,7 @@ use App\Models\BayConflicts;
 use App\Models\Flights;
 use App\Models\Airline;
 use App\Models\FlightLiveBays;
+use App\Models\UserPreference;
 
 class BayAllocation implements ShouldQueue
 {
@@ -699,6 +700,14 @@ class BayAllocation implements ShouldQueue
         ];
 
         $cid = (int) $cid;
+        $user_preferences = UserPreference::where('user_id', $cid)->first();
+        
+        if($user_preferences !== null){
+            if($user->preferences->hoppie_usage == 0)
+            // User preference section exists and it is set as do not do...
+            echo "Cancel Hoppie Message - User has it disabled";
+            return null; 
+        }
 
         $hoppie = app(HoppieClient::class);
         $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);

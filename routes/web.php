@@ -49,6 +49,8 @@ Route::get('/map/{icao}', [MapController::class, 'airportMap']);
 // Dashboard
 Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/my-settings', [DashboardController::class, 'settingsView'])->name('dashboard.settings.index');
+    Route::post('/my-settings/save', [DashboardController::class, 'settingsSave'])->name('dashboard.settings.save');
     
     // Discord Linking
     Route::get('/discord/unlink', [DiscordController::class, 'unlinkDiscord'])->name('dashboard.discord.unlink');

@@ -248,7 +248,7 @@ use Carbon\Carbon;
                 {{-- <a class="dropdown-item">{{Auth::user()->highestRole()->name}}</a>
                 <div class="dropdown-divider"></div> --}}
                 <a class="dropdown-item" href="{{route('dashboard.index')}}">Dashboard</a>
-                <a class="dropdown-item disabled" href="#">My Data</a>
+                {{-- <a class="dropdown-item disabled" href="#">My Data</a> --}}
                 <div class="dropdown-divider"></div> {{-- Divider --}}
                 <a class="dropdown-item" href="{{ route('auth.logout') }}"onclick="event.preventDefault();document.getElementById('logout-form').submit();">{{ __('Logout') }}</a><form id="logout-form" action="{{ route('auth.logout') }}" method="GET" class="d-none">@csrf</form>
               </div>

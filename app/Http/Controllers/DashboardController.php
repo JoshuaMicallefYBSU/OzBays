@@ -7,12 +7,30 @@ use Illuminate\Support\Facades\File;
 use App\Models\Airports;
 use App\Models\Bays;
 use App\Models\User;
+use App\Models\UserPreference;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         return view('dashboard.index');
+    }
+
+    public function settingsView()
+    {
+        return view('dashboard.settings.index');
+    }
+
+    public function settingsSave(Request $request)
+    {
+        // return $request->all();
+
+        $user = UserPreference::where('user_id', $request->id)->first();
+        $user->name_format = $request->name_format;
+        $user->hoppie_usage = $request->hoppie_usage;
+        $user->save();
+
+        return back()->with('success', 'Success!!! Your settings where updated!');
     }
 
     ################## ADMIN SECTION

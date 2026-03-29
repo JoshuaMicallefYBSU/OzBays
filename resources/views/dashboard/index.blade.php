@@ -15,10 +15,12 @@
         <div class="col-md-8">
             <div class="card mt-4">
                 <div class="card-body">
-                    <h3 class="card-title">Flight Info</h3>
+                    <h3 class="card-title">Flight Information | OzBays System</h3>
 
                     {{-- Flight Information --}}
                     <x id="flight-info"></x>
+
+                    {{-- Bay Assignment Options --}}
                 </div>
             </div>
         </div>
@@ -27,23 +29,19 @@
             <div class="card mt-4">
                 <div class="card-body">
                     <h3 class="card-title">My Profile</h3>
+
+                {{-- User Card --}}
                     <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <a disabled class="card-link" style="color: black; cursor:default">
-                                <h6 class="card-title mb-1"><i class="fa fa-sign-in"></i> {{Auth::user()->fullName('FLC')}}</h6>
+                                <h6 class="card-title mb-1"><i class="fa fa-user"></i> {{Auth::user()->fullName('FLC')}}</h6>
                                 <small class="text-muted"><b>Role: </b>{{Auth::user()->highestRole()->name}}</small><br>
-                                <small class="text-muted"><b>Discord: </b> @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small>
+                                {{-- <small class="text-muted"><b>Discord: </b> @if(Auth::user()->discord_user_id == null)Not Linked @else Linked @endif</small> --}}
                             </a>
                         </div>
                     </li>
-                </div>
-            </div>
 
-            <div class="card mt-4">
-                <div class="card-body">
-                    <h3 class="card-title">My Actions</h3>
-
-                    {{-- Link Discord --}}
+                {{-- Link Discord --}}
                     @if(Auth::user()->discord_user_id == null)
                     <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
@@ -80,16 +78,22 @@
                         </div>
                     </li>
                     @endif
+                </div>
+            </div>
 
-                    {{-- OzBays Settings --}}
-                    {{-- <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">My Actions</h3>
+
+                {{-- OzBays Settings --}}
+                    <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{route('dashboard.discord.link')}}" class="card-link" style="color: black;">
+                            <a href="{{route('dashboard.settings.index')}}" class="card-link" style="color: black;">
                                 <h6 class="card-title mb-1"><i class="fa fa-cog"></i> OzBays Settings</h6>
                                 <small class="text-muted">Edit your personal OzBays Preferences</small>
                             </a>
                         </div>
-                    </li> --}}
+                    </li>
 
                 </div>
             </div>
