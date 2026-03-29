@@ -451,7 +451,7 @@ class BayAllocation implements ShouldQueue
         if (!in_array($info->ac, $allowedTypes, true)) {
             Log::channel('aircraft')->error($info->ac . ' type does not exist');
             $discord = new DiscordClient();
-            $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
+            $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
             $ac = 'B738';
         } else {
             $ac = $info->ac;
