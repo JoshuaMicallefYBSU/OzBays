@@ -767,7 +767,7 @@ class BayAllocation implements ShouldQueue
         $user_preferences = UserPreference::where('user_id', $cid)->first();
         
         if($user_preferences !== null){
-            if($user->preferences->hoppie_usage == 0)
+            if($user_preferences->hoppie_usage == 0)
             // User preference section exists and it is set as do not do...
             echo "Cancel Hoppie Message - User has it disabled";
             return null; 

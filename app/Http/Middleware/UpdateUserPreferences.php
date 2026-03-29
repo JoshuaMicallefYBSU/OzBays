@@ -12,12 +12,12 @@ class UpdateUserPreferences
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $pref = UserPreference::where('user_id', Auth::user()->id)->first();
+        $userId = Auth::id();
 
-            if($pref == null){
-                UserPreference::create(['user_id' => Auth::user()->id]);
-            }
+        if ($userId) {
+            UserPreference::firstOrCreate([
+                'user_id' => $userId,
+            ]);
         }
 
         return $next($request);
