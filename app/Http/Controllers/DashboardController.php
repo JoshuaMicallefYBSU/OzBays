@@ -93,6 +93,28 @@ class DashboardController extends Controller
         return back()->with('success', 'Airport has successfully been activated! - YeeHaw!!!!');
     }
 
+    // Disable Airport Function
+    public function disableLiveAirport(Request $request)
+    {
+        $airport = Airports::where('icao', $request->icao)->first();
+
+        $airport->live_bays = 0;
+        $airport->save();
+
+        return back()->with('success', 'Airport Live Bay has successfully been disabled!');
+    }
+
+    // Activate Airport Function
+    public function activateLiveAirport(Request $request)
+    {
+        $airport = Airports::where('icao', $request->icao)->first();
+
+        $airport->live_bays = 1;
+        $airport->save();
+
+        return back()->with('success', 'Airport Live Bay has successfully been activated! - YeeHaw!!!!');
+    }
+
     // Aircraft.json view
     public function aircraftList()
     {

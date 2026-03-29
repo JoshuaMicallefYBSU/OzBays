@@ -34,6 +34,8 @@ Route::get('/map/{icao}', [MapController::class, 'airportMap']);
         Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
         Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
         Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
+        Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
+        Route::post('airport/live-activate', [DashboardController::class, 'activateLiveAirport'])->name('dashboard.admin.airport.live-activate');
         Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
         Route::post('airport/activate', [DashboardController::class, 'activateAirport'])->name('dashboard.admin.airport.activate');
         // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
