@@ -22,7 +22,7 @@
                                                 Real Aircraft scheduled to arrive at {{Auth::user()->isFlying->liveBay->bayInfo->terminal}}, {{Auth::user()->isFlying->liveBay->bayInfo->bay}} | Want a different bay? Request it below!
                                             @endif
                                         @else
-                                            Assigned Bay {{Auth::user()->isFlying->liveBay->bayInfo->terminal}}, {{Auth::user()->isFlying->mapBay->bay}} on Arrival | If unable, advise GND for alternate bay on first contact
+                                            Assigned Bay {{Auth::user()->isFlying->liveBay->bayInfo->terminal ?? null}} {{Auth::user()->isFlying->mapBay->bay}} on Arrival | If unable, advise GND for alternate bay on first contact
                                         @endif
                                     </small>
                                 </a>
