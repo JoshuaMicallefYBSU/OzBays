@@ -50,39 +50,41 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected static function booted(): void
+    {
+        static::created(function ($user) {
+            $user->userPreferences()->create();
+        });
+    }
 
     public function fullName($format)
     {
-        if ($format == 'FLC') {
-            if($this->userPreferences->name_format == 0){
+        $preferences = $this->getUserPreferencesOrCreate();
+
+        if ($format === 'FLC') {
+            if ($preferences->name_format == 0) {
                 return $this->id;
-            } elseif($this->userPreferences->name_format == 1) {
-                return $this->fname.' - '.$this->id;
-            } elseif($this->userPreferences->name_format == 2) {
-                return $this->fname.' '.substr($this->lname, 0, 1).' - '.$this->id;
-            } elseif($this->userPreferences->name_format == 3) {
-                return $this->fname.' '.$this->lname.' - '.$this->id;
+            } elseif ($preferences->name_format == 1) {
+                return $this->fname . ' - ' . $this->id;
+            } elseif ($preferences->name_format == 2) {
+                return $this->fname . ' ' . substr($this->lname, 0, 1) . ' - ' . $this->id;
+            } elseif ($preferences->name_format == 3) {
+                return $this->fname . ' ' . $this->lname . ' - ' . $this->id;
             }
-            
         } elseif ($format === 'FL') {
-            if($this->userPreferences->name_format == 0){
+            if ($preferences->name_format == 0) {
                 return $this->id;
-            } elseif($this->userPreferences->name_format == 1) {
+            } elseif ($preferences->name_format == 1) {
                 return $this->fname;
-            } elseif($this->userPreferences->name_format == 2) {
-                return $this->fname.' '.substr($this->lname, 0, 1);
-            } elseif($this->userPreferences->name_format == 3) {
-                return $this->fname.' '.$this->lname;
+            } elseif ($preferences->name_format == 2) {
+                return $this->fname . ' ' . substr($this->lname, 0, 1);
+            } elseif ($preferences->name_format == 3) {
+                return $this->fname . ' ' . $this->lname;
             }
         } elseif ($format === 'F') {
-            if($this->userPreferences->name_format == 0){
+            if ($preferences->name_format == 0) {
                 return $this->id;
-            } elseif($this->userPreferences->name_format == 1 && $this->userPreferences->name_format == 2 && $this->userPreferences->name_format == 3) {
+            } elseif (in_array($preferences->name_format, [1, 2, 3])) {
                 return $this->fname;
             }
         }
@@ -95,11 +97,26 @@ class User extends Authenticatable
         return $this->hasOne(UserPreference::class, 'user_id', 'id');
     }
 
+    public function getUserPreferencesOrCreate()
+    {
+        if ($this->relationLoaded('userPreferences') && $this->userPreferences) {
+            return $this->userPreferences;
+        }
+
+        $preferences = $this->userPreferences()->firstOrCreate([
+            'user_id' => $this->id,
+        ]);
+
+        $this->setRelation('userPreferences', $preferences);
+
+        return $preferences;
+    }
+
     public function highestRole()
     {
-        //If the user doesnt have a role, then give them one temporarily.
+        // If the user doesnt have a role, then give them one temporarily.
         if (count($this->roles) == 0) {
-            //Assign them guest
+            // Assign them guest
             $this->assignRole('Pilot');
         }
 
