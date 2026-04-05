@@ -6809,9 +6809,10 @@
                     "Type": null,
                     "Priority": 5
                 }
-            },
+            }
+        },
 
-            "YPAD": {
+        "YPAD": {
                 "icao": "YPAD",
                 "name": "Adelaide",
                 "lat": -34.94659219,
@@ -7045,4 +7046,3 @@
             }
         }
     }
-}
