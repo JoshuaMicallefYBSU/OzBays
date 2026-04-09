@@ -4,7 +4,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\UpdateLastSeen;
-use App\Http\Middleware\UpdateUserPreferences;
 use App\Services\DiscordClient;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,35 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             UpdateLastSeen::class,
-            UpdateUserPreferences::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('auth.sso.login'));
-    })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->report(function (Throwable $e) {
-            try {
-            $authUser = Auth::check() ? Auth::user() : null;
-
-            $authText = $authUser
-                ? 'Auth: ' . ($authUser->fullName('FLC'))
-                : 'Auth: Guest';
-
-            $message = "Message: {$e->getMessage()}\n"
-                . "File: {$e->getFile()}\n"
-                . "Line: {$e->getLine()}\n"
-                . $authText;
-
-            $discord = new DiscordClient();
-            $discord->sendMessageWithEmbed(
-                config('services.discord.' . config('app.env') . '.error_logs'),
-                'Server Error has Occurred',
-                $message,
-                'fc0303',
-            );
-        } catch (Throwable $discordError) {
-            // Swallow this so Discord failure does not break exception reporting
-        }
-        });
     })
 
     

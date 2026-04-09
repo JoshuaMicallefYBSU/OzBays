@@ -92,6 +92,10 @@ class AuthController extends Controller
             'lname'         => isset($response->data->personal->name_last) ? $response->data->personal->name_last : $response->data->cid,
         ]);
 
+        UserPreference::firstOrCreate([
+            'user_id' => $response->data->cid,
+        ]);
+
         $user->save();
         Auth::loginUsingId($user->id, true);
 

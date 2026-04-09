@@ -9,7 +9,7 @@
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">User</th>
-                    <th scope="col">Rating</th>
+                    <th scope="col">Role</th>
                     <th scope="col">Last Seen</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -19,8 +19,8 @@
                     <tr>
                         <td>{{$user->id}}</td>
                         <td>{{$user->fullName('FL')}}</td>
-                        <td>Not Recorded (Yet)</td>
-                        <td>{{\Carbon\Carbon::parse($user->last_seen)->format('d/m/Y @ h:i').'Z' ?? null}}</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
                         <td>N/A</td>
                     </tr>
                 @endforeach
