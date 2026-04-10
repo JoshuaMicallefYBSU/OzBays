@@ -96,10 +96,6 @@ class AuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        UserPreference::firstOrCreate([
-            'user_id' => $user->id,
-        ]);
-
         return redirect()->route('home')->with('success', "Welcome back, {$user->fullName('F')}!");
     }
 }
