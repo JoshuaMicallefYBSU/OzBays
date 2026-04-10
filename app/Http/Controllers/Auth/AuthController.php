@@ -11,26 +11,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use GuzzleHttp\Exception\ClientException;
 
-/**
- * Class AuthController.
- */
 class AuthController extends Controller
 {
-    /**
-     * Log the user out.
-     *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('home')->with('success', 'You have been signed out.');
     }
 
-    /*
-    Connect integration
-    */
     public function connectLogin()
     {
         session()->forget('state');
@@ -46,16 +38,15 @@ class AuthController extends Controller
             'state'           => $state,
         ]);
 
-        return redirect(config('connect.endpoint').'/oauth/authorize?'.$query);
+        return redirect(config('connect.endpoint') . '/oauth/authorize?' . $query);
     }
 
     public function validateConnectLogin(Request $request)
     {
-        //Written by Harrison Scott
         $http = new Client();
 
         try {
-            $response = $http->post(config('connect.endpoint').'/oauth/token', [
+            $response = $http->post(config('connect.endpoint') . '/oauth/token', [
                 'form_params' => [
                     'grant_type'    => 'authorization_code',
                     'client_id'     => config('connect.client_id'),
@@ -67,40 +58,46 @@ class AuthController extends Controller
         } catch (ClientException $e) {
             return redirect()->route('home')->with('error', $e->getMessage());
         }
-        session()->put('token', json_decode((string) $response->getBody(), true));
+
+        $request->session()->put('token', json_decode((string) $response->getBody(), true));
 
         try {
-            $response = (new Client())->get(config('connect.endpoint').'/api/user', [
+            $response = $http->get(config('connect.endpoint') . '/api/user', [
                 'headers' => [
                     'Accept'        => 'application/json',
-                    'Authorization' => 'Bearer '.session()->get('token.access_token'),
+                    'Authorization' => 'Bearer ' . $request->session()->get('token.access_token'),
                 ],
             ]);
         } catch (ClientException $e) {
             return redirect()->route('home')->with('error', $e->getMessage());
         }
+
         $response = json_decode($response->getBody());
 
         if (!isset($response->data->cid)) {
             return redirect()->route('home')->with('error', 'There was an error processing data from Connect (No CID)');
         }
+
         if (!isset($response->data->vatsim->rating)) {
             return redirect()->route('home')->with('error', 'We cannot create an account without VATSIM details.');
         }
 
-        // Time to create the user
-        $user = User::updateOrCreate(['id' => $response->data->cid], [
-            'email'         => isset($response->data->personal->email) ? $response->data->personal->email : 'no-reply@ganderoceanic.ca',
-            'fname'         => isset($response->data->personal->name_first) ? utf8_decode($response->data->personal->name_first) : $response->data->cid,
-            'lname'         => isset($response->data->personal->name_last) ? $response->data->personal->name_last : $response->data->cid,
-        ]);
+        $user = User::updateOrCreate(
+            ['id' => $response->data->cid],
+            [
+                'email' => $response->data->personal->email ?? 'no-reply@ganderoceanic.ca',
+                'fname' => isset($response->data->personal->name_first)
+                    ? utf8_decode($response->data->personal->name_first)
+                    : $response->data->cid,
+                'lname' => $response->data->personal->name_last ?? $response->data->cid,
+            ]
+        );
 
-        $user->save();
-        Auth::loginUsingId($user->id, true);
+        Auth::login($user, true);
+        $request->session()->regenerate();
 
-        // Add User Preferences
         UserPreference::firstOrCreate([
-            'user_id' => $response->data->cid,
+            'user_id' => $user->id,
         ]);
 
         return redirect()->route('home')->with('success', "Welcome back, {$user->fullName('F')}!");
