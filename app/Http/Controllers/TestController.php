@@ -23,11 +23,11 @@ class TestController extends Controller
         // Call the handle method directly to get the result synchronously
         // $result = $job->handle();
         $result2 = $job2->handle();
-        $result3 = $job3->handle();
+        // $result3 = $job3->handle();
         // $result4 = $job4->handle();
 
-        // return response()->json([
-        //     'message' => 'Job executed successfully'
-        // ]);
+        return response()->json([
+            'message' => 'Job executed successfully'
+        ]);
     }
 }

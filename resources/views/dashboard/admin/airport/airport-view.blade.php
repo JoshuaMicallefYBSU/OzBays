@@ -41,6 +41,14 @@
                         </div>
                         <input type="text" class="form-control" value="{{$airport->status}}">
                     </div>
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">Live Bay</span>
+                        </div>
+                        @if($airport->live_bays == 0)<input type="text" class="form-control" value="Inactive">@endif
+                        @if($airport->live_bays == 1)<input type="text" class="form-control" value="Active">@endif
+                    </div>
                 </div>
 
                 {{-- Middle Collum --}}
@@ -58,6 +66,13 @@
                         </div>
                         <input type="text" class="form-control" value="{{$airport->lon}}">
                     </div>
+                    
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">Live Group</span>
+                        </div>
+                        <input type="text" class="form-control" value="{{$airport->live_type}}">
+                    </div>
                 </div>
 
                 {{-- Right Collum --}}
@@ -74,6 +89,13 @@
                             <span class="input-group-text" id="basic-addon1">taxi</span>
                         </div>
                         <input type="text" class="form-control" value="{{$airport->taxi_time}}">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">Live Times</span>
+                        </div>
+                        <input type="text" class="form-control" value="{{$airport->live_update_times}}">
                     </div>
                 </div>
             </div>
@@ -101,20 +123,39 @@
                         @endforeach
                     </tbody>
                 </table>
-
         </div>
 
         {{-- Map Section --}}
         <div class="col-md-4">
-            {{-- Create quick disable button incase something goes wrong in production --}}
-            @if($airport->status == 'active' && Auth::user()->hasRole('Maintainer'))
-                <a data-target="#disableAirportModal" data-toggle="modal" style="cursor: pointer" class="btn btn-danger">Disable Airport</a><br>
-            @endif
+            <div class="row" style="margin-bottom: 10px;">
 
-            {{-- Create quick disable button incase something goes wrong in production --}}
-            @if($airport->status == 'testing' && Auth::user()->hasRole('Maintainer'))
-                <a data-target="#activateAirportModal" data-toggle="modal" style="cursor: pointer" class="btn btn-success">Activate Airport</a><br>
-            @endif
+                {{-- Airport Status --}}
+                @if($airport->status == 'testing')
+                    @can('update status')
+                        <a data-target="#activateAirportModal" data-toggle="modal" style="cursor: pointer" class="btn btn-success">Activate Airport</a><br>
+                    @endcan
+                @endif
+
+                @if($airport->status == 'active')
+                    @can('update status')
+                        <a data-target="#disableAirportModal" data-toggle="modal" style="cursor: pointer" class="btn btn-danger">Disable Airport</a><br>
+                    @endcan
+                @endif
+
+                {{-- Live Bays Status --}}
+                @if($airport->live_bays == 0)
+                    @can('update status')
+                        <a data-target="#activateLiveModal" data-toggle="modal" style="cursor: pointer; margin-left: 10px;" class="btn btn-success">Activate Live Bays</a><br>
+                    @endcan
+                @endif
+
+                @if($airport->live_bays == 1)
+                    @can('update status')
+                        <a data-target="#deactivateLiveModal" data-toggle="modal" style="cursor: pointer; margin-left: 10px;" class="btn btn-danger">Deactivate Live Bays</a><br>
+                    @endcan
+                @endif
+                
+            </div>
 
             <iframe
                 src="{{ route('mapIndex', ['lat' => $airport->lat, 'lon' => $airport->lon, 'zoom' => '12.5', 'hide_info' => true]) }}"
@@ -173,6 +214,62 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
                         <input type="submit" class="btn btn-success" value="Activate {{$airport->icao}}">
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- Activate Live Bays Modal --}}
+    <div class="modal fade" id="activateLiveModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Are you sure?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                
+                <form action="{{route('dashboard.admin.airport.live-activate')}}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>This will mark the Live Bay status as 'Active', which will <b>enable</b> pulling IRL Flight Data via the FlightAware API.</p>
+
+                        <input required type="hidden" value={{$airport->icao}} name="icao" maxlength="9" id="" class="form-control">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-success" value="Activate {{$airport->icao}} Live Bays">
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- Disable Live Bays Modal --}}
+    <div class="modal fade" id="deactivateLiveModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Are you sure?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                
+                <form action="{{route('dashboard.admin.airport.live-disable')}}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>This will deactivate the live bay functionality for {{$airport->icao}}.</p>
+
+                        <input required type="hidden" value={{$airport->icao}} name="icao" maxlength="9" id="" class="form-control">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-danger" value="Deactivate {{$airport->icao}} Live Bays">
                     </div>
                 </form>
 

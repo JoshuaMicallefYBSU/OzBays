@@ -5,12 +5,6 @@
 <h3>Welcome to your OzBays Dashboard, {{Auth::user()->fullName('F')}}</h3>
 <p>Your one stop shop for everything for your OzBays Experience,</p>
 
-@include('partials.message', [
-    'type' => 'info',
-    'message' => "Clearly, it's like a barren wasteland here. As OzBays gains in popularity and functionality, more and more options will appear here. 
-    <br><i>Announcements for new functionality will be released in the OzBays Discord in the <u>#ozbays-changes</u> channel.</i>"
-])
-
     <div class="row">
         <div class="col-md-8">
             <div class="card mt-4">
@@ -23,6 +17,27 @@
                     {{-- Bay Assignment Options --}}
                 </div>
             </div>
+
+            {{-- <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">Your Statistics, {{Auth::user()->fullName('F')}}</h3>
+                    <p>Check out where you have flown on VATSIM in VATPAC Airspace. Records are updated once per day at approximatley 0030z. <br>Please Note: <i>Records only exist from April 2026, and only show for airports supported by OzBays.</i></p>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p style="font-weight: bold; font-size: 18px; font-style">Top Airlines</p>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <p style="font-weight: bold; font-size: 18px;">Top Aircraft</p>
+                        </div>
+
+                        <div class="col-md-4">
+                            <p style="font-weight: bold; font-size: 18px;">Top Arrival</p>
+                        </div>
+                    </div>
+                </div>
+            </div> --}}
         </div>
 
         <div class="col-md-4">
