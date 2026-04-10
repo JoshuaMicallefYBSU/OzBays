@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use GuzzleHttp\Client;
 use App\Models\User;
+use App\Models\UserPreference;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
