@@ -87,18 +87,21 @@ class AuthController extends Controller
         if (!isset($response->data->vatsim->rating)) {
             return redirect()->route('home')->with('error', 'We cannot create an account without VATSIM details.');
         }
+
+        // Time to create the user
         $user = User::updateOrCreate(['id' => $response->data->cid], [
             'email'         => isset($response->data->personal->email) ? $response->data->personal->email : 'no-reply@ganderoceanic.ca',
             'fname'         => isset($response->data->personal->name_first) ? utf8_decode($response->data->personal->name_first) : $response->data->cid,
             'lname'         => isset($response->data->personal->name_last) ? $response->data->personal->name_last : $response->data->cid,
         ]);
 
+        $user->save();
+        Auth::loginUsingId($user->id, true);
+
+        // Add User Preferences
         UserPreference::firstOrCreate([
             'user_id' => $response->data->cid,
         ]);
-
-        $user->save();
-        Auth::loginUsingId($user->id, true);
 
         return redirect()->route('home')->with('success', "Welcome back, {$user->fullName('F')}!");
     }
