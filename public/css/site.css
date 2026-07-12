@@ -1612,6 +1612,16 @@ footer.oz-footer .copyright * {
     font-weight: 700;
 }
 
+.oz-gate-message-area {
+    min-height: 3.6rem;
+    display: grid;
+    align-items: center;
+}
+
+.oz-gate-message-area--alert .oz-gate-helptext {
+    display: none;
+}
+
 .oz-gate-updated {
     margin-top: 1rem;
     color: rgba(255, 224, 138, 0.5);
@@ -1621,22 +1631,18 @@ footer.oz-footer .copyright * {
 }
 
 .oz-gate-alert {
-    position: fixed;
-    z-index: 30;
-    top: clamp(0.8rem, 2vw, 1.5rem);
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    max-width: min(92vw, 980px);
-    padding: 0.8rem 1rem;
-    border: 2px solid var(--oz-amber);
+    width: 100%;
+    padding: clamp(0.7rem, 1.4vw, 1rem) clamp(0.85rem, 1.8vw, 1.3rem);
+    border: 2px solid var(--oz-amber-strong);
     background: var(--oz-amber);
     color: var(--oz-navy-text);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.18), 0 14px 32px rgba(0, 0, 0, 0.35);
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: clamp(0.9rem, 2vw, 1.4rem);
+    font-size: clamp(1rem, 1.85vw, 1.55rem);
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -1692,7 +1698,7 @@ footer.oz-footer .copyright * {
 
 @media (prefers-reduced-motion: no-preference) {
     .oz-gate-alert:not([hidden]) {
-        animation: oz-gate-alert-flash 1.4s ease-out 2;
+        animation: oz-gate-alert-flash 1.4s ease-in-out infinite;
     }
 }
 

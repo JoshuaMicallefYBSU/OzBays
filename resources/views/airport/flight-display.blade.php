@@ -4,11 +4,6 @@
 
 @section('content')
 <main class="oz-gate-display-shell" data-partial-url="{{ route('airport.flight-display.partial', ['icao' => $display['airport']->icao, 'callsign' => $display['flight']->callsign]) }}">
-    <div id="oz-gate-alert" class="oz-gate-alert" role="status" aria-live="assertive" hidden>
-        <span id="oz-gate-alert-text"></span>
-        <button type="button" id="oz-gate-alert-close" aria-label="Dismiss gate change message">×</button>
-    </div>
-
     <div class="oz-gate-display-toolbar">
         <span><i class="fas fa-circle" aria-hidden="true"></i> Live Gate Information</span>
         <span class="oz-gate-display-clock" id="oz-gate-clock">--:--:-- UTC</span>

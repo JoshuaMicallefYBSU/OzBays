@@ -69,11 +69,17 @@
             @endif
         </div>
 
-        <p class="oz-gate-helptext">
-            {{ $display['direction'] === 'departure'
-                ? 'Please remain near the gate area and monitor this display for boarding updates.'
-                : 'Gate information updates automatically as the aircraft progresses to stand.' }}
-        </p>
+        <div class="oz-gate-message-area">
+            <p class="oz-gate-helptext">
+                {{ $display['direction'] === 'departure'
+                    ? 'Please remain near the gate area and monitor this display for boarding updates.'
+                    : 'Gate information updates automatically as the aircraft progresses to stand.' }}
+            </p>
+            <div id="oz-gate-alert" class="oz-gate-alert" role="status" aria-live="assertive" hidden>
+                <span id="oz-gate-alert-text"></span>
+                <button type="button" id="oz-gate-alert-close" aria-label="Dismiss gate change message">×</button>
+            </div>
+        </div>
         <div class="oz-gate-updated">Updated {{ $display['rendered_at']->format('H:i:s') }} UTC</div>
     </section>
 </div>
