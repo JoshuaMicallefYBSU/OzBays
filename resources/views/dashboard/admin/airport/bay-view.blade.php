@@ -100,7 +100,7 @@
 
     <div class="col-md-4">
         <iframe
-            src="{{ route('mapIndex', ['lat' => $bay->lat, 'lon' => $bay->lon, 'zoom' => '16', 'hide_info' => true]) }}"
+            src="{{ route('mapEmbed', ['lat' => $bay->lat, 'lon' => $bay->lon, 'zoom' => '16', 'hide_info' => true]) }}"
             style="width:100%; height:500px; border:none;"
         ></iframe>
     </div>

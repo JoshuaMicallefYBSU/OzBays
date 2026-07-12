@@ -158,7 +158,7 @@
             </div>
 
             <iframe
-                src="{{ route('mapIndex', ['lat' => $airport->lat, 'lon' => $airport->lon, 'zoom' => '12.5', 'hide_info' => true]) }}"
+                src="{{ route('mapEmbed', ['lat' => $airport->lat, 'lon' => $airport->lon, 'zoom' => '12.5', 'hide_info' => true]) }}"
                 style="width:100%; height:500px; border:none;"
             ></iframe>
         </div>

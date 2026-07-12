@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use App\Models\Airports;
 use App\Models\Bays;
+use App\Models\MissingAircraftType;
 use App\Models\User;
 use App\Models\UserPreference;
 use Spatie\Permission\Models\Role;
@@ -207,8 +208,11 @@ class DashboardController extends Controller
             return strcmp((string)$a, (string)$b);
         });
 
+        $missingTypes = MissingAircraftType::orderByDesc('count')->get();
+
         return view('dashboard.admin.aircraft.index', [
             'groups' => $groups,
+            'missingTypes' => $missingTypes,
         ]);
     }
 }
