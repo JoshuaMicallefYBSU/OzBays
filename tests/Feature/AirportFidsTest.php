@@ -26,7 +26,7 @@ class AirportFidsTest extends TestCase
             ->assertOk()
             ->assertSee('Destination')
             ->assertSee('Gate Open')
-            ->assertSee('Qantas')
+            ->assertDontSee('Qantas')
             ->assertSee('img/airlines/QFA.svg');
     }
 

@@ -40,9 +40,14 @@
                             @endif
                             <span @if($logo) hidden @endif>{{ $row['operator'] }}</span>
                         </span>
-                        <span class="oz-fids-callsign">{{ $row['callsign'] }}</span>
+                        <a
+                            class="oz-fids-callsign oz-fids-callsign-link"
+                            href="{{ route('airport.flight-display', ['icao' => $icao, 'callsign' => $row['callsign']]) }}"
+                            target="_blank"
+                            rel="noopener"
+                            aria-label="Open gate display for {{ $row['callsign'] }}"
+                        >{{ $row['callsign'] }}</a>
                     </span>
-                    @if ($airline?->name)<span class="oz-fids-airline">{{ $airline->name }}</span>@endif
                 </div>
                 <div class="oz-fids-col oz-fids-col--type">{{ $row['ac'] ?? '--' }}</div>
                 <div class="oz-fids-col oz-fids-col--origin">{{ $isDepartures ? ($row['destination'] ?? '--') : ($row['origin'] ?? '--') }}</div>
