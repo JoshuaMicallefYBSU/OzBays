@@ -217,7 +217,12 @@ class BayAllocation implements ShouldQueue
                     $bay->delete();
 
                     $discord = new DiscordClient;
-                    $discord->sendMessageWithEmbed($discordChannel, 'Aircraft Diversion / Refile | '.$flight->callsign, 'Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay '.$bay->bay_core.' at '.$bay->airport.' has now been marked as available.', 'fc1c03');
+                    try {
+                        $discord->sendMessageWithEmbed($discordChannel, 'Aircraft Diversion / Refile | '.$flight->callsign, 'Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay '.$bay->bay_core.' at '.$bay->airport.' has now been marked as available.', 'fc1c03');
+                    } catch (\Exception $e) {
+                        // if discord fails, log the error, but don't kill the whole job
+                        Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+                    }
                     break;
                 }
             }
@@ -432,7 +437,12 @@ class BayAllocation implements ShouldQueue
         if (! in_array($info->ac, $allowedTypes, true)) {
             Log::channel('aircraft')->error($info->ac.' type does not exist');
             $discord = new DiscordClient;
-            $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
+            try {
+                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
+            } catch (\Exception $e) {
+                // if discord fails, log the error, but don't kill the whole job
+                Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+            }
             $ac = 'B738';
         } else {
             $ac = $info->ac;
@@ -674,7 +684,12 @@ class BayAllocation implements ShouldQueue
 
                 // Send Discord Embed Message
                 $discord = new DiscordClient;
-                $discord->sendMessageWithEmbed($discordChannel, 'Bay Assigned | '.$info['cs'].', '.$info['ac'], ' '.$value->bay.' inbound '.$info['arr']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', '27F58B');
+                try {
+                    $discord->sendMessageWithEmbed($discordChannel, 'Bay Assigned | '.$info['cs'].', '.$info['ac'], ' '.$value->bay.' inbound '.$info['arr']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', '27F58B');
+                } catch (\Exception $e) {
+                    // if discord fails, log the error, but don't kill the whole job
+                    Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+                }
 
                 // Hoppie CPDLC Message
                 $version = 1;
@@ -694,7 +709,12 @@ class BayAllocation implements ShouldQueue
 
                 // Send Discord Embed Message
                 $discord = new DiscordClient;
-                $discord->sendMessageWithEmbed($discordChannel, 'Bay Re-Assignment | '.$info['cs'].', '.$info['ac'], ' Bay '.$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay.' inbound '.$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', 'fca503');
+                try {
+                    $discord->sendMessageWithEmbed($discordChannel, 'Bay Re-Assignment | '.$info['cs'].', '.$info['ac'], ' Bay '.$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay.' inbound '.$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', 'fca503');
+                } catch (\Exception $e) {
+                    // if discord fails, log the error, but don't kill the whole job
+                    Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+                }
 
                 // Hoppie CPDLC Message
                 $version = 2;
@@ -711,7 +731,12 @@ class BayAllocation implements ShouldQueue
         } catch (\Throwable $e) {
             Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
             $discord = new DiscordClient;
-            $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
+            try {
+                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
+            } catch (\Exception $e) {
+                // if discord fails, log the error, but don't kill the whole job
+                Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+            }
 
             return null; // <-- This prevents the outer loop from crashing
         }
@@ -780,7 +805,12 @@ class BayAllocation implements ShouldQueue
                     $hoppie->sendTelex($arr, $flight, $Uplink);
 
                     $discord = new DiscordClient;
-                    $discord->sendMessageWithEmbed($discordChannel, $flight.' | CPDLC UPLINK', $Uplink, '808080');
+                    try {
+                        $discord->sendMessageWithEmbed($discordChannel, $flight.' | CPDLC UPLINK', $Uplink, '808080');
+                    } catch (\Exception $e) {
+                        // if discord fails, log the error, but don't kill the whole job
+                        Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+                    }
                 }
             } else {
                 Log::channel('hoppie')->error($flight.' not connected to Hoppie Network. Exiting.');
