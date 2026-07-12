@@ -14,6 +14,7 @@ class Airline extends Model
     protected $fillable = [
         'icao',
         'name',
+        'logo_path',
         'freight_regex',
     ];
 
