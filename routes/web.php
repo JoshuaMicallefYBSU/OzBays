@@ -130,7 +130,7 @@ Route::prefix('auth')->group(function () {
 
 // PARTIALS SECTIONS
 Route::prefix('partial')->group(function () {
-    Route::get('/airport/ladder/{icao}', [PartialsController::class, 'updateLadder']);
+    Route::get('/airport/ladder/{icao}', [PartialsController::class, 'updateLadder'])->name('airportLadderPartial');
     Route::get('/dashboard/flight-info', [PartialsController::class, 'updateFlights']);
     Route::get('/home/airport-stats', [PartialsController::class, 'updateAirportStats']);
     Route::get('/notifications', [PartialsController::class, 'updateNotifications'])->middleware('auth');

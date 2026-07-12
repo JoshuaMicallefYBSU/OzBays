@@ -881,6 +881,13 @@ footer.oz-footer .copyright * {
     margin-bottom: 1.5rem;
 }
 
+/* The FIDS is intended to be read at a distance, so it receives a wider
+   stage than the standard content pages without changing the global shell. */
+.container.oz-airport-fids-page {
+    width: min(100% - 2rem, 1640px);
+    max-width: none;
+}
+
 .oz-board-title {
     display: flex;
     align-items: baseline;
@@ -907,6 +914,42 @@ footer.oz-footer .copyright * {
     gap: 0.2rem;
 }
 
+.oz-board-mode-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    color: var(--oz-text-muted);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.oz-board-mode-control select {
+    appearance: none;
+    min-width: 112px;
+    padding: 0.28rem 1.65rem 0.28rem 0.5rem;
+    border: 1px solid rgba(255, 199, 44, 0.55);
+    border-radius: 0;
+    background: var(--oz-bg-alt);
+    background-image: linear-gradient(45deg, transparent 50%, var(--oz-amber) 50%), linear-gradient(135deg, var(--oz-amber) 50%, transparent 50%);
+    background-position: calc(100% - 11px) 50%, calc(100% - 7px) 50%;
+    background-repeat: no-repeat;
+    background-size: 4px 4px, 4px 4px;
+    color: var(--oz-amber-soft);
+    font: inherit;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.oz-board-mode-control select:focus {
+    outline: 2px solid var(--oz-amber-soft);
+    outline-offset: 2px;
+}
+
 .oz-board-clock-label {
     font-size: 0.72rem;
     font-weight: 700;
@@ -923,13 +966,95 @@ footer.oz-footer .copyright * {
     letter-spacing: 0.05em;
 }
 
-/* ---------- FIDS arrivals board ---------- */
+/* ---------- Airport FIDS board ---------- */
 .oz-fids {
-    background: var(--oz-bg-alt);
-    border: 1px solid var(--oz-border-strong);
-    border-radius: var(--oz-radius);
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    --oz-fids-ink: #05080d;
+    --oz-fids-grid: rgba(255, 199, 44, 0.22);
+    background: var(--oz-fids-ink);
+    border: 3px solid var(--oz-amber);
+    border-radius: 0;
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.52), 0 0 0 1px rgba(255, 224, 138, 0.2);
     overflow: hidden;
+}
+
+.oz-fids-terminal-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    min-height: 58px;
+    background: var(--oz-amber);
+    color: var(--oz-navy-text);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.oz-fids-terminal-mark {
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 1.2rem;
+    background: var(--oz-bg);
+    color: var(--oz-amber-soft);
+    letter-spacing: 0.08em;
+}
+
+.oz-fids-terminal-title {
+    padding: 0 1.1rem;
+    font-size: clamp(1.15rem, 3vw, 1.7rem);
+    letter-spacing: -0.06em;
+}
+
+.oz-fids-terminal-live {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    padding: 0 1.2rem;
+    font-size: 0.67rem;
+    letter-spacing: 0.07em;
+    text-align: right;
+}
+
+.oz-fids-cycle {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.1rem 0.35rem;
+    min-width: 138px;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px solid rgba(22, 33, 10, 0.35);
+    color: var(--oz-navy-text);
+    font-size: 0.56rem;
+    line-height: 1.1;
+    letter-spacing: 0.05em;
+}
+
+.oz-fids-cycle strong {
+    text-align: right;
+    font-size: 0.64rem;
+}
+
+.oz-fids-cycle-track {
+    grid-column: 1 / -1;
+    display: block;
+    height: 3px;
+    overflow: hidden;
+    background: rgba(22, 33, 10, 0.25);
+}
+
+.oz-fids-cycle-track span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--oz-navy-text);
+    transition: width 180ms linear;
+}
+
+.oz-fids-terminal-live i {
+    color: var(--oz-bg);
+    font-size: 0.55rem;
+    vertical-align: 1px;
 }
 
 .oz-fids-scroll {
@@ -938,12 +1063,12 @@ footer.oz-footer .copyright * {
 
 .oz-fids-row {
     display: grid;
-    grid-template-columns: 130px 1.4fr 90px 90px 130px 90px 140px;
+    grid-template-columns: 116px 1.5fr 82px 1fr 86px 100px 122px;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.85rem 1.25rem;
-    min-width: 780px;
-    border-bottom: 1px solid var(--oz-border);
+    gap: 0;
+    min-width: 760px;
+    border-bottom: 1px solid var(--oz-fids-grid);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
 .oz-fids-row:last-child {
@@ -951,107 +1076,233 @@ footer.oz-footer .copyright * {
 }
 
 .oz-fids-row:not(.oz-fids-head):nth-child(even) {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 199, 44, 0.035);
+}
+
+.oz-fids-row:not(.oz-fids-head) {
+    min-height: 58px;
+    color: var(--oz-amber-soft);
+    text-shadow: 0 0 9px rgba(255, 199, 44, 0.16);
+}
+
+.oz-fids-row:not(.oz-fids-head):hover {
+    background: rgba(255, 199, 44, 0.1);
 }
 
 .oz-fids-head {
-    background: rgba(255, 255, 255, 0.03);
-    font-size: 0.72rem;
+    min-height: 31px;
+    background: var(--oz-surface);
+    font-size: 0.62rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: var(--oz-text-muted);
+    letter-spacing: 0.13em;
+    color: var(--oz-amber-soft);
 }
 
-.oz-fids-col--flight,
-.oz-fids-col--type,
-.oz-fids-col--origin,
-.oz-fids-col--bay,
-.oz-fids-col--dist,
-.oz-fids-col--time {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+.oz-fids-col {
+    min-width: 0;
+    padding: 0.45rem 0.7rem;
+    border-right: 1px solid var(--oz-fids-grid);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.oz-fids-col:last-child {
+    border-right: 0;
 }
 
 .oz-fids-callsign {
-    display: block;
-    font-weight: 600;
-    color: var(--oz-text);
-    letter-spacing: 0.03em;
+    font-weight: 800;
+    color: var(--oz-amber-soft);
+    letter-spacing: 0.04em;
 }
 
 .oz-fids-airline {
     display: block;
-    font-family: 'Inter', ui-sans-serif, sans-serif;
-    font-size: 0.72rem;
-    color: var(--oz-text-muted);
+    margin-left: 36px;
+    font-size: 0.6rem;
+    color: rgba(255, 224, 138, 0.65);
+    letter-spacing: 0.04em;
 }
 
 .oz-fids-bay {
     display: block;
     font-weight: 600;
-    color: var(--oz-text);
+    color: var(--oz-amber-soft);
 }
 
 .oz-fids-bay--tba {
-    color: var(--oz-text-muted);
+    color: rgba(255, 224, 138, 0.58);
     font-weight: 500;
 }
 
 .oz-fids-terminal {
     display: block;
-    font-family: 'Inter', ui-sans-serif, sans-serif;
     font-size: 0.72rem;
-    color: var(--oz-text-muted);
+    color: rgba(255, 224, 138, 0.58);
 }
 
 .oz-fids-time {
     display: block;
     font-weight: 600;
-    color: var(--oz-text);
+    color: var(--oz-amber-soft);
 }
 
 .oz-fids-time-label {
     display: block;
-    font-family: 'Inter', ui-sans-serif, sans-serif;
     font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--oz-text-muted);
+    color: rgba(255, 224, 138, 0.58);
 }
 
 .oz-fids-status {
     display: inline-flex;
     align-items: center;
-    font-size: 0.72rem;
+    font-size: 0.64rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 0.3rem 0.6rem;
-    border-radius: 999px;
+    padding: 0;
+    border-radius: 0;
     white-space: nowrap;
 }
 
+.oz-fids-status--gate-open,
+.oz-fids-status--arriving,
 .oz-fids-status--inbound {
-    color: #8ecbff;
-    background: rgba(96, 165, 250, 0.12);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-}
-
-.oz-fids-status--taxiing {
     color: var(--oz-amber-soft);
-    background: rgba(255, 199, 44, 0.12);
-    border: 1px solid rgba(255, 199, 44, 0.3);
+    background: transparent;
+    border: 0;
 }
 
-.oz-fids-status--boarding {
-    color: #7ee2a8;
-    background: rgba(52, 211, 153, 0.12);
-    border: 1px solid rgba(52, 211, 153, 0.3);
+.oz-fids-status--boarding,
+.oz-fids-status--landed {
+    color: var(--oz-amber);
+    background: transparent;
+    border: 0;
+}
+
+.oz-fids-status--final-call,
+.oz-fids-status--arrived {
+    color: var(--oz-amber-strong);
+    background: transparent;
+    border: 0;
+}
+
+.oz-fids-status--closed,
+.oz-fids-status--departed {
+    color: rgba(255, 224, 138, 0.45);
+    background: transparent;
+    border: 0;
+}
+
+.oz-fids-flight-ident {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.oz-fids-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 22px;
+    flex: 0 0 30px;
+    overflow: hidden;
+    border: 1px solid var(--oz-fids-grid);
+    border-radius: 0;
+    color: var(--oz-amber);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.oz-fids-logo img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .oz-fids-empty {
-    padding: 2.5rem 1.25rem;
+    padding: 3rem 1.25rem;
     text-align: center;
-    color: var(--oz-text-muted);
-    font-size: 0.95rem;
+    color: var(--oz-amber-soft);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 575.98px) {
+    .oz-fids-terminal-bar {
+        min-height: 48px;
+    }
+
+    .oz-fids-terminal-mark,
+    .oz-fids-terminal-live {
+        display: none;
+    }
+
+    .oz-fids-terminal-title {
+        padding: 0 0.85rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .oz-airport-fids-page .oz-board-header {
+        padding-top: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-bar {
+        min-height: 76px;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-mark {
+        padding-inline: 1.6rem;
+        font-size: 1.1rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-title {
+        font-size: 2.25rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-live {
+        padding-right: 1.6rem;
+        font-size: 0.75rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-row {
+        grid-template-columns: 1.1fr 1.8fr 0.8fr 1.55fr 0.85fr 1fr 1.15fr;
+        min-width: 0;
+    }
+
+    .oz-airport-fids-page .oz-fids-row:not(.oz-fids-head) {
+        min-height: 72px;
+        font-size: 1.04rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-head {
+        min-height: 38px;
+        font-size: 0.68rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-col {
+        padding: 0.55rem 1rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-status {
+        font-size: 0.76rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-airline {
+        font-size: 0.67rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-time-label {
+        font-size: 0.7rem;
+    }
 }
