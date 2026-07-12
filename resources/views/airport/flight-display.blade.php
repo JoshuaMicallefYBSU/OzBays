@@ -21,12 +21,11 @@
 <script>
     const gateShell = document.querySelector('.oz-gate-display-shell');
     const displayContent = document.getElementById('oz-gate-display-content');
-    const alertBox = document.getElementById('oz-gate-alert');
-    const alertText = document.getElementById('oz-gate-alert-text');
     const fullscreenButton = document.getElementById('oz-gate-fullscreen');
     let lastGateKey = displayContent.querySelector('[data-gate-key]')?.dataset.gateKey ?? 'unassigned';
     let gateRequest = null;
     let pollingStopped = false;
+    let activeGateAlertMessage = null;
 
     function tickGateClock() {
         const clock = document.getElementById('oz-gate-clock');
@@ -42,8 +41,13 @@
     }
 
     function showGateAlert(message) {
+        const alertBox = document.getElementById('oz-gate-alert');
+        const alertText = document.getElementById('oz-gate-alert-text');
+        const messageArea = alertBox.closest('.oz-gate-message-area');
+        activeGateAlertMessage = message;
         alertText.textContent = message;
         alertBox.hidden = false;
+        messageArea.classList.add('oz-gate-message-area--alert');
     }
 
     function refreshGateDisplay() {
@@ -65,11 +69,15 @@
                 const template = document.createElement('template');
                 template.innerHTML = html;
                 const nextPanel = template.content.querySelector('[data-gate-key]');
-                if (nextPanel && nextPanel.dataset.gateKey !== lastGateKey) {
-                    showGateAlert(gateMessage(nextPanel));
-                    lastGateKey = nextPanel.dataset.gateKey;
-                }
+                const gateChanged = nextPanel && nextPanel.dataset.gateKey !== lastGateKey;
+                const message = gateChanged ? gateMessage(nextPanel) : null;
+                if (gateChanged) lastGateKey = nextPanel.dataset.gateKey;
                 displayContent.replaceChildren(template.content);
+                if (message) {
+                    showGateAlert(message);
+                } else if (activeGateAlertMessage) {
+                    showGateAlert(activeGateAlertMessage);
+                }
             })
             .catch(error => {
                 if (error.name !== 'AbortError') gateShell.classList.add('oz-gate-display-shell--stale');
@@ -96,7 +104,14 @@
         document.documentElement.requestFullscreen();
     });
     document.addEventListener('fullscreenchange', updateFullscreenLabel);
-    document.getElementById('oz-gate-alert-close').addEventListener('click', () => alertBox.hidden = true);
+    document.addEventListener('click', event => {
+        if (event.target.closest('#oz-gate-alert-close')) {
+            activeGateAlertMessage = null;
+            const alertBox = document.getElementById('oz-gate-alert');
+            alertBox.hidden = true;
+            alertBox.closest('.oz-gate-message-area').classList.remove('oz-gate-message-area--alert');
+        }
+    });
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') refreshGateDisplay();
     });
