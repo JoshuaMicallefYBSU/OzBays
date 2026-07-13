@@ -10,6 +10,11 @@ class MapController extends Controller
 {
     public function index()
     {
+        return view('map.index');
+    }
+
+    public function embed()
+    {
         $airports = Airports::all();
         $bays     = Bays::all();
         $flights  = Flights::where('online', 1)->with('mapBay')->get();
@@ -81,7 +86,7 @@ class MapController extends Controller
                     ];
                 }
 
-        return view('map.index', [
+        return view('map.embed', [
             'geojson' => json_encode([
                 'type'     => 'FeatureCollection',
                 'features' => $features,

@@ -12,5 +12,6 @@ class UserPreference extends Model
         'user_id',
         'name_format',
         'hoppie',
+        'news_notifications',
     ];
 }

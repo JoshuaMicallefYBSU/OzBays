@@ -6,6 +6,7 @@
     "AllocationInfo_GA": "Small, VFR GA Prop Aircraft - Mainly stops the system from erroring that they do not exist.",
     "GA": [
         "AC11",
+        "AC50",
         "AC95",
         "BN2T",
         "BN2P",
@@ -117,7 +118,6 @@
         "JS32",
         "JS41",
         "JAB4"
-
     ],
 
     "AllocationInfo_1": "Aircraft with wingspan between 20m - 26m",

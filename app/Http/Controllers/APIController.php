@@ -21,7 +21,7 @@ class APIController extends Controller
     {
         $airports = Airports::where('status', 'active')->pluck('icao');
 
-        $flights = Flights::select(['callsign', 'arr', 'distance', 'scheduled_bay'])
+        $flights = Flights::select(['callsign', 'dep', 'arr', 'distance', 'scheduled_bay'])
             ->where('online', 1)
             ->whereIn('arr', $airports)
             ->where('distance', '<', 150)
@@ -39,6 +39,33 @@ class APIController extends Controller
             });
 
         return $flights;
+    }
+
+    public function OzStripsCDM()
+    {
+        return response()->json(
+            Airports::where('status', 'active')
+                ->with(['occupiedBays' => function ($query) {
+                    $query->where('status', 1)
+                        ->select('airport', 'bay', 'callsign');
+                }])
+                ->get()
+                ->keyBy('icao')
+                ->map(function ($airport) {
+                    return [
+                        'occupied_bays' => $airport->occupiedBays
+                            ->groupBy('callsign')
+                            ->map(function ($bays) {
+                                $bay = $bays->first();
+                                return [
+                                    'callsign' => $bay->callsign,
+                                    'bay' => $bay->bay,
+                                ];
+                            })
+                            ->values(),
+                    ];
+                })
+        );
     }
     
     // Current Flights Recorded by the OzBays Server

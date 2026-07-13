@@ -26,8 +26,8 @@ class TestController extends Controller
         $result3 = $job3->handle();
         // $result4 = $job4->handle();
 
-        // return response()->json([
-        //     'message' => 'Job executed successfully'
-        // ]);
+        return response()->json([
+            'message' => 'Job executed successfully'
+        ]);
     }
 }

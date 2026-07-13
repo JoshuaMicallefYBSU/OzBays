@@ -46,7 +46,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'last_seen_at' => 'datetime',
+            'last_seen' => 'datetime',
         ];
     }
 

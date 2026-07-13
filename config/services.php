@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'changelog' => [
+        'token' => env('CHANGELOG_TOKEN'),
+    ],
+
     'discord' => [
         // Local System Logic
         'local' => [

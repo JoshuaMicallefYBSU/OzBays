@@ -4,7 +4,7 @@
 <h2>Your OzBays Settings, {{Auth::user()->fullName('F')}}</h2>
 <p>See all the settings which you can control throughout OzBays. Make sure to press the save button with any changes you would like!</p>
 <div class="pb-3">
-    <a href="{{route('dashboard.index')}}" style="color: black;"> <i class="fas fa-arrow-left"></i> Return to your Dashboard</a>
+    <a href="{{route('dashboard.index')}}"> <i class="fas fa-arrow-left"></i> Return to your Dashboard</a>
 </div>
 
 <hr>
@@ -46,6 +46,20 @@
             <select name="hoppie_usage" class="form-control">
                 <option value="1" @if(Auth::user()->userPreferences->hoppie_usage == 1) selected @endif>Yes - Send me a message via the Hoppie Network</option>
                 <option value="0" @if(Auth::user()->userPreferences->hoppie_usage == 0) selected @endif>No - Never send me hoppie messages</option>
+            </select>
+        </div>
+    </div>
+
+    {{-- News Article Notifications --}}
+    <div class="d-flex flex-row justify-content-between mt-2">
+        <div>
+            <h4 class="font-weight-bold blue-text">News Article Notifications</h4>
+            <p>Receive a notification in your bell menu whenever a new OzBays news article is published?</p>
+        </div>
+        <div style="width: 30%;">
+            <select name="news_notifications" class="form-control">
+                <option value="1" @if(Auth::user()->userPreferences->news_notifications == 1) selected @endif>Yes - Notify me about new news articles</option>
+                <option value="0" @if(Auth::user()->userPreferences->news_notifications == 0) selected @endif>No - Do not notify me about new news articles</option>
             </select>
         </div>
     </div>

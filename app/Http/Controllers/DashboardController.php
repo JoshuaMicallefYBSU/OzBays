@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use App\Models\Airports;
 use App\Models\Bays;
+use App\Models\MissingAircraftType;
 use App\Models\User;
 use App\Models\UserPreference;
+use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
 {
@@ -29,6 +31,7 @@ class DashboardController extends Controller
         $user->name_format = $request->name_format;
         $user->hoppie_usage = $request->hoppie_usage;
         $user->email_feedback = $request->email_feedback;
+        $user->news_notifications = $request->news_notifications;
         $user->save();
 
         return back()->with('success', 'Success!!! Your settings where updated!');
@@ -71,6 +74,31 @@ class DashboardController extends Controller
         return view('dashboard.admin.user.index', compact('users'));
     }
 
+    public function userView(User $user)
+    {
+        $roles = Role::orderBy('name')->get();
+
+        return view('dashboard.admin.user.view', compact('user', 'roles'));
+    }
+
+    public function userAssignRole(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|string|exists:roles,name',
+        ]);
+
+        $user->assignRole($request->role);
+
+        return back()->with('success', 'Role "'.$request->role.'" assigned to '.$user->fullName('FL').'.');
+    }
+
+    public function userRemoveRole(Request $request, User $user, string $role)
+    {
+        $user->removeRole($role);
+
+        return back()->with('success', 'Role "'.$role.'" removed from '.$user->fullName('FL').'.');
+    }
+
     // Disable Airport Function
     public function disableAirport(Request $request)
     {
@@ -91,6 +119,28 @@ class DashboardController extends Controller
         $airport->save();
 
         return back()->with('success', 'Airport has successfully been activated! - YeeHaw!!!!');
+    }
+
+    // Disable Airport Function
+    public function disableLiveAirport(Request $request)
+    {
+        $airport = Airports::where('icao', $request->icao)->first();
+
+        $airport->live_bays = 0;
+        $airport->save();
+
+        return back()->with('success', 'Airport Live Bay has successfully been disabled!');
+    }
+
+    // Activate Airport Function
+    public function activateLiveAirport(Request $request)
+    {
+        $airport = Airports::where('icao', $request->icao)->first();
+
+        $airport->live_bays = 1;
+        $airport->save();
+
+        return back()->with('success', 'Airport Live Bay has successfully been activated! - YeeHaw!!!!');
     }
 
     // Aircraft.json view
@@ -158,8 +208,11 @@ class DashboardController extends Controller
             return strcmp((string)$a, (string)$b);
         });
 
+        $missingTypes = MissingAircraftType::orderByDesc('count')->get();
+
         return view('dashboard.admin.aircraft.index', [
             'groups' => $groups,
+            'missingTypes' => $missingTypes,
         ]);
     }
 }
