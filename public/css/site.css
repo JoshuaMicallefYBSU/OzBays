@@ -881,6 +881,13 @@ footer.oz-footer .copyright * {
     margin-bottom: 1.5rem;
 }
 
+/* The FIDS is intended to be read at a distance, so it receives a wider
+   stage than the standard content pages without changing the global shell. */
+.container.oz-airport-fids-page {
+    width: min(100% - 2rem, 1640px);
+    max-width: none;
+}
+
 .oz-board-title {
     display: flex;
     align-items: baseline;
@@ -907,6 +914,42 @@ footer.oz-footer .copyright * {
     gap: 0.2rem;
 }
 
+.oz-board-mode-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    color: var(--oz-text-muted);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.oz-board-mode-control select {
+    appearance: none;
+    min-width: 112px;
+    padding: 0.28rem 1.65rem 0.28rem 0.5rem;
+    border: 1px solid rgba(255, 199, 44, 0.55);
+    border-radius: 0;
+    background: var(--oz-bg-alt);
+    background-image: linear-gradient(45deg, transparent 50%, var(--oz-amber) 50%), linear-gradient(135deg, var(--oz-amber) 50%, transparent 50%);
+    background-position: calc(100% - 11px) 50%, calc(100% - 7px) 50%;
+    background-repeat: no-repeat;
+    background-size: 4px 4px, 4px 4px;
+    color: var(--oz-amber-soft);
+    font: inherit;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.oz-board-mode-control select:focus {
+    outline: 2px solid var(--oz-amber-soft);
+    outline-offset: 2px;
+}
+
 .oz-board-clock-label {
     font-size: 0.72rem;
     font-weight: 700;
@@ -923,13 +966,95 @@ footer.oz-footer .copyright * {
     letter-spacing: 0.05em;
 }
 
-/* ---------- FIDS arrivals board ---------- */
+/* ---------- Airport FIDS board ---------- */
 .oz-fids {
-    background: var(--oz-bg-alt);
-    border: 1px solid var(--oz-border-strong);
-    border-radius: var(--oz-radius);
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    --oz-fids-ink: #05080d;
+    --oz-fids-grid: rgba(255, 199, 44, 0.22);
+    background: var(--oz-fids-ink);
+    border: 3px solid var(--oz-amber);
+    border-radius: 0;
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.52), 0 0 0 1px rgba(255, 224, 138, 0.2);
     overflow: hidden;
+}
+
+.oz-fids-terminal-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    min-height: 58px;
+    background: var(--oz-amber);
+    color: var(--oz-navy-text);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.oz-fids-terminal-mark {
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 1.2rem;
+    background: var(--oz-bg);
+    color: var(--oz-amber-soft);
+    letter-spacing: 0.08em;
+}
+
+.oz-fids-terminal-title {
+    padding: 0 1.1rem;
+    font-size: clamp(1.15rem, 3vw, 1.7rem);
+    letter-spacing: -0.06em;
+}
+
+.oz-fids-terminal-live {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    padding: 0 1.2rem;
+    font-size: 0.67rem;
+    letter-spacing: 0.07em;
+    text-align: right;
+}
+
+.oz-fids-cycle {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.1rem 0.35rem;
+    min-width: 138px;
+    margin-left: 0.7rem;
+    padding-left: 0.7rem;
+    border-left: 1px solid rgba(22, 33, 10, 0.35);
+    color: var(--oz-navy-text);
+    font-size: 0.56rem;
+    line-height: 1.1;
+    letter-spacing: 0.05em;
+}
+
+.oz-fids-cycle strong {
+    text-align: right;
+    font-size: 0.64rem;
+}
+
+.oz-fids-cycle-track {
+    grid-column: 1 / -1;
+    display: block;
+    height: 3px;
+    overflow: hidden;
+    background: rgba(22, 33, 10, 0.25);
+}
+
+.oz-fids-cycle-track span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--oz-navy-text);
+    transition: width 180ms linear;
+}
+
+.oz-fids-terminal-live i {
+    color: var(--oz-bg);
+    font-size: 0.55rem;
+    vertical-align: 1px;
 }
 
 .oz-fids-scroll {
@@ -938,12 +1063,12 @@ footer.oz-footer .copyright * {
 
 .oz-fids-row {
     display: grid;
-    grid-template-columns: 130px 1.4fr 90px 90px 130px 90px 140px;
+    grid-template-columns: 116px 1.5fr 82px 1fr 86px 100px 122px;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.85rem 1.25rem;
-    min-width: 780px;
-    border-bottom: 1px solid var(--oz-border);
+    gap: 0;
+    min-width: 760px;
+    border-bottom: 1px solid var(--oz-fids-grid);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
 .oz-fids-row:last-child {
@@ -951,107 +1076,633 @@ footer.oz-footer .copyright * {
 }
 
 .oz-fids-row:not(.oz-fids-head):nth-child(even) {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 199, 44, 0.035);
+}
+
+.oz-fids-row:not(.oz-fids-head) {
+    min-height: 58px;
+    color: var(--oz-amber-soft);
+    text-shadow: 0 0 9px rgba(255, 199, 44, 0.16);
+}
+
+.oz-fids-row:not(.oz-fids-head):hover {
+    background: rgba(255, 199, 44, 0.1);
 }
 
 .oz-fids-head {
-    background: rgba(255, 255, 255, 0.03);
-    font-size: 0.72rem;
+    min-height: 31px;
+    background: var(--oz-surface);
+    font-size: 0.62rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: var(--oz-text-muted);
+    letter-spacing: 0.13em;
+    color: var(--oz-amber-soft);
 }
 
-.oz-fids-col--flight,
-.oz-fids-col--type,
-.oz-fids-col--origin,
-.oz-fids-col--bay,
-.oz-fids-col--dist,
-.oz-fids-col--time {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+.oz-fids-col {
+    min-width: 0;
+    padding: 0.45rem 0.7rem;
+    border-right: 1px solid var(--oz-fids-grid);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.oz-fids-col:last-child {
+    border-right: 0;
 }
 
 .oz-fids-callsign {
-    display: block;
-    font-weight: 600;
-    color: var(--oz-text);
-    letter-spacing: 0.03em;
+    font-weight: 800;
+    color: var(--oz-amber-soft);
+    letter-spacing: 0.04em;
+}
+
+.oz-fids-callsign-link {
+    text-decoration: none;
+}
+
+.oz-fids-callsign-link:hover,
+.oz-fids-callsign-link:focus {
+    color: var(--oz-amber);
+    text-decoration: underline;
+    outline: none;
 }
 
 .oz-fids-airline {
     display: block;
-    font-family: 'Inter', ui-sans-serif, sans-serif;
-    font-size: 0.72rem;
-    color: var(--oz-text-muted);
+    margin-left: 36px;
+    font-size: 0.6rem;
+    color: rgba(255, 224, 138, 0.65);
+    letter-spacing: 0.04em;
 }
 
 .oz-fids-bay {
     display: block;
     font-weight: 600;
-    color: var(--oz-text);
+    color: var(--oz-amber-soft);
 }
 
 .oz-fids-bay--tba {
-    color: var(--oz-text-muted);
+    color: rgba(255, 224, 138, 0.58);
     font-weight: 500;
 }
 
 .oz-fids-terminal {
     display: block;
-    font-family: 'Inter', ui-sans-serif, sans-serif;
     font-size: 0.72rem;
-    color: var(--oz-text-muted);
+    color: rgba(255, 224, 138, 0.58);
 }
 
 .oz-fids-time {
     display: block;
     font-weight: 600;
-    color: var(--oz-text);
+    color: var(--oz-amber-soft);
 }
 
 .oz-fids-time-label {
     display: block;
-    font-family: 'Inter', ui-sans-serif, sans-serif;
     font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--oz-text-muted);
+    color: rgba(255, 224, 138, 0.58);
 }
 
 .oz-fids-status {
     display: inline-flex;
     align-items: center;
-    font-size: 0.72rem;
+    font-size: 0.64rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 0.3rem 0.6rem;
-    border-radius: 999px;
+    padding: 0;
+    border-radius: 0;
     white-space: nowrap;
 }
 
+.oz-fids-status--gate-open,
+.oz-fids-status--arriving,
 .oz-fids-status--inbound {
-    color: #8ecbff;
-    background: rgba(96, 165, 250, 0.12);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-}
-
-.oz-fids-status--taxiing {
     color: var(--oz-amber-soft);
-    background: rgba(255, 199, 44, 0.12);
-    border: 1px solid rgba(255, 199, 44, 0.3);
+    background: transparent;
+    border: 0;
 }
 
-.oz-fids-status--boarding {
-    color: #7ee2a8;
-    background: rgba(52, 211, 153, 0.12);
-    border: 1px solid rgba(52, 211, 153, 0.3);
+.oz-fids-status--boarding,
+.oz-fids-status--landed {
+    color: var(--oz-amber);
+    background: transparent;
+    border: 0;
+}
+
+.oz-fids-status--final-call,
+.oz-fids-status--arrived {
+    color: var(--oz-amber-strong);
+    background: transparent;
+    border: 0;
+}
+
+.oz-fids-status--closed,
+.oz-fids-status--departed {
+    color: rgba(255, 224, 138, 0.45);
+    background: transparent;
+    border: 0;
+}
+
+.oz-fids-flight-ident {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.oz-fids-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 22px;
+    flex: 0 0 30px;
+    overflow: hidden;
+    border: 1px solid var(--oz-fids-grid);
+    border-radius: 0;
+    color: var(--oz-amber);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.oz-fids-logo img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .oz-fids-empty {
-    padding: 2.5rem 1.25rem;
+    padding: 3rem 1.25rem;
     text-align: center;
-    color: var(--oz-text-muted);
-    font-size: 0.95rem;
+    color: var(--oz-amber-soft);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 575.98px) {
+    .oz-fids-terminal-bar {
+        min-height: 48px;
+    }
+
+    .oz-fids-terminal-mark,
+    .oz-fids-terminal-live {
+        display: none;
+    }
+
+    .oz-fids-terminal-title {
+        padding: 0 0.85rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .oz-airport-fids-page .oz-board-header {
+        padding-top: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-bar {
+        min-height: 76px;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-mark {
+        padding-inline: 1.6rem;
+        font-size: 1.1rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-title {
+        font-size: 2.25rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-terminal-live {
+        padding-right: 1.6rem;
+        font-size: 0.75rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-row {
+        grid-template-columns: 1.1fr 1.8fr 0.8fr 1.55fr 0.85fr 1fr 1.15fr;
+        min-width: 0;
+    }
+
+    .oz-airport-fids-page .oz-fids-row:not(.oz-fids-head) {
+        min-height: 72px;
+        font-size: 1.04rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-head {
+        min-height: 38px;
+        font-size: 0.68rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-col {
+        padding: 0.55rem 1rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-status {
+        font-size: 0.76rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-airline {
+        font-size: 0.67rem;
+    }
+
+    .oz-airport-fids-page .oz-fids-time-label {
+        font-size: 0.7rem;
+    }
+}
+
+/* ---------- Full-page gate display ---------- */
+.oz-gate-display-body {
+    min-height: 100vh;
+    margin: 0;
+    display: block;
+    background:
+        radial-gradient(circle at 12% 12%, rgba(255, 199, 44, 0.12), transparent 28%),
+        linear-gradient(135deg, var(--oz-bg) 0%, #030509 100%);
+    overflow: hidden;
+}
+
+.oz-gate-display-shell {
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    padding: clamp(0.75rem, 1.6vw, 1.4rem);
+    color: var(--oz-amber-soft);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.oz-gate-display-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 44px;
+    padding: 0.45rem 0.75rem;
+    border: 2px solid var(--oz-amber);
+    border-bottom: 0;
+    background: var(--oz-amber);
+    color: var(--oz-navy-text);
+    font-size: clamp(0.65rem, 1vw, 0.78rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.oz-gate-display-toolbar i {
+    font-size: 0.62rem;
+}
+
+.oz-gate-display-clock {
+    margin-left: auto;
+}
+
+.oz-gate-fullscreen {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid rgba(22, 33, 10, 0.42);
+    background: rgba(22, 33, 10, 0.08);
+    color: var(--oz-navy-text);
+    padding: 0.3rem 0.55rem;
+    font: inherit;
+    cursor: pointer;
+}
+
+.oz-gate-fullscreen:focus,
+.oz-gate-fullscreen:hover {
+    outline: 2px solid var(--oz-bg);
+    outline-offset: 2px;
+}
+
+#oz-gate-display-content {
+    min-height: 0;
+}
+
+.oz-gate-display {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.92fr) minmax(480px, 1.08fr);
+    min-height: calc(100vh - clamp(0.75rem, 1.6vw, 1.4rem) * 2 - 44px);
+    border: 2px solid var(--oz-amber);
+    background: #05080d;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.62);
+}
+
+.oz-gate-route-panel,
+.oz-gate-flight-panel {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(255, 199, 44, 0.09), transparent 44%),
+        repeating-linear-gradient(0deg, rgba(255, 199, 44, 0.055) 0, rgba(255, 199, 44, 0.055) 1px, transparent 1px, transparent 54px),
+        #05080d;
+}
+
+.oz-gate-route-panel {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto auto;
+    border-right: 2px solid var(--oz-amber);
+}
+
+.oz-gate-strip {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0.9rem;
+    background: rgba(255, 199, 44, 0.14);
+    border-bottom: 1px solid rgba(255, 199, 44, 0.4);
+    font-size: clamp(0.72rem, 1.2vw, 0.95rem);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.oz-gate-route-label {
+    padding: clamp(1.4rem, 3vw, 2.4rem) clamp(1.2rem, 3vw, 2rem) 0;
+    color: rgba(255, 224, 138, 0.68);
+    font-size: clamp(0.72rem, 1.4vw, 0.95rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.oz-gate-route-panel h1 {
+    align-self: start;
+    margin: 0;
+    padding: 0.4rem clamp(1.2rem, 3vw, 2rem);
+    color: var(--oz-amber-soft);
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: clamp(2.8rem, 7.5vw, 8rem);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.08em;
+    text-transform: uppercase;
+}
+
+.oz-gate-route-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0 clamp(1.2rem, 3vw, 2rem) 1rem;
+    color: rgba(255, 224, 138, 0.72);
+    font-size: clamp(1.1rem, 2.2vw, 2rem);
+    font-weight: 800;
+}
+
+.oz-gate-primary-time {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: clamp(1rem, 2vw, 1.5rem) clamp(1.2rem, 3vw, 2rem);
+    background: rgba(255, 199, 44, 0.08);
+    border-top: 1px solid rgba(255, 199, 44, 0.35);
+}
+
+.oz-gate-primary-time span {
+    color: rgba(255, 224, 138, 0.68);
+    font-size: clamp(0.8rem, 1.5vw, 1.05rem);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.oz-gate-primary-time strong {
+    color: var(--oz-amber);
+    font-size: clamp(3.5rem, 8vw, 8.8rem);
+    line-height: 0.82;
+    letter-spacing: -0.08em;
+}
+
+.oz-gate-flight-panel {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto auto;
+    padding: clamp(1rem, 2.2vw, 2rem);
+}
+
+.oz-gate-flight-topline {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.9rem, 2vw, 1.6rem);
+}
+
+.oz-gate-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(74px, 9vw, 128px);
+    height: clamp(52px, 6.2vw, 88px);
+    border: 2px solid rgba(255, 199, 44, 0.55);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--oz-amber);
+    font-size: clamp(1rem, 1.8vw, 1.45rem);
+    font-weight: 800;
+}
+
+.oz-gate-logo img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.oz-gate-flight-number {
+    color: var(--oz-amber-soft);
+    font-size: clamp(2.2rem, 6vw, 6.6rem);
+    font-weight: 800;
+    letter-spacing: -0.08em;
+    line-height: 0.9;
+}
+
+.oz-gate-airline {
+    color: rgba(255, 224, 138, 0.68);
+    font-size: clamp(0.9rem, 1.5vw, 1.25rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.oz-gate-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: clamp(1rem, 2vw, 1.8rem);
+    padding: 0.7rem 0;
+    border-top: 1px solid rgba(255, 199, 44, 0.35);
+    border-bottom: 1px solid rgba(255, 199, 44, 0.35);
+    color: rgba(255, 224, 138, 0.72);
+    font-size: clamp(0.9rem, 1.7vw, 1.45rem);
+    font-weight: 800;
+}
+
+.oz-gate-display-status {
+    color: var(--oz-amber);
+    text-transform: uppercase;
+}
+
+.oz-gate-display-status--closed,
+.oz-gate-display-status--departed {
+    color: rgba(255, 224, 138, 0.52);
+}
+
+.oz-gate-display-status--final-call,
+.oz-gate-display-status--arrived {
+    color: var(--oz-amber-strong);
+}
+
+.oz-gate-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 1fr;
+    gap: clamp(0.7rem, 1.2vw, 1rem);
+    align-content: center;
+    margin: clamp(1rem, 2vw, 2rem) 0;
+}
+
+.oz-gate-cell {
+    min-height: clamp(118px, 16vh, 210px);
+    padding: clamp(0.8rem, 1.7vw, 1.25rem);
+    border: 1px solid rgba(255, 199, 44, 0.4);
+    background: rgba(255, 199, 44, 0.06);
+}
+
+.oz-gate-cell span,
+.oz-gate-cell em {
+    display: block;
+    color: rgba(255, 224, 138, 0.62);
+    font-size: clamp(0.68rem, 1.1vw, 0.9rem);
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.oz-gate-cell strong {
+    display: block;
+    margin-top: 0.45rem;
+    color: var(--oz-amber-soft);
+    font-size: clamp(2rem, 5.6vw, 6rem);
+    line-height: 0.9;
+    letter-spacing: -0.08em;
+}
+
+.oz-gate-cell--hero {
+    grid-row: span 2;
+}
+
+.oz-gate-grid--departure {
+    grid-template-columns: 1.25fr 1fr;
+}
+
+.oz-gate-grid--departure .oz-gate-cell--hero {
+    grid-row: auto;
+}
+
+.oz-gate-cell--hero strong {
+    font-size: clamp(4rem, 12vw, 13rem);
+}
+
+.oz-gate-helptext {
+    margin: 0;
+    color: rgba(255, 224, 138, 0.72);
+    font-size: clamp(0.95rem, 1.65vw, 1.45rem);
+    font-weight: 700;
+}
+
+.oz-gate-message-area {
+    min-height: 3.6rem;
+    display: grid;
+    align-items: center;
+}
+
+.oz-gate-message-area--alert .oz-gate-helptext {
+    display: none;
+}
+
+.oz-gate-updated {
+    margin-top: 1rem;
+    color: rgba(255, 224, 138, 0.5);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.oz-gate-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: clamp(0.7rem, 1.4vw, 1rem) clamp(0.85rem, 1.8vw, 1.3rem);
+    border: 2px solid var(--oz-amber-strong);
+    background: var(--oz-amber);
+    color: var(--oz-navy-text);
+    box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.18), 0 14px 32px rgba(0, 0, 0, 0.35);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: clamp(1rem, 1.85vw, 1.55rem);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.oz-gate-alert[hidden] {
+    display: none;
+}
+
+.oz-gate-alert button {
+    border: 0;
+    background: transparent;
+    color: var(--oz-navy-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.oz-gate-unavailable {
+    display: grid;
+    min-height: calc(100vh - 7rem);
+    place-items: center;
+    border: 2px solid var(--oz-amber);
+    color: var(--oz-amber-soft);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: clamp(1.5rem, 4vw, 4rem);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .oz-gate-display-body {
+        overflow: auto;
+    }
+
+    .oz-gate-display {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .oz-gate-route-panel {
+        border-right: 0;
+        border-bottom: 2px solid var(--oz-amber);
+    }
+
+    .oz-gate-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .oz-gate-cell--hero {
+        grid-column: 1 / -1;
+        grid-row: auto;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .oz-gate-alert:not([hidden]) {
+        animation: oz-gate-alert-flash 1.4s ease-in-out infinite;
+    }
+}
+
+@keyframes oz-gate-alert-flash {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.18); }
 }

@@ -165,7 +165,7 @@ use Carbon\Carbon;
 
     <body>
       <div id="content-wrapper">
-        <div class="container" style="padding-top: 50px;">
+        <div class="container @yield('container-class')" style="padding-top: 50px;">
             @include('layouts.messages')
             @yield('content')
         </div>
