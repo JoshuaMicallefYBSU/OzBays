@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Jobs\FlightData;
 use App\Models\Flights;
-use App\Models\NewsArticle;
 use App\Services\HoppieClient;
 use App\Jobs\AerodromeUpdates;
 
@@ -14,9 +13,7 @@ class PagesController extends Controller
 {
     public function Home()
     {
-        $news = NewsArticle::latest('id')->take(3)->get();
-
-        return view('home', compact('news'));
+        return view('home');
     }
 
     public function AirportUpdate()

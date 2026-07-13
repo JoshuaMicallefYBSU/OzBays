@@ -12,42 +12,9 @@ jobs:
     if: ${{ (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'discord-notify')) }}
     runs-on: ubuntu-latest
     steps:
-      - name: Wait 5 minutes before notifying
-        run: sleep 300
-
       - name: Discord Notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.CHANGES_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
           args: "# {{ EVENT_PAYLOAD.pull_request.title }}\n{{ EVENT_PAYLOAD.pull_request.body }}"
-
-      - name: Add Changelog Entry
-        env:
-          CHANGELOG_TOKEN: ${{ secrets.CHANGELOG_TOKEN }}
-          APP_URL: ${{ secrets.APP_URL }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          PR_MERGED_AT: ${{ github.event.pull_request.merged_at }}
-        run: |
-          if [ -z "$APP_URL" ]; then
-            echo "::error::APP_URL secret is not set — cannot record changelog entry."
-            exit 1
-          fi
-
-          payload=$(jq -n \
-            --arg title "$PR_TITLE" \
-            --arg description "$PR_BODY" \
-            --arg url "$PR_URL" \
-            --arg author "$PR_AUTHOR" \
-            --arg merged_at "$PR_MERGED_AT" \
-            --argjson number "$PR_NUMBER" \
-            '{title: $title, description: $description, url: $url, pr_number: $number, author: $author, merged_at: $merged_at}')
-
-          curl -sf -X POST "$APP_URL/api/changelog" \
-            -H "X-Changelog-Token: $CHANGELOG_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$payload"

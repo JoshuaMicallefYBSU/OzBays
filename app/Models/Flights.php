@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BayAllocations;
 
 class Flights extends Model
 {
@@ -25,19 +26,6 @@ class Flights extends Model
         'online',
         'current_bay',
         'scheduled_bay',
-        'filed_etd',
-        'landed_at',
-        'departed_at',
-        'arrived_at',
-    ];
-
-    protected $casts = [
-        'elt' => 'datetime',
-        'eibt' => 'datetime',
-        'filed_etd' => 'datetime',
-        'landed_at' => 'datetime',
-        'departed_at' => 'datetime',
-        'arrived_at' => 'datetime',
     ];
 
     public function assignedBay()

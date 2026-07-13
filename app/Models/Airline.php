@@ -14,7 +14,6 @@ class Airline extends Model
     protected $fillable = [
         'icao',
         'name',
-        'logo_path',
         'freight_regex',
     ];
 
@@ -62,7 +61,7 @@ class Airline extends Model
             }
         }
 
-        if (! is_array($patterns)) {
+        if (!is_array($patterns)) {
             $patterns = [$patterns];
         }
 
@@ -71,7 +70,7 @@ class Airline extends Model
         }
 
         foreach ($patterns as $regex) {
-            if (! is_string($regex)) {
+            if (!is_string($regex)) {
                 continue;
             }
 
@@ -88,7 +87,6 @@ class Airline extends Model
                 }
             } catch (\Throwable $e) {
                 Log::warning("Invalid freight_regex for airline {$this->icao} ({$regex}): {$e->getMessage()}");
-
                 continue;
             }
         }
@@ -102,11 +100,11 @@ class Airline extends Model
         $first = $regex[0] ?? '';
 
         // If it looks like a delimited pattern already (e.g. /.../i or ~...~), keep it.
-        if ($first !== '' && ! ctype_alnum($first) && preg_match('/^'.preg_quote($first, '/').'.*'.preg_quote($first, '/').'[a-zA-Z]*$/s', $regex)) {
+        if ($first !== '' && !ctype_alnum($first) && preg_match('/^' . preg_quote($first, '/') . '.*' . preg_quote($first, '/') . '[a-zA-Z]*$/s', $regex)) {
             return $regex;
         }
 
-        return '~'.str_replace('~', '\\~', $regex).'~i';
+        return '~' . str_replace('~', '\\~', $regex) . '~i';
     }
 
     protected static function booted()

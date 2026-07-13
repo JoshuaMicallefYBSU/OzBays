@@ -27,9 +27,4 @@ class Airports extends Model
     {
         return $this->hasMany(Bays::class, 'airport', 'icao');
     }
-
-    public function occupiedBays()
-    {
-        return $this->hasMany(Bays::class, 'airport', 'icao');
-    }
 }

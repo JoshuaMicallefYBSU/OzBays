@@ -26,7 +26,12 @@
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
         <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
-            <main class="flex max-w-[335px] w-full flex-col lg:max-w-4xl lg:flex-row">
+            <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
+                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
+                    <h1 style="font-size: 30px; margin-bottom: 20px;" class="mb-2 font-medium">OzBays - ERR 404</h1>
+                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">We don't know what you are trying to find, but unfortunatley, you did not find it on this attempt. Have a 'easter egg' to try and quench your thurst for trouble.</p>
+                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]"><a href="{{route('home')}}"><u>Return to the homepage?</u></a></p>
+                </div>
                 <div class="bg-[#fff2f2] dark:bg-[#424242] relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[335/376] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden flex items-center justify-center">
                     <img src="{{ asset('img/rawrrrrrr.png') }}"
                         class="w-full h-full object-contain"
@@ -35,21 +40,17 @@
                     >
                 </div>
 
-                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
-                    <h1 style="font-size: 30px; margin-bottom: 20px;" class="mb-2 font-medium">
-                        OzBays - ERR 404
-                    </h1>
-
-                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                        We don't know what you are trying to find, but unfortunatley, you did not find it on this attempt. Have a 'easter egg' to try and quench your thurst for trouble.
-                    </p>
-
-                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                        <a href="{{route('home')}}"><u>Return to the homepage?</u></a>
-                    </p>
-                </div>
-
             </main>
+            {{-- <br>
+            <img src="https://cdn.discordapp.com/attachments/1436569037240008704/1447339877497831486/ext.png?ex=693743cd&is=6935f24d&hm=ffe0cf110e30ab41b4a991328140aa461e77c6b1d7d532f69b44cdcf1dbfa6d9"
+                 class="object-contain"
+                 style="padding: 10px; width: 20%;"
+                 alt=""
+            > --}}
+        </div>
+
+        <div class="">
+            
         </div>
     </body>
 </html>

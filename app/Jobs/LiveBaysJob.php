@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use App\Models\Airports;
 use App\Models\Bays;
 use App\Models\FlightLiveBays;
-use App\Models\FlightLiveMissingBays;
 use App\Services\AeroAPIClient;
 
 class LiveBaysJob implements ShouldQueue
@@ -95,7 +94,6 @@ class LiveBaysJob implements ShouldQueue
                 foreach($all_callsigns as $callsign){
                     $flight_data[$schedule['destination']['code_icao']][] = [
                         'callsign'      =>  $callsign['operator'].''.$callsign['flight_number'],
-                        'aircraft'      =>  $callsign['aircraft_type'] ?? null,
                         'operator'      =>  $callsign['operator'],
                         'flight_number' =>  $callsign['flight_number'],
                         'arrival'       =>  $schedule['destination']['code_icao'],
@@ -119,25 +117,13 @@ class LiveBaysJob implements ShouldQueue
                     ->where('terminal', 'LIKE', '%' . $flight['terminal'] . '%')
                     ->where('bay', 'LIKE', '%' . $flight['gate'] . '%')
                     ->first();
-
-                if($bay == null){
-                    
-                    // Add to missing bay database
-                    FlightLiveMissingBays::firstOrCreate(['airport' => $flight['arrival'], 'terminal' => $flight['terminal'], 'bay' => $flight['gate']],
-                    [
-                        'aircraft' => $flight['aircraft'],
-                        'callsign' => $flight['callsign'],
-                    ]);
-                } else {
-
-                    // Bay has been found! Lets add it to the database
-                    FlightLiveBays::updateOrCreate(['callsign' => $flight['callsign']], [
-                        'airport'       => $flight['arrival'],
-                        'terminal'      => $flight['terminal'],
-                        'gate'          => $flight['gate'],
-                        'scheduled_bay' => $bay->id,
-                    ]);
-                }
+                
+                FlightLiveBays::updateOrCreate(['callsign' => $flight['callsign']], [
+                    'airport'       => $flight['arrival'],
+                    'terminal'      => $flight['terminal'],
+                    'gate'          => $flight['gate'],
+                    'scheduled_bay' => $bay->id ?? null,
+                ]);
             }
         }
 

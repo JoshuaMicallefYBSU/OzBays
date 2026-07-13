@@ -19,9 +19,9 @@
                     <tr>
                         <td>{{$user->id}}</td>
                         <td>{{$user->fullName('FL')}}</td>
-                        <td>Not Recorded (Yet)</td>
-                        <td>{{$user->last_seen ? $user->last_seen->format('d/m/Y @ h:i A').'Z' : 'Never'}}</td>
-                        <td><a href="{{route('dashboard.admin.users.view', $user)}}">View</a></td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
                     </tr>
                 @endforeach
             </tbody>

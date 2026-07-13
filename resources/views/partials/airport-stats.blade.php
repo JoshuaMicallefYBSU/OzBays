@@ -28,8 +28,8 @@
                 @php $index++; @endphp
             @endforeach
             
-            @if (count($stats_inbound) < 1)
-                <p>No Aircraft Inbound to OzBays Airports</p>
+            @if (count($stats_ground) < 1)
+                <p style="margin-top: -20px;">No data available.</p>
             @endif
         </ul>
     </div>
@@ -64,7 +64,7 @@
             @endforeach
             
             @if (count($stats_ground) < 1)
-                <p>No Ground Movements at OzBays Airports</p>
+                <p style="margin-top: -20px;">No data available.</p>
             @endif
         </ul>
     </div>
