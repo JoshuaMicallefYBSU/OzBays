@@ -12,6 +12,9 @@ jobs:
     if: ${{ (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'discord-notify')) }}
     runs-on: ubuntu-latest
     steps:
+      - name: Wait 5 minutes before notifying
+        run: sleep 300
+
       - name: Discord Notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.CHANGES_WEBHOOK }}
