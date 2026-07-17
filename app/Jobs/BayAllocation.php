@@ -217,7 +217,7 @@ class BayAllocation implements ShouldQueue
 
                     $bay->delete();
 
-                    $discord = new DiscordClient;
+                    $discord = app(DiscordClient::class);
                     try {
                         $discord->sendMessageWithEmbed($discordChannel, 'Aircraft Diversion / Refile | '.$flight->callsign, 'Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay '.$bay->bay_core.' at '.$bay->airport.' has now been marked as available.', 'fc1c03');
                     } catch (\Exception $e) {
@@ -359,7 +359,7 @@ class BayAllocation implements ShouldQueue
 
                 // Delete the BayConflicts Entry
                 $conflict = BayConflicts::where('bay', $slot['bay'])->first();
-                $conflict->delete();
+                $conflict?->delete();
             }
 
             // Assign a bay to the Aircraft--\
@@ -423,7 +423,7 @@ class BayAllocation implements ShouldQueue
         $acType = strtoupper((string) $info->ac);
         $isFreight = in_array($acType, $this->freightOnlyTypes, true) || Airline::isFreightCallsign($info->callsign);
 
-        // Index the AC so it can be used later
+        // Index the AC so we know which priority group it belongs to.
         $aircraftIndex = null;
         foreach ($aircraftJSON as $index => $types) {
             if (in_array($info->ac, $types, true)) {
@@ -432,23 +432,31 @@ class BayAllocation implements ShouldQueue
             }
         }
 
-        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
-        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
-
-        if (! in_array($info->ac, $allowedTypes, true)) {
+        if ($aircraftIndex === null) {
             Log::channel('aircraft')->error($info->ac.' type does not exist');
             MissingAircraftType::recordMiss($acType);
-            $discord = new DiscordClient;
+            $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
             }
+
+            // Fall back to treating the unknown type like a B738 for bay-matching purposes.
             $ac = 'B738';
+            foreach ($aircraftJSON as $index => $types) {
+                if (in_array($ac, $types, true)) {
+                    $aircraftIndex = $index;
+                    break;
+                }
+            }
         } else {
             $ac = $info->ac;
         }
+
+        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex ?? 0);
+        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
 
         // ## - Preferred Bay Assignment Check can go Here - Pulls data every hour from FLIGHTAWARE API
 
@@ -618,15 +626,14 @@ class BayAllocation implements ShouldQueue
             // dd($availableBays);
         }
 
-        $candidates = $availableBays->take(7);
-        $selectedBay = $candidates->random();
         if (! app()->runningUnitTests()) {
             echo 'Available bays for '.$cs['cs'].'<br>';
             echo $availableBays.'<br><br><br>';
         }
 
-        // Randomise selection within top 7 - Wamt it to be a bit random over time :)
-        $selectedBay = $availableBays->first();
+        // Randomise selection within the top 7 candidates so it isn't always the same bay over time.
+        $candidates = $availableBays->take(7);
+        $selectedBay = $candidates->random();
 
         return $selectedBay;
     }
@@ -685,7 +692,7 @@ class BayAllocation implements ShouldQueue
                 $aircraftBay->save();
 
                 // Send Discord Embed Message
-                $discord = new DiscordClient;
+                $discord = app(DiscordClient::class);
                 try {
                     $discord->sendMessageWithEmbed($discordChannel, 'Bay Assigned | '.$info['cs'].', '.$info['ac'], ' '.$value->bay.' inbound '.$info['arr']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', '27F58B');
                 } catch (\Exception $e) {
@@ -710,7 +717,7 @@ class BayAllocation implements ShouldQueue
                 $aircraftBay->save();
 
                 // Send Discord Embed Message
-                $discord = new DiscordClient;
+                $discord = app(DiscordClient::class);
                 try {
                     $discord->sendMessageWithEmbed($discordChannel, 'Bay Re-Assignment | '.$info['cs'].', '.$info['ac'], ' Bay '.$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay.' inbound '.$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', 'fca503');
                 } catch (\Exception $e) {
@@ -732,7 +739,7 @@ class BayAllocation implements ShouldQueue
             return $value;
         } catch (\Throwable $e) {
             Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
-            $discord = new DiscordClient;
+            $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
             } catch (\Exception $e) {
@@ -766,11 +773,9 @@ class BayAllocation implements ShouldQueue
         $cid = (int) $cid;
         $user_preferences = UserPreference::where('user_id', $cid)->first();
 
-        if ($user_preferences !== null) {
-            if ($user_preferences->hoppie_usage == 0) {
-                // User preference section exists and it is set as do not do...
-                echo 'Cancel Hoppie Message - User has it disabled';
-            }
+        if ($user_preferences !== null && $user_preferences->hoppie_usage == 0) {
+            // User preference section exists and it is set as do not do...
+            echo 'Cancel Hoppie Message - User has it disabled';
 
             return null;
         }
@@ -806,7 +811,7 @@ class BayAllocation implements ShouldQueue
                 if ($send_message == true) {
                     $hoppie->sendTelex($arr, $flight, $Uplink);
 
-                    $discord = new DiscordClient;
+                    $discord = app(DiscordClient::class);
                     try {
                         $discord->sendMessageWithEmbed($discordChannel, $flight.' | CPDLC UPLINK', $Uplink, '808080');
                     } catch (\Exception $e) {

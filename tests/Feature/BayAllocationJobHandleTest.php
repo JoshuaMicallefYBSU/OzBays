@@ -8,85 +8,24 @@ use App\Models\Airports;
 use App\Models\BayAllocations;
 use App\Models\Bays;
 use App\Models\Flights;
-use App\Services\DiscordClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Tests\Concerns\InteractsWithBayAllocationSqlite;
 use Tests\TestCase;
 
 class BayAllocationJobHandleTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithBayAllocationSqlite;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (DB::connection()->getDriverName() !== 'sqlite') {
-            return;
-        }
-
-        $pdo = DB::connection()->getPdo();
-
-        if (method_exists($pdo, 'sqliteCreateFunction')) {
-            $pdo->sqliteCreateFunction('REGEXP', function ($pattern, $value) {
-                if ($pattern === null || $value === null) {
-                    return 0;
-                }
-
-                $pattern = (string) $pattern;
-                $value = (string) $value;
-
-                $delimited = '/' . str_replace('/', '\\/', $pattern) . '/';
-                return @preg_match($delimited, $value) ? 1 : 0;
-            }, 2);
-
-            $pdo->sqliteCreateFunction('CONCAT', function (...$args) {
-                return implode('', array_map(fn ($v) => $v === null ? '' : (string) $v, $args));
-            }, -1);
-
-            $pdo->sqliteCreateFunction('FIND_IN_SET', function ($needle, $haystack) {
-                if ($needle === null || $haystack === null) {
-                    return 0;
-                }
-
-                $needle = (string) $needle;
-                $haystack = (string) $haystack;
-
-                $parts = $haystack === '' ? [] : explode(',', $haystack);
-                $parts = array_map('trim', $parts);
-
-                $idx = array_search($needle, $parts, true);
-                return $idx === false ? 0 : ($idx + 1);
-            }, 2);
-
-            $pdo->sqliteCreateFunction('IF', function ($cond, $then, $else) {
-                return $cond ? $then : $else;
-            }, 3);
-
-            $pdo->sqliteCreateFunction('RAND', function () {
-                return mt_rand() / mt_getrandmax();
-            }, 0);
-
-            $pdo->sqliteCreateFunction('GREATEST', function (...$args) {
-                $args = array_map(fn ($v) => $v === null ? null : (float) $v, $args);
-                $args = array_values(array_filter($args, fn ($v) => $v !== null));
-                return empty($args) ? null : max($args);
-            }, -1);
-        }
+        $this->registerBayAllocationSqliteShims();
 
         // Prevent Discord HTTP calls
-        $this->app->instance(DiscordClient::class, new class {
-            public function sendMessageWithEmbed($channelId, $title, $description, $color)
-            {
-                return true;
-            }
-
-            public function sendMessage($channelId, $message)
-            {
-                return true;
-            }
-        });
+        $this->fakeDiscordClient();
 
         // Stub aircraft.json
         File::shouldReceive('get')->andReturn(json_encode([
