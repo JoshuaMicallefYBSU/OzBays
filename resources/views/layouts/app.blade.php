@@ -106,8 +106,9 @@ use Carbon\Carbon;
                 <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">Aircraft</a>
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>
+                  <a class="dropdown-item" href="{{route('dashboard.admin.data.index')}}">Changes Requiring Approval</a>
                 @endcan
+                <a class="dropdown-item" href="{{route('dashboard.admin.data.import')}}">Import Airport Data</a>
 
                 @can('manage news')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
