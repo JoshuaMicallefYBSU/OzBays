@@ -10,6 +10,7 @@
             'ac' => optional($bay->FlightInfo)->ac,
             'dep' => optional($bay->FlightInfo)->dep,
             'bay' => $bay->bay,
+            'long_name' => $bay->long_name,
             'terminal' => $bay->terminal,
             'time' => $bay->updated_at,
             'time_label' => 'On Bay Since',
@@ -32,6 +33,7 @@
             'ac' => $aircraft->ac,
             'dep' => $aircraft->dep,
             'bay' => optional($aircraft->mapBay)->bay,
+            'long_name' => optional($aircraft->mapBay)->long_name,
             'terminal' => optional($aircraft->mapBay)->terminal,
             'time' => $aircraft->eibt,
             'time_label' => 'Est. On Bay',
@@ -47,6 +49,7 @@
             'ac' => $aircraft->ac,
             'dep' => $aircraft->dep,
             'bay' => optional($aircraft->mapBay)->bay,
+            'long_name' => optional($aircraft->mapBay)->long_name,
             'terminal' => optional($aircraft->mapBay)->terminal,
             'time' => $aircraft->elt,
             'time_label' => 'Est. Landing',
@@ -90,6 +93,9 @@
                 <div class="oz-fids-col oz-fids-col--bay">
                     @if($row['bay'])
                         <span class="oz-fids-bay">{{ $row['bay'] }}</span>
+                        @if($row['long_name'])
+                            <span class="oz-fids-terminal">{{ $row['long_name'] }}</span>
+                        @endif
                         @if($row['terminal'])
                             <span class="oz-fids-terminal">{{ $row['terminal'] }}</span>
                         @endif
