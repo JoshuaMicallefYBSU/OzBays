@@ -13,5 +13,7 @@ class UserPreference extends Model
         'name_format',
         'hoppie_usage',
         'news_notifications',
+        'news_general',
+        'ozbays_updates',
     ];
 }

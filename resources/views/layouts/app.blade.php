@@ -84,6 +84,14 @@ use Carbon\Carbon;
                 </a>
             </li>
 
+            <!-- Team Button -->
+            <li class="nav-item">
+                <a class="nav-link {{ str_contains(request()->url(), 'team') == true ? 'active' : '' }} " href="{{route('team.index')}}">
+                    <i class="fa fa-users"></i>The Team
+                    <span class="sr-only"></span>
+                </a>
+            </li>
+
             <!-- Map Button -->
             <li class="nav-item">
                 <a class="nav-link {{ str_contains(request()->url(), 'map') == true ? 'active' : '' }} " href="{{route('mapIndex')}}">

@@ -50,16 +50,49 @@
         </div>
     </div>
 
-    {{-- News Article Notifications --}}
+    <hr>
+
+    {{-- Email Sections --}}
+    <h2><u>Discord Settings</u></h2>
+
+    {{-- News Articles --}}
     <div class="d-flex flex-row justify-content-between mt-2">
         <div>
-            <h4 class="font-weight-bold blue-text">News Article Notifications</h4>
-            <p>Receive a notification in your bell menu whenever a new OzBays news article is published?</p>
+            <h4 class="font-weight-bold blue-text">News Articles</h4>
+            <p>Receive a notification in your bell menu whenever a new OzBays news article is published? If you're linked with Discord, this also controls a Discord role.</p>
         </div>
         <div style="width: 30%;">
             <select name="news_notifications" class="form-control">
                 <option value="1" @if(Auth::user()->userPreferences->news_notifications == 1) selected @endif>Yes - Notify me about new news articles</option>
                 <option value="0" @if(Auth::user()->userPreferences->news_notifications == 0) selected @endif>No - Do not notify me about new news articles</option>
+            </select>
+        </div>
+    </div>
+
+    {{-- General Announcements --}}
+    <div class="d-flex flex-row justify-content-between mt-2">
+        <div>
+            <h4 class="font-weight-bold blue-text">General Announcements</h4>
+            <p>Receive general OzBays announcements? If you're linked with Discord, this also controls a Discord role.</p>
+        </div>
+        <div style="width: 30%;">
+            <select name="news_general" class="form-control">
+                <option value="1" @if(Auth::user()->userPreferences->news_general == 1) selected @endif>Yes - Notify me about general announcements</option>
+                <option value="0" @if(Auth::user()->userPreferences->news_general == 0) selected @endif>No - Do not notify me about general announcements</option>
+            </select>
+        </div>
+    </div>
+
+    {{-- OzBays Updates --}}
+    <div class="d-flex flex-row justify-content-between mt-2">
+        <div>
+            <h4 class="font-weight-bold blue-text">OzBays Updates</h4>
+            <p>Receive notifications about OzBays site/feature updates? If you're linked with Discord, this also controls a Discord role.</p>
+        </div>
+        <div style="width: 30%;">
+            <select name="ozbays_updates" class="form-control">
+                <option value="1" @if(Auth::user()->userPreferences->ozbays_updates == 1) selected @endif>Yes - Notify me about OzBays updates</option>
+                <option value="0" @if(Auth::user()->userPreferences->ozbays_updates == 0) selected @endif>No - Do not notify me about OzBays updates</option>
             </select>
         </div>
     </div>

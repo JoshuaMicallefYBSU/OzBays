@@ -11,6 +11,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PartialsController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,9 @@ Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->na
 Route::get('/map', [MapController::class, 'index'])->name('mapIndex');
 Route::get('/map/embed', [MapController::class, 'embed'])->name('mapEmbed');
 Route::get('/map/{icao}', [MapController::class, 'airportMap']);
+
+// Team
+Route::get('/team', [TeamController::class, 'index'])->name('team.index');
 
 // News Articles
 Route::get('/news', [NewsController::class, 'list'])->name('news.index');

@@ -32,6 +32,8 @@ class DashboardController extends Controller
         $user->hoppie_usage = $request->hoppie_usage;
         $user->email_feedback = $request->email_feedback;
         $user->news_notifications = $request->news_notifications;
+        $user->news_general = $request->news_general;
+        $user->ozbays_updates = $request->ozbays_updates;
         $user->save();
 
         return back()->with('success', 'Success!!! Your settings where updated!');
