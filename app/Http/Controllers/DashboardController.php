@@ -32,12 +32,15 @@ class DashboardController extends Controller
             'news_notifications' => 'required|boolean',
         ]);
 
-        // Always the authenticated user's own preferences - never an id from
-        // the request body.
-        $preferences = $request->user()->getUserPreferencesOrCreate();
-        $preferences->fill($data);
-        $preferences->save();
-
+        $user = UserPreference::where('user_id', $request->id)->first();
+        $user->name_format = $request->name_format;
+        $user->hoppie_usage = $request->hoppie_usage;
+        $user->email_feedback = $request->email_feedback;
+        $user->news_notifications = $request->news_notifications;
+        $user->news_general = $request->news_general;
+        $user->ozbays_updates = $request->ozbays_updates;
+        $user->save();
+      
         return back()->with('success', 'Success!!! Your settings where updated!');
     }
 

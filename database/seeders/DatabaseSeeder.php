@@ -21,9 +21,10 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         ### Create the assignable roles
-        $developer = Role::create(['id' => 1, 'name' => 'Developer']);
+        $leadDeveloper = Role::create(['id' => 1, 'name' => 'Lead Developer']);
         $maintainer = Role::create(['id' => 2, 'name' => 'Maintainer']);
         $contributor = Role::create(['id' => 3, 'name' => 'Contributor']);
+        $developer = Role::create(['id' => 4, 'name' => 'Developer']);
         $member = Role::create(['id' => 99, 'name' => 'Pilot']);
 
         ### Create permissions...
@@ -48,7 +49,7 @@ class DatabaseSeeder extends Seeder
         Permission::create(['name' => 'send notifications']);
 
 
-        $developer->syncPermissions([
+        $leadDeveloper->syncPermissions([
             'edit settings',
 
             'view users',
@@ -64,13 +65,17 @@ class DatabaseSeeder extends Seeder
             'send notifications'
         ]);
 
+        $developer->syncPermissions([
+            'view users',
+
+            'manage news',
+            'send notifications'
+        ]);
+
         $maintainer->syncPermissions([
             'approve changes',
             'update status',
             'view data',
-
-            'manage news',
-            'send notifications'
         ]);
         $contributor->syncPermissions([
             'view data'

@@ -14,5 +14,7 @@ class UserPreference extends Model
         'hoppie_usage',
         'email_feedback',
         'news_notifications',
+        'news_general',
+        'ozbays_updates',
     ];
 }

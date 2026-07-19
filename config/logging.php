@@ -76,6 +76,12 @@ return [
             'level' => 'debug',
         ],
 
+        'discord' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/discord.log'),
+            'level' => 'debug',
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
