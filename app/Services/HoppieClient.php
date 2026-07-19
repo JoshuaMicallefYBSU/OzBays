@@ -11,13 +11,14 @@ class HoppieClient
     protected Client $client;
     protected string $logon;
 
-    public function __construct()
+    public function __construct(?Client $client = null)
     {
-        $this->logon = env('HOPPIE_LOGON');
+        $this->logon = (string) config('services.hoppie.logon', '');
 
-        $this->client = new Client([
+        // Hoppie docs recommend a 15 second HTTP timeout
+        $this->client = $client ?? new Client([
             'base_uri' => 'http://www.hoppie.nl',
-            'timeout'  => 5,
+            'timeout'  => 15,
         ]);
     }
 
@@ -51,13 +52,47 @@ class HoppieClient
             return false;
         }
     }
-    
-    public function sendTelex(string $from, string $to, string $message): bool
+
+    /**
+     * Check the callsign's Hoppie session belongs to a VATSIM connection.
+     *
+     * Hoppie relays for several networks (VATSIM, IVAO, None). A ping only
+     * proves the callsign is on Hoppie - without this check an uplink could
+     * go to a different pilot flying the same callsign on another network.
+     */
+    public function isOnVatsim(string $callsign): bool
     {
-        // TELEX Message
         try {
-            $response = $this->client->get('/acars/system/connect.html', [
-                'query' => [
+            $response = $this->client->get('/acars/system/online.html', [
+                'query' => ['network' => 'VATSIM'],
+            ]);
+
+            $body = (string) $response->getBody();
+
+            // Station rows link to callsign.html?network=VATSIM&callsign=XXX
+            return (bool) preg_match(
+                '/callsign='.preg_quote(strtoupper($callsign), '/').'(?=[&"\'<\s])/',
+                $body
+            );
+
+        } catch (GuzzleException $e) {
+            Log::warning('Hoppie VATSIM network check failed', [
+                'callsign' => $callsign,
+                'error'    => $e->getMessage(),
+            ]);
+
+            // Page unavailable - assume OK rather than withholding every uplink
+            return true;
+        }
+    }
+
+    public function sendTelex(string $from, string $to, string $message, int $min = 1): bool
+    {
+        // TELEX Message - plain free text, real line breaks render as-is.
+        // POST per the Hoppie docs, so long packets don't hit URL length limits.
+        try {
+            $this->client->post('/acars/system/connect.html', [
+                'form_params' => [
                     'logon'  => $this->logon,
                     'from'   => strtoupper($from),
                     'to'     => strtoupper($to),
@@ -74,19 +109,24 @@ class HoppieClient
             ]);
         }
 
-        // CPDLC Message
+        // CPDLC Message - packet is /data2/<MIN>/<MRN>/<RA>/<text>.
+        // MRN stays empty (this uplink is not a reply to any downlink) and
+        // RA "NE" means no pilot response is required. "@" is the CPDLC
+        // line feed, so real newlines are swapped for it.
         try {
-            $response = $this->client->get('/acars/system/connect.html', [
-                'query' => [
+            $packet = sprintf('/data2/%d//NE/%s', $min, str_replace("\n", '@', $message));
+
+            $response = $this->client->post('/acars/system/connect.html', [
+                'form_params' => [
                     'logon'  => $this->logon,
                     'from'   => strtoupper($from),
                     'to'     => strtoupper($to),
                     'type'   => 'cpdlc',
-                    'packet' => '/data2/2/1/NE/ '.$message,
+                    'packet' => $packet,
                 ],
             ]);
 
-            return trim((string) $response->getBody()) === 'ok';
+            return str_starts_with(trim((string) $response->getBody()), 'ok');
 
         } catch (GuzzleException $e) {
             Log::error('CPDLC message send failed', [
@@ -105,7 +145,7 @@ class HoppieClient
      */
     public function sendIfConnected(string $from, string $to, string $message): bool
     {
-        if (! $this->isConnected($to)) {
+        if (! $this->isConnected($to, $from)) {
             return false;
         }
 

@@ -6,8 +6,8 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Services\DiscordClient;
-use App\Models\Roster\RosterMember;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use GuzzleHttp\Exception\ClientException;
@@ -22,13 +22,16 @@ class DiscordController extends Controller
     /*
     Discord connection/server join
     */
-    public function linkRedirectDiscord()
+    public function linkRedirectDiscord(Request $request)
     {
+        $request->session()->put('discord_state', $state = Str::random(40));
+
         $query = http_build_query([
-            'client_id' => env('DISCORD_CLIENT_ID'),
-            'redirect_uri' => env('APP_URL') . "/dashboard/discord/link/callback",
+            'client_id' => config('services.discord.client_id'),
+            'redirect_uri' => config('app.url') . "/dashboard/discord/link/callback",
             'response_type' => 'code',
             'scope' => 'identify',
+            'state' => $state,
         ]);
 
         return redirect('https://discord.com/oauth2/authorize?' . $query);
@@ -36,17 +39,24 @@ class DiscordController extends Controller
 
     public function linkCallbackDiscord(Request $request)
     {
+        // Verify the state issued at the start of the flow (OAuth CSRF guard)
+        $expectedState = $request->session()->pull('discord_state');
+
+        if (empty($expectedState) || ! hash_equals($expectedState, (string) $request->state)) {
+            return redirect()->route('dashboard.index')->with('error', 'Discord linking session expired or invalid. Please try again.');
+        }
+
         //Get access token using returned code
         $http = new Client();
 
         try {
             $response = $http->post('https://discord.com/api/v10/oauth2/token', [
                 'form_params' => [
-                    'client_id' => env('DISCORD_CLIENT_ID'),
-                    'client_secret' => env('DISCORD_CLIENT_SECRET'),
+                    'client_id' => config('services.discord.client_id'),
+                    'client_secret' => config('services.discord.client_secret'),
                     'grant_type' => 'authorization_code',
                     'code' => $request->code,
-                    'redirect_uri' => env('APP_URL') . "/dashboard/discord/link/callback",
+                    'redirect_uri' => config('app.url') . "/dashboard/discord/link/callback",
                     'scope' => 'identify'
                 ],
                 'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
@@ -55,7 +65,11 @@ class DiscordController extends Controller
             return redirect()->route('dashboard.index')->with('error', $e->getMessage());
         }
 
-        $access_token = json_decode($response->getBody(), true)['access_token'];
+        $access_token = json_decode($response->getBody(), true)['access_token'] ?? null;
+
+        if ($access_token === null) {
+            return redirect()->route('dashboard.index')->with('error', 'Discord did not return an access token. Please try again.');
+        }
 
         //Get User Details from access token
         try {
@@ -87,13 +101,16 @@ class DiscordController extends Controller
         return redirect()->route('dashboard.index')->with('success', 'Linked with account '.$discord_user['username'].'! Please join our Discord!');
     }
 
-    public function joinRedirectDiscord()
+    public function joinRedirectDiscord(Request $request)
     {
+        $request->session()->put('discord_state', $state = Str::random(40));
+
         $query = http_build_query([
-            'client_id' => env('DISCORD_CLIENT_ID'),
-            'redirect_uri' => env('APP_URL') . '/dashboard/discord/server/join/callback',
+            'client_id' => config('services.discord.client_id'),
+            'redirect_uri' => config('app.url') . '/dashboard/discord/server/join/callback',
             'response_type' => 'code',
             'scope' => 'identify guilds.join',
+            'state' => $state,
         ]);
 
         return redirect('https://discord.com/oauth2/authorize?' . $query);
@@ -101,6 +118,13 @@ class DiscordController extends Controller
 
     public function joinCallbackDiscord(Request $request)
     {
+        // Verify the state issued at the start of the flow (OAuth CSRF guard)
+        $expectedState = $request->session()->pull('discord_state');
+
+        if (empty($expectedState) || ! hash_equals($expectedState, (string) $request->state)) {
+            return redirect()->route('dashboard.index')->with('error', 'Discord join session expired or invalid. Please try again.');
+        }
+
         //Get the current user
         $user = auth()->user();
 
@@ -121,11 +145,11 @@ class DiscordController extends Controller
         try {
             $response = $http->post('https://discord.com/api/v10/oauth2/token', [
                 'form_params' => [
-                    'client_id' => env('DISCORD_CLIENT_ID'),
-                    'client_secret' => env('DISCORD_CLIENT_SECRET'),
+                    'client_id' => config('services.discord.client_id'),
+                    'client_secret' => config('services.discord.client_secret'),
                     'grant_type' => 'authorization_code',
                     'code' => $request->code,
-                    'redirect_uri' => env('APP_URL') . '/dashboard/discord/server/join/callback',
+                    'redirect_uri' => config('app.url') . '/dashboard/discord/server/join/callback',
                     'scope' => 'identify guilds.join'
                 ],
                 'headers' => ['Content-Type' => 'application/x-www-form-urlencoded']
@@ -134,17 +158,21 @@ class DiscordController extends Controller
             return redirect()->route('dashboard.index')->with('error', $e->getMessage());
         }
 
-        $access_token = json_decode($response->getBody(), true)['access_token'];
+        $access_token = json_decode($response->getBody(), true)['access_token'] ?? null;
+
+        if ($access_token === null) {
+            return redirect()->route('dashboard.index')->with('error', 'Discord did not return an access token. Please try again.');
+        }
 
 
         //Make em join Discord 
         try {
             $response = (new Client())
                 ->put(
-                    'https://discord.com/api/v10/guilds/'.env('DISCORD_GUILD_ID').'/members/'.$user->discord_user_id,
+                    'https://discord.com/api/v10/guilds/'.config('services.discord.guild_id').'/members/'.$user->discord_user_id,
                     [
                         'headers' => [
-                            'Authorization' => 'Bot ' . env('DISCORD_BOT_TOKEN')
+                            'Authorization' => 'Bot ' . config('services.discord.bot_token')
                         ],
                         'json' => [
                             'access_token' => $access_token,
@@ -176,9 +204,9 @@ class DiscordController extends Controller
             $http = new Client();
 
             try {
-                $http->delete('https://discord.com/api/v10/guilds/'.env('DISCORD_GUILD_ID').'/members/'.$user->discord_user_id, 
+                $http->delete('https://discord.com/api/v10/guilds/'.config('services.discord.guild_id').'/members/'.$user->discord_user_id,
                     [
-                        'headers' => ['Authorization' => 'Bot '.env('DISCORD_BOT_TOKEN')]
+                        'headers' => ['Authorization' => 'Bot '.config('services.discord.bot_token')]
                     ]);
             } catch (ClientException $e) {
                 return redirect()->route('dashboard.index')->with('error', $e->getMessage());

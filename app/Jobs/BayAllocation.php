@@ -24,7 +24,20 @@ class BayAllocation implements ShouldQueue
 {
     use Queueable;
 
+    public $timeout = 110;
+
+    public $tries = 1;
+
+    // Scheduled every minute - overlapping runs double-book bays and slots,
+    // so skip the dispatch when the previous run is still going.
+    public function middleware(): array
+    {
+        return [(new \Illuminate\Queue\Middleware\WithoutOverlapping('bay-allocation'))->dontRelease()->expireAfter(180)];
+    }
+
     protected array $freightOnlyTypes = [];
+
+    protected array $ignoredTypes = [];
 
     /**
      * Create a new job instance.
@@ -53,6 +66,13 @@ class BayAllocation implements ShouldQueue
             $this->freightOnlyTypes = array_values(array_unique(array_map('strtoupper', $rawJson['FreightOnly'])));
         }
 
+        // Ignored types (helicopters etc.) - never assigned a bay, never
+        // reported as a missing aircraft type.
+        $this->ignoredTypes = [];
+        if (is_array($rawJson) && isset($rawJson['Ignored']) && is_array($rawJson['Ignored'])) {
+            $this->ignoredTypes = array_values(array_unique(array_map('strtoupper', $rawJson['Ignored'])));
+        }
+
         $aircraftJSON = [];
         $priorityIndex = 0;
 
@@ -63,7 +83,7 @@ class BayAllocation implements ShouldQueue
                 continue;
             }
 
-            if ($groupKey === 'FreightOnly') {
+            if ($groupKey === 'FreightOnly' || $groupKey === 'Ignored') {
                 continue;
             }
 
@@ -83,11 +103,7 @@ class BayAllocation implements ShouldQueue
         $airports = Airports::all()->keyBy('icao');
         $bays = Bays::all();
 
-        if (env('APP_DEBUG') == true) {
-            $discordChannel = config('services.discord.'.env('APP_ENV').'.bay_assign');
-        } else {
-            $discordChannel = config('services.discord.'.env('APP_ENV').'.bay_assign');
-        }
+        $discordChannel = config('services.discord.'.config('app.env').'.bay_assign');
 
         $initialAssignment = false;
         $occupiedBays = []; // List of all bays currently with an Aircraft parked in them
@@ -166,9 +182,12 @@ class BayAllocation implements ShouldQueue
                 }
             }
 
-            // Does an arrival aircraft require bay assignment?
+            // Does an arrival aircraft require bay assignment? Ignored types
+            // (helicopters etc.) never get one.
             if ((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->status == 'On Approach' && $ac->eibt !== null) {
-                $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
+                if (! in_array(strtoupper((string) $ac->ac), $this->ignoredTypes, true)) {
+                    $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
+                }
             }
         }
 
@@ -312,11 +331,25 @@ class BayAllocation implements ShouldQueue
 
         // dd($data);
 
-        // Loop through the reassignment aircraft. Waits for min 4 mins before checking
+        // Loop through the reassignment aircraft. Waits for min 4 mins before checking,
+        // unless the inbound aircraft is within 5NM of the airport - then reassign
+        // immediately so the conflict is resolved before it arrives.
         // - Does conflict still exist (e.g. is bay occupied) - Yes, reassign | No, delete entry and continue.
         // - Set assigned bay to null, and
 
-        $conflicts = BayConflicts::where('created_at', '<=', now()->subMinutes(4))->with('SlotInfo')->with('FlightInfo')->get();
+        $conflicts = BayConflicts::with('SlotInfo')->with('FlightInfo')
+            ->get()
+            ->filter(function ($conflict) {
+                if ($conflict->created_at <= now()->subMinutes(4)) {
+                    return true;
+                }
+
+                $flight = $conflict->FlightInfo;
+
+                return $flight !== null
+                    && $flight->distance !== null
+                    && (float) $flight->distance <= AirportFlightState::IMMEDIATE_REASSIGN_RADIUS_NM;
+            });
         $info2 = [];
         foreach ($conflicts as $conflict) {
 
@@ -433,11 +466,19 @@ class BayAllocation implements ShouldQueue
         }
 
         if ($aircraftIndex === null) {
+            // Deliberately unsupported types (helicopters etc.) are skipped
+            // quietly rather than reported as missing.
+            if (in_array($acType, $this->ignoredTypes, true)) {
+                Log::channel('aircraft')->info($acType.' is an ignored type - no bay assignment for '.$info->callsign);
+
+                return null;
+            }
+
             Log::channel('aircraft')->error($info->ac.' type does not exist');
             MissingAircraftType::recordMiss($acType);
             $discord = app(DiscordClient::class);
             try {
-                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
+                $discord->sendMessage(config('services.discord.'.config('app.env').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
@@ -463,14 +504,19 @@ class BayAllocation implements ShouldQueue
         // Grab Live Bay Assignment
         $live_bay = FlightLiveBays::where('callsign', $cs['cs'])->where('airport', $cs['arr'])->with('bayInfo')->first();
 
-        if ($live_bay !== null) {
-            // Check if the IRL Bay Assignment is available - If so, select it
-            if ($live_bay->scheduled_bay !== null) {
-                if ($live_bay->bayInfo->status == null) {
-                    $live_bay_details = $live_bay->bayInfo;
+        if ($live_bay !== null && $live_bay->scheduled_bay !== null && $live_bay->bayInfo !== null) {
+            // Check if the IRL Bay Assignment is available and can actually
+            // take this aircraft type - the real-world aircraft may be larger
+            // or smaller than the one being flown on the network.
+            $bayTypes = array_map('strtoupper', array_filter(explode('/', (string) $live_bay->bayInfo->aircraft)));
+            $fits = count(array_intersect($bayTypes, array_map('strtoupper', $allowedTypes))) > 0;
 
-                    return $live_bay_details;
-                }
+            if ($live_bay->bayInfo->status == null && $fits) {
+                return $live_bay->bayInfo;
+            }
+
+            if (! $fits) {
+                Log::channel('bays')->error($cs['cs'].' live bay '.$live_bay->bayInfo->bay.' at '.$cs['arr'].' does not fit a '.$acType.' - falling through to standard assignment');
             }
         }
 
@@ -650,7 +696,13 @@ class BayAllocation implements ShouldQueue
         try {
             $value = $this->selectBay($cs, $aircraftJSON, $discordChannel);
 
-            // dd($value);
+            // Nothing selected (unknown flight or ignored aircraft type) -
+            // skip quietly rather than erroring on a null bay below.
+            if ($value === null) {
+                Log::channel('bays')->info("No bay selected for {$info['cs']} - skipping assignment");
+
+                return null;
+            }
 
             $eobt = $this->bayTimeCalcs($info['eibt']);
             $core = $this->bayCore($value->bay);
@@ -707,7 +759,7 @@ class BayAllocation implements ShouldQueue
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
-                $arrBay = $value->bay;
+                $arrBay = $this->bayDisplayName($value);
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
             } elseif ($initial == 2) {
@@ -732,7 +784,7 @@ class BayAllocation implements ShouldQueue
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
-                $arrBay = $value->bay;
+                $arrBay = $this->bayDisplayName($value);
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
             }
 
@@ -741,7 +793,7 @@ class BayAllocation implements ShouldQueue
             Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
             $discord = app(DiscordClient::class);
             try {
-                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
+                $discord->sendMessage(config('services.discord.'.config('app.env').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
@@ -787,10 +839,16 @@ class BayAllocation implements ShouldQueue
         $arrival = Airports::where('icao', $arr)->first();
 
         // Only run the check on Production with an Active Airport
-        if (env('APP_ENV') == 'production') {
+        if (config('app.env') == 'production') {
             Log::channel('hoppie')->error('Attempting Hoppie Message for Flight '.$flight);
 
-            if ($hoppie->isConnected($flight, $arr)) {
+            if (! $hoppie->isConnected($flight, $arr)) {
+                Log::channel('hoppie')->error($flight.' not connected to Hoppie Network. Exiting.');
+            } elseif (! $hoppie->isOnVatsim($flight)) {
+                // Same callsign may be on Hoppie via IVAO or offline flying -
+                // only uplink when the connection is confirmed as VATSIM.
+                Log::channel('hoppie')->error($flight.' is on Hoppie via a non-VATSIM network. Uplink withheld.');
+            } else {
                 if ($arrival->status == 'testing') {
                     Log::channel('hoppie')->error($flight.' connected to the Hoppie Network & airport is in tester mode.');
 
@@ -809,7 +867,7 @@ class BayAllocation implements ShouldQueue
                 }
 
                 if ($send_message == true) {
-                    $hoppie->sendTelex($arr, $flight, $Uplink);
+                    $hoppie->sendTelex($arr, $flight, $Uplink, $version);
 
                     $discord = app(DiscordClient::class);
                     try {
@@ -819,8 +877,6 @@ class BayAllocation implements ShouldQueue
                         Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
                     }
                 }
-            } else {
-                Log::channel('hoppie')->error($flight.' not connected to Hoppie Network. Exiting.');
             }
         } else {
             echo '- Not on the Production Server: Skipping Hoppie Message';
@@ -832,23 +888,25 @@ class BayAllocation implements ShouldQueue
 
     private function BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid): string
     {
+        // Plain uppercase free text only. "@" is a line feed in CPDLC clients
+        // and "\" renders literally, so neither belongs inside the message.
         if ($version == 1) {
             $messageLines = [
-                "{$arr} ARRIVAL INFO \\",
-                "@{$flight}@, {$dep}-{$arr} \\",
-                "ARR BAY: @{$bayType}, {$arrBay}@ \\",
-                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \\',
-                'RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \\',
+                "{$arr} ARRIVAL INFO",
+                "{$flight}, {$dep}-{$arr}",
+                "ARR BAY: {$bayType}, {$arrBay}",
+                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC',
+                'RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ',
                 'RMK/ ACK NOT REQUIRED WITH ATC',
                 'END BAY UPLINK',
             ];
         } elseif ($version == 2) {
             $messageLines = [
-                "{$arr} ARRIVAL UPDATE \\",
-                "@{$flight}@, {$dep}-{$arr} \\",
-                "ARR BAY: @{$bayType}, {$arrBay}@ \\",
-                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \\',
-                'RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY \\',
+                "{$arr} ARRIVAL UPDATE",
+                "{$flight}, {$dep}-{$arr}",
+                "ARR BAY: {$bayType}, {$arrBay}",
+                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC',
+                'RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY',
                 'RMK/ ACK NOT REQUIRED WITH ATC',
                 'END BAY UPLINK',
             ];
@@ -873,6 +931,17 @@ class BayAllocation implements ShouldQueue
         preg_match('/^[A-Za-z]*\d+/', $bay, $m);
 
         return $m[0];
+    }
+
+    // Bay name for pilot-facing messages - appends the optional descriptive
+    // long name (e.g. "D55 (DOMESTIC 55)") when one is configured.
+    private function bayDisplayName($bay): string
+    {
+        if (! empty($bay->long_name)) {
+            return $bay->bay.' ('.strtoupper($bay->long_name).')';
+        }
+
+        return $bay->bay;
     }
 
     private function airportDistance($lat, $lon, $airports)

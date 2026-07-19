@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@php $preferences = Auth::user()->getUserPreferencesOrCreate(); @endphp
 <h2>Your OzBays Settings, {{Auth::user()->fullName('F')}}</h2>
 <p>See all the settings which you can control throughout OzBays. Make sure to press the save button with any changes you would like!</p>
 <div class="pb-3">
@@ -10,9 +11,6 @@
 <hr>
 <form action="{{route('dashboard.settings.save')}}" method="POST">
     @csrf
-
-    {{-- Hidden Items --}}
-    <input required type="hidden" value={{Auth::user()->id}} name="id" maxlength="10" id="id" class="form-control">
 
     {{-- General Sections --}}
     <h2><u>General</u></h2>
@@ -26,10 +24,10 @@
 
         <div style="width: 30%;">
             <select name="name_format" class="form-control">
-                <option value="0" @if(Auth::user()->userPreferences->name_format == 0) selected @endif>{{Auth::user()->id}} (CID Only)</option>
-                <option value="1" @if(Auth::user()->userPreferences->name_format == 1) selected @endif>{{Auth::user()->fname}} - {{Auth::user()->id}} (First Name + CID)</option>
-                <option value="2" @if(Auth::user()->userPreferences->name_format == 2) selected @endif>{{Auth::user()->fname}} {{substr(Auth::user()->lname, 0, 1)}} - {{Auth::user()->id}} (First Name, Initial Last Name + CID)</option>
-                <option value="3" @if(Auth::user()->userPreferences->name_format == 3) selected @endif>{{Auth::user()->fname}} {{Auth::user()->lname}} - {{Auth::user()->id}} (First & Last Name + CID)</option>
+                <option value="0" @if($preferences->name_format == 0) selected @endif>{{Auth::user()->id}} (CID Only)</option>
+                <option value="1" @if($preferences->name_format == 1) selected @endif>{{Auth::user()->fname}} - {{Auth::user()->id}} (First Name + CID)</option>
+                <option value="2" @if($preferences->name_format == 2) selected @endif>{{Auth::user()->fname}} {{substr(Auth::user()->lname, 0, 1)}} - {{Auth::user()->id}} (First Name, Initial Last Name + CID)</option>
+                <option value="3" @if($preferences->name_format == 3) selected @endif>{{Auth::user()->fname}} {{Auth::user()->lname}} - {{Auth::user()->id}} (First & Last Name + CID)</option>
             </select>
         </div>
     </div>
@@ -44,8 +42,8 @@
         </div>
         <div style="width: 30%;">
             <select name="hoppie_usage" class="form-control">
-                <option value="1" @if(Auth::user()->userPreferences->hoppie_usage == 1) selected @endif>Yes - Send me a message via the Hoppie Network</option>
-                <option value="0" @if(Auth::user()->userPreferences->hoppie_usage == 0) selected @endif>No - Never send me hoppie messages</option>
+                <option value="1" @if($preferences->hoppie_usage == 1) selected @endif>Yes - Send me a message via the Hoppie Network</option>
+                <option value="0" @if($preferences->hoppie_usage == 0) selected @endif>No - Never send me hoppie messages</option>
             </select>
         </div>
     </div>
@@ -63,8 +61,8 @@
         </div>
         <div style="width: 30%;">
             <select name="news_notifications" class="form-control">
-                <option value="1" @if(Auth::user()->userPreferences->news_notifications == 1) selected @endif>Yes - Notify me about new news articles</option>
-                <option value="0" @if(Auth::user()->userPreferences->news_notifications == 0) selected @endif>No - Do not notify me about new news articles</option>
+                <option value="1" @if($preferences->news_notifications == 1) selected @endif>Yes - Notify me about new news articles</option>
+                <option value="0" @if($preferences->news_notifications == 0) selected @endif>No - Do not notify me about new news articles</option>
             </select>
         </div>
     </div>
@@ -110,8 +108,8 @@
         </div>
         <div style="width: 30%;">
             <select name="email_feedback" class="form-control">
-                <option value="1" @if(Auth::user()->userPreferences->email_feedback == 1) selected @endif>Yes - Recieve feedback from OzBays about your experience</option>
-                <option value="0" @if(Auth::user()->userPreferences->email_feedback == 0) selected @endif>No - I do not want to provide feedback</option>
+                <option value="1" @if($preferences->email_feedback == 1) selected @endif>Yes - Recieve feedback from OzBays about your experience</option>
+                <option value="0" @if($preferences->email_feedback == 0) selected @endif>No - I do not want to provide feedback</option>
             </select>
         </div>
     </div>

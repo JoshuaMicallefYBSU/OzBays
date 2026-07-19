@@ -13,6 +13,14 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
 
+    // The primary key is the VATSIM CID supplied at login, not an
+    // auto-increment - without this, Eloquent overwrote the in-memory id
+    // with lastInsertId() after create, so the created() hook wrote
+    // UserPreference rows against the wrong user_id.
+    public $incrementing = false;
+
+    protected $keyType = 'int';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,7 +32,7 @@ class User extends Authenticatable
         'lname',
         'email',
         'permissions',
-        'gdpr_subscriped_emails',
+        'gdpr_subscribed_emails',
         'deleted',
         'init',
         'discord_username',
@@ -61,35 +69,39 @@ class User extends Authenticatable
     {
         $preferences = $this->getUserPreferencesOrCreate();
 
-        if ($format === 'FLC') {
-            if ($preferences->name_format == 0) {
-                return $this->id;
-            } elseif ($preferences->name_format == 1) {
-                return $this->fname . ' - ' . $this->id;
-            } elseif ($preferences->name_format == 2) {
-                return $this->fname . ' ' . substr($this->lname, 0, 1) . ' - ' . $this->id;
-            } elseif ($preferences->name_format == 3) {
-                return $this->fname . ' ' . $this->lname . ' - ' . $this->id;
-            }
-        } elseif ($format === 'FL') {
-            if ($preferences->name_format == 0) {
-                return $this->id;
-            } elseif ($preferences->name_format == 1) {
-                return $this->fname;
-            } elseif ($preferences->name_format == 2) {
-                return $this->fname . ' ' . substr($this->lname, 0, 1);
-            } elseif ($preferences->name_format == 3) {
-                return $this->fname . ' ' . $this->lname;
-            }
-        } elseif ($format === 'F') {
-            if ($preferences->name_format == 0) {
-                return $this->id;
-            } elseif (in_array($preferences->name_format, [1, 2, 3])) {
-                return $this->fname;
-            }
+        // Normalise so an unexpected value can never blank the name out -
+        // fall back to the default display style (format 2).
+        $nameFormat = (int) $preferences->name_format;
+        if (! in_array($nameFormat, [0, 1, 2, 3], true)) {
+            $nameFormat = 2;
         }
 
-        return null;
+        if ($format === 'FLC') {
+            if ($nameFormat == 0) {
+                return $this->id;
+            } elseif ($nameFormat == 1) {
+                return $this->fname . ' - ' . $this->id;
+            } elseif ($nameFormat == 2) {
+                return $this->fname . ' ' . substr((string) $this->lname, 0, 1) . ' - ' . $this->id;
+            }
+
+            return $this->fname . ' ' . $this->lname . ' - ' . $this->id;
+        }
+
+        if ($format === 'FL') {
+            if ($nameFormat == 0) {
+                return $this->id;
+            } elseif ($nameFormat == 1) {
+                return $this->fname;
+            } elseif ($nameFormat == 2) {
+                return $this->fname . ' ' . substr((string) $this->lname, 0, 1);
+            }
+
+            return $this->fname . ' ' . $this->lname;
+        }
+
+        // 'F' and any unknown format request
+        return $nameFormat == 0 ? $this->id : $this->fname;
     }
 
     public function userPreferences()
@@ -116,8 +128,10 @@ class User extends Authenticatable
     {
         // If the user doesnt have a role, then give them one temporarily.
         if (count($this->roles) == 0) {
-            // Assign them guest
+            // Assign them guest, then reload so the cached empty relation
+            // doesn't make roles[0] blow up below.
             $this->assignRole('Pilot');
+            $this->load('roles');
         }
 
         return $this->roles[0];

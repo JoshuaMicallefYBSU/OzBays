@@ -86,13 +86,17 @@ class MapController extends Controller
                     ];
                 }
 
+        // JSON_HEX_TAG etc. stop any "</script>" inside data strings from
+        // breaking out of the inline <script> block these are printed into.
+        $jsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP;
+
         return view('map.embed', [
             'geojson' => json_encode([
                 'type'     => 'FeatureCollection',
                 'features' => $features,
-            ]),
-            'airportsJson' => $airports->toJson(),
-            'aircraftJson' => $flights->toJson(),
+            ], $jsonFlags),
+            'airportsJson' => $airports->toJson($jsonFlags),
+            'aircraftJson' => $flights->toJson($jsonFlags),
         ]);
     }
 }

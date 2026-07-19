@@ -21,11 +21,10 @@ class PagesController extends Controller
 
     public function AirportUpdate()
     {
-        $job = AerodromeUpdates::dispatch();
-        $result = $job->handle();
+        AerodromeUpdates::dispatchSync();
+
         return response()->json([
             'message' => 'Job executed successfully',
-            'data' => $result,
         ]);
     }
 
