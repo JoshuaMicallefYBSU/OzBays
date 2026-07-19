@@ -69,35 +69,39 @@ class User extends Authenticatable
     {
         $preferences = $this->getUserPreferencesOrCreate();
 
-        if ($format === 'FLC') {
-            if ($preferences->name_format == 0) {
-                return $this->id;
-            } elseif ($preferences->name_format == 1) {
-                return $this->fname . ' - ' . $this->id;
-            } elseif ($preferences->name_format == 2) {
-                return $this->fname . ' ' . substr($this->lname, 0, 1) . ' - ' . $this->id;
-            } elseif ($preferences->name_format == 3) {
-                return $this->fname . ' ' . $this->lname . ' - ' . $this->id;
-            }
-        } elseif ($format === 'FL') {
-            if ($preferences->name_format == 0) {
-                return $this->id;
-            } elseif ($preferences->name_format == 1) {
-                return $this->fname;
-            } elseif ($preferences->name_format == 2) {
-                return $this->fname . ' ' . substr($this->lname, 0, 1);
-            } elseif ($preferences->name_format == 3) {
-                return $this->fname . ' ' . $this->lname;
-            }
-        } elseif ($format === 'F') {
-            if ($preferences->name_format == 0) {
-                return $this->id;
-            } elseif (in_array($preferences->name_format, [1, 2, 3])) {
-                return $this->fname;
-            }
+        // Normalise so an unexpected value can never blank the name out -
+        // fall back to the default display style (format 2).
+        $nameFormat = (int) $preferences->name_format;
+        if (! in_array($nameFormat, [0, 1, 2, 3], true)) {
+            $nameFormat = 2;
         }
 
-        return null;
+        if ($format === 'FLC') {
+            if ($nameFormat == 0) {
+                return $this->id;
+            } elseif ($nameFormat == 1) {
+                return $this->fname . ' - ' . $this->id;
+            } elseif ($nameFormat == 2) {
+                return $this->fname . ' ' . substr((string) $this->lname, 0, 1) . ' - ' . $this->id;
+            }
+
+            return $this->fname . ' ' . $this->lname . ' - ' . $this->id;
+        }
+
+        if ($format === 'FL') {
+            if ($nameFormat == 0) {
+                return $this->id;
+            } elseif ($nameFormat == 1) {
+                return $this->fname;
+            } elseif ($nameFormat == 2) {
+                return $this->fname . ' ' . substr((string) $this->lname, 0, 1);
+            }
+
+            return $this->fname . ' ' . $this->lname;
+        }
+
+        // 'F' and any unknown format request
+        return $nameFormat == 0 ? $this->id : $this->fname;
     }
 
     public function userPreferences()

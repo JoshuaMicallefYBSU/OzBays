@@ -121,6 +121,30 @@ class SecurityFixesTest extends TestCase
         $this->assertDatabaseMissing('user_preferences', ['user_id' => 0]);
     }
 
+    public function test_full_name_never_returns_blank_even_with_an_invalid_name_format(): void
+    {
+        $user = $this->makeUser(100005);
+
+        $preferences = $user->getUserPreferencesOrCreate();
+        $preferences->name_format = 99; // out of range - used to return null
+        $preferences->save();
+
+        $this->assertSame('Test P - 100005', $user->fresh()->fullName('FLC'));
+        $this->assertSame('Test P', $user->fresh()->fullName('FL'));
+        $this->assertSame('Test', $user->fresh()->fullName('F'));
+    }
+
+    public function test_full_name_formats_render_with_the_correct_cid(): void
+    {
+        $user = $this->makeUser(100006);
+
+        $preferences = $user->getUserPreferencesOrCreate();
+        $preferences->name_format = 3;
+        $preferences->save();
+
+        $this->assertSame('Test Pilot - 100006', $user->fresh()->fullName('FLC'));
+    }
+
     public function test_aerodrome_updates_aborts_instead_of_wiping_on_malformed_json(): void
     {
         Airports::create(['icao' => 'YSSY', 'lat' => '-33.9', 'lon' => '151.1', 'name' => 'Sydney', 'color' => '#fff', 'status' => 'active', 'check_exist' => 1]);
