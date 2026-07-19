@@ -25,14 +25,18 @@ class DashboardController extends Controller
 
     public function settingsSave(Request $request)
     {
-        // return $request->all();
+        $data = $request->validate([
+            'name_format' => 'required|integer|between:0,3',
+            'hoppie_usage' => 'required|boolean',
+            'email_feedback' => 'required|boolean',
+            'news_notifications' => 'required|boolean',
+        ]);
 
-        $user = UserPreference::where('user_id', $request->id)->first();
-        $user->name_format = $request->name_format;
-        $user->hoppie_usage = $request->hoppie_usage;
-        $user->email_feedback = $request->email_feedback;
-        $user->news_notifications = $request->news_notifications;
-        $user->save();
+        // Always the authenticated user's own preferences - never an id from
+        // the request body.
+        $preferences = $request->user()->getUserPreferencesOrCreate();
+        $preferences->fill($data);
+        $preferences->save();
 
         return back()->with('success', 'Success!!! Your settings where updated!');
     }
@@ -61,7 +65,7 @@ class DashboardController extends Controller
         $bay = Bays::where('bay', $bay_url)->where('airport', $icao)->first();
 
         if($bay == null){
-            return redirect()->route('dashboard.admin.airport.view', [$icao])->with('error', 'Bay '.$bay.' does not exist at '.$icao.'. Please select from the below bay options.');
+            return redirect()->route('dashboard.admin.airport.view', [$icao])->with('error', 'Bay '.$bay_url.' does not exist at '.$icao.'. Please select from the below bay options.');
         }
 
         return view('dashboard.admin.airport.bay-view', compact('bay'));
@@ -99,21 +103,29 @@ class DashboardController extends Controller
         return back()->with('success', 'Role "'.$role.'" removed from '.$user->fullName('FL').'.');
     }
 
+    // Look up the airport referenced by an admin toggle, 404-safe.
+    private function findAirportOrAbort(Request $request): Airports
+    {
+        $request->validate(['icao' => 'required|string']);
+
+        return Airports::where('icao', $request->icao)->firstOrFail();
+    }
+
     // Disable Airport Function
     public function disableAirport(Request $request)
     {
-        $airport = Airports::where('icao', $request->icao)->first();
+        $airport = $this->findAirportOrAbort($request);
 
         $airport->status = 'testing';
         $airport->save();
 
-        return back()->with('success', 'Airport has successfully been disabled!');
+        return back()->with('success', 'Airport has been set to testing mode - uplinks now go to testers only.');
     }
 
     // Activate Airport Function
     public function activateAirport(Request $request)
     {
-        $airport = Airports::where('icao', $request->icao)->first();
+        $airport = $this->findAirportOrAbort($request);
 
         $airport->status = 'active';
         $airport->save();
@@ -124,7 +136,7 @@ class DashboardController extends Controller
     // Disable Airport Function
     public function disableLiveAirport(Request $request)
     {
-        $airport = Airports::where('icao', $request->icao)->first();
+        $airport = $this->findAirportOrAbort($request);
 
         $airport->live_bays = 0;
         $airport->save();
@@ -135,7 +147,7 @@ class DashboardController extends Controller
     // Activate Airport Function
     public function activateLiveAirport(Request $request)
     {
-        $airport = Airports::where('icao', $request->icao)->first();
+        $airport = $this->findAirportOrAbort($request);
 
         $airport->live_bays = 1;
         $airport->save();

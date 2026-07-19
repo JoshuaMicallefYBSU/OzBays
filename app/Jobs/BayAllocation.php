@@ -24,6 +24,17 @@ class BayAllocation implements ShouldQueue
 {
     use Queueable;
 
+    public $timeout = 110;
+
+    public $tries = 1;
+
+    // Scheduled every minute - overlapping runs double-book bays and slots,
+    // so skip the dispatch when the previous run is still going.
+    public function middleware(): array
+    {
+        return [(new \Illuminate\Queue\Middleware\WithoutOverlapping('bay-allocation'))->dontRelease()->expireAfter(180)];
+    }
+
     protected array $freightOnlyTypes = [];
 
     protected array $ignoredTypes = [];
@@ -92,11 +103,7 @@ class BayAllocation implements ShouldQueue
         $airports = Airports::all()->keyBy('icao');
         $bays = Bays::all();
 
-        if (env('APP_DEBUG') == true) {
-            $discordChannel = config('services.discord.'.env('APP_ENV').'.bay_assign');
-        } else {
-            $discordChannel = config('services.discord.'.env('APP_ENV').'.bay_assign');
-        }
+        $discordChannel = config('services.discord.'.config('app.env').'.bay_assign');
 
         $initialAssignment = false;
         $occupiedBays = []; // List of all bays currently with an Aircraft parked in them
@@ -471,7 +478,7 @@ class BayAllocation implements ShouldQueue
             MissingAircraftType::recordMiss($acType);
             $discord = app(DiscordClient::class);
             try {
-                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
+                $discord->sendMessage(config('services.discord.'.config('app.env').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
@@ -786,7 +793,7 @@ class BayAllocation implements ShouldQueue
             Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
             $discord = app(DiscordClient::class);
             try {
-                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
+                $discord->sendMessage(config('services.discord.'.config('app.env').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
@@ -832,7 +839,7 @@ class BayAllocation implements ShouldQueue
         $arrival = Airports::where('icao', $arr)->first();
 
         // Only run the check on Production with an Active Airport
-        if (env('APP_ENV') == 'production') {
+        if (config('app.env') == 'production') {
             Log::channel('hoppie')->error('Attempting Hoppie Message for Flight '.$flight);
 
             if (! $hoppie->isConnected($flight, $arr)) {

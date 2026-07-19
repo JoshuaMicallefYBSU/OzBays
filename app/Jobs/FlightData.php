@@ -14,15 +14,25 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
 
 class FlightData implements ShouldQueue
 {
     use Queueable;
 
-    public $timeout = 55;
+    // The production path is 4 update cycles with 45s of sleeps between them,
+    // so 55s guaranteed a mid-run kill. Long enough now for a full cycle.
+    public $timeout = 115;
 
     public $tries = 1;
+
+    // Scheduled every minute - if a run is still going, skip this dispatch
+    // instead of processing the same VATSIM data twice concurrently.
+    public function middleware(): array
+    {
+        return [(new WithoutOverlapping('flight-data'))->dontRelease()->expireAfter(180)];
+    }
 
     /**
      * Create a new job instance.
@@ -37,7 +47,7 @@ class FlightData implements ShouldQueue
      */
     public function handle(): void
     {
-        if (env('APP_DEBUG') == true) {
+        if (config('app.debug') == true) {
             $this->update();
         } else {
             for ($i = 0; $i < 4; $i++) {
@@ -78,8 +88,6 @@ class FlightData implements ShouldQueue
         }
 
         foreach ($pilots as $pilot) {
-
-            $aircraft = Flights::where('callsign', $pilot->callsign)->first();
 
             $airportMatch = null;
             foreach ($airports as $icao => $airport) {
@@ -172,7 +180,7 @@ class FlightData implements ShouldQueue
                     $status = 'Unknown';
                 }
 
-                $type = str_starts_with($departure, 'Y') ? 'DOM' : 'INTL';
+                $type = str_starts_with((string) $departure, 'Y') ? 'DOM' : 'INTL';
 
                 // Collate the Data
                 $arrivalAircraft[$arrival][] = [
@@ -208,8 +216,10 @@ class FlightData implements ShouldQueue
         foreach ($OnGround as $aa) {
             $existing = Flights::where('callsign', $aa['callsign'])->first();
             $changedPlan = $existing && $this->changedPlan($existing, $aa['dep'], $aa['arr']);
+            // Never write 'id' here - flights.id is the auto-increment key that
+            // bay_allocation.callsign references; forcing it to the pilot CID
+            // rewrote primary keys and orphaned allocations.
             $payload = [
-                'id' => $aa['cid'],
                 'cid' => $aa['cid'],
                 'hdg' => $aa['hdg'],
                 'dep' => $aa['dep'],
@@ -240,7 +250,6 @@ class FlightData implements ShouldQueue
                 $existing = Flights::where('callsign', $ac['callsign'])->first();
                 $changedPlan = $existing && $this->changedPlan($existing, $ac['dep'], $ac['arr']);
                 $payload = [
-                    'id' => $ac['cid'],
                     'cid' => $ac['cid'],
                     'dep' => $ac['dep'],
                     'ac' => $ac['ac'],

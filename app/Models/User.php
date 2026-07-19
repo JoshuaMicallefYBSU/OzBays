@@ -13,6 +13,14 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
 
+    // The primary key is the VATSIM CID supplied at login, not an
+    // auto-increment - without this, Eloquent overwrote the in-memory id
+    // with lastInsertId() after create, so the created() hook wrote
+    // UserPreference rows against the wrong user_id.
+    public $incrementing = false;
+
+    protected $keyType = 'int';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,7 +32,7 @@ class User extends Authenticatable
         'lname',
         'email',
         'permissions',
-        'gdpr_subscriped_emails',
+        'gdpr_subscribed_emails',
         'deleted',
         'init',
         'discord_username',
@@ -116,8 +124,10 @@ class User extends Authenticatable
     {
         // If the user doesnt have a role, then give them one temporarily.
         if (count($this->roles) == 0) {
-            // Assign them guest
+            // Assign them guest, then reload so the cached empty relation
+            // doesn't make roles[0] blow up below.
             $this->assignRole('Pilot');
+            $this->load('roles');
         }
 
         return $this->roles[0];

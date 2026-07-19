@@ -15,6 +15,12 @@ class LiveBaysJob implements ShouldQueue
 {
     use Queueable;
 
+    // The per-airport rate-limit sleep (61s) means this job legitimately runs
+    // for minutes - the queue default of 60s would kill it on the first airport.
+    public $timeout = 3600;
+
+    public $tries = 1;
+
     /**
      * Create a new job instance.
      */
@@ -55,7 +61,10 @@ class LiveBaysJob implements ShouldQueue
         foreach($airports as $airport){
             $schedules = $aeroapi->getAirportSchedule($airport->icao, $airport->live_type);
 
-            // dd($schedules);
+            // API failure or unexpected shape - skip this airport rather than crash the job
+            if (! is_array($schedules) || ! is_array($schedules['scheduled_arrivals'] ?? null)) {
+                continue;
+            }
 
             foreach($schedules['scheduled_arrivals'] as $schedule){
 

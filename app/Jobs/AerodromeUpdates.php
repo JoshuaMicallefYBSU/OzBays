@@ -5,6 +5,7 @@ namespace App\Jobs;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use App\Models\Airports;
 use App\Models\Bays;
 
@@ -29,6 +30,14 @@ class AerodromeUpdates implements ShouldQueue
         $jsonPath = public_path('config/airport.json');
         $rawJson = json_decode(File::get($jsonPath), true);
         $airports = $rawJson['Airports'] ?? [];
+
+        // A missing or malformed file must never wipe the database - the
+        // sync below deletes everything that isn't re-confirmed by the JSON.
+        if (! is_array($airports) || $airports === []) {
+            Log::error('AerodromeUpdates aborted: airport.json is missing, malformed, or contains no airports.');
+
+            return;
+        }
 
         ### UPDATE THE AIRPORTS & BAYS
         // Set all airports to not checked
@@ -70,10 +79,9 @@ class AerodromeUpdates implements ShouldQueue
                     'pax_type'      => $bay['Type'],
                     'operators'  => $bay['Operator'],
                     'priority'  => $bay['Priority'],
-                    'lat'       => $bay['lat'],
                     'check_exist'   => 1,
                     'terminal'  => $bay['Terminal'],
-                ]);   
+                ]);
             }
         }
 

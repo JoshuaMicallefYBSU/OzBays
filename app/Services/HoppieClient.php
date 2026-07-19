@@ -13,7 +13,7 @@ class HoppieClient
 
     public function __construct(?Client $client = null)
     {
-        $this->logon = (string) env('HOPPIE_LOGON', '');
+        $this->logon = (string) config('services.hoppie.logon', '');
 
         // Hoppie docs recommend a 15 second HTTP timeout
         $this->client = $client ?? new Client([

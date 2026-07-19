@@ -61,13 +61,17 @@ Route::prefix('admin')->group(function () {
     });
 
     // Airport Information
-    Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
-    Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
-    Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
-    Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
-    Route::post('airport/live-activate', [DashboardController::class, 'activateLiveAirport'])->name('dashboard.admin.airport.live-activate');
-    Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
-    Route::post('airport/activate', [DashboardController::class, 'activateAirport'])->name('dashboard.admin.airport.activate');
+    Route::middleware(['auth', 'can:view data'])->group(function () {
+        Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
+        Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
+        Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
+    });
+    Route::middleware(['auth', 'can:update status'])->group(function () {
+        Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
+        Route::post('airport/live-activate', [DashboardController::class, 'activateLiveAirport'])->name('dashboard.admin.airport.live-activate');
+        Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
+        Route::post('airport/activate', [DashboardController::class, 'activateAirport'])->name('dashboard.admin.airport.activate');
+    });
     // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
     // Route::post('airport/{icao}/approve', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.approve.change');
 
@@ -84,7 +88,7 @@ Route::prefix('admin')->group(function () {
     });
 
     // Aircraft Information
-    Route::get('aircraft', [DashboardController::class, 'aircraftList'])->name('dashboard.admin.aircraft.all');
+    Route::get('aircraft', [DashboardController::class, 'aircraftList'])->middleware(['auth', 'can:view data'])->name('dashboard.admin.aircraft.all');
 });
 
 // News Administration
@@ -129,8 +133,8 @@ Route::prefix('notifications')->middleware('auth')->group(function () {
 });
 
 // Updates
-Route::get('/update/airports', [PagesController::class, 'AirportUpdate'])->name('airportsupdate');
-Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi'); // Local Running Only
+Route::get('/update/airports', [PagesController::class, 'AirportUpdate'])->middleware(['auth', 'can:approve changes'])->name('airportsupdate');
+Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi'); // Local Running Only - environment-gated in the controller
 
 // ## Authentication Section - VATSIM SSO :)
 // Authentication

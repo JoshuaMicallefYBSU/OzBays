@@ -39,7 +39,23 @@ return [
         'token' => env('CHANGELOG_TOKEN'),
     ],
 
+    'hoppie' => [
+        'logon' => env('HOPPIE_LOGON'),
+    ],
+
+    'aeroapi' => [
+        'main' => env('API_MAIN_KEY'),
+        'backup' => env('API_BACKUP_KEY'),
+        'mainbackup' => env('API_MAINBACKUP_KEY'),
+        'reserve' => env('API_RESERVE_KEY'),
+    ],
+
     'discord' => [
+        'bot_token' => env('DISCORD_BOT_TOKEN'),
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'guild_id' => env('DISCORD_GUILD_ID'),
+
         // Local System Logic
         'local' => [
             'bay_assign'    => 1454375087473168405,
