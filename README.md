@@ -1,96 +1,59 @@
-<p align="center">
-  <a href="https://ozbays.xyz" target="_blank">
-    <img src="public/img/logo.png" width="320" alt="OzBays logo — a taxiway signpost with aircraft type signs">
-  </a>
-</p>
-
-<h1 align="center">OzBays</h1>
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
-  <strong>Automatic bay assignment for VATSIM Australia Pacific (VATPAC) controlled airports.</strong>
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-<p align="center">
-  <a href="https://ozbays.xyz"><img src="https://img.shields.io/badge/website-ozbays.xyz-FFD400?style=flat-square" alt="Website"></a>
-  <img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel&logoColor=white" alt="Laravel 12">
-  <img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.2+">
-  <img src="https://img.shields.io/badge/status-alpha-orange?style=flat-square" alt="Alpha">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square" alt="Apache 2.0 License"></a>
-</p>
+## About Laravel
 
----
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-OzBays watches the live [VATSIM](https://vatsim.net) network and automatically assigns arrival bays to aircraft inbound to supported Australian airports — then tells the pilot about it, just like the real world does. It mirrors real-life gate assignments where possible, resolves conflicts when someone parks on your bay, and uplinks the assignment straight to the cockpit over CPDLC.
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-> **Status:** OzBays is in active alpha development and is currently **not deployed** for operational use on the VATSIM network.
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Features
+## Learning Laravel
 
-- ✈️ **Automatic bay assignment** — inbound aircraft are matched to a suitable bay based on aircraft type/wingspan group, operator preferences, freight vs passenger operations, and domestic/international status.
-- 🌏 **Real-world bay mirroring** — scheduled arrival data feeds real-life gate assignments into the allocator, so the network flight parks where the real flight did (when it fits!).
-- 📡 **Hoppie CPDLC / TELEX uplinks** — pilots connected to the [Hoppie ACARS network](https://www.hoppie.nl/acars/) on VATSIM receive their assigned bay as a datalink uplink before arrival.
-- 🔄 **Conflict resolution** — if an aircraft parks on a bay that's already assigned to an arrival, the inbound aircraft is automatically reassigned (immediately when it's within 5NM).
-- 🗺️ **Live map** — every monitored aircraft and the live status of every bay (available / booked / occupied) on an interactive map.
-- 🛬 **Arrival ladders & flight displays** — a FIDS-style arrival board per airport, plus a boarding-gate-style display for each flight.
-- 🖥️ **OzStrips integration** — a JSON API exposing live assignments for [OzStrips](https://ozstrips.vatpac.org/) and other VATPAC tooling.
-- 🔔 **Discord integration** — bay assignments, conflicts, and system events streamed to Discord, with account linking and role sync.
-- 🛡️ **Role-based administration** — VATSIM Connect SSO sign-in, with a maintainer approval workflow for airport data changes.
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
 
-## How it works
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-A set of scheduled jobs keeps everything in sync:
+## Laravel Sponsors
 
-| Job | Schedule | What it does |
-| --- | --- | --- |
-| `FlightData` | Every minute | Pulls the VATSIM datafeed, tracks every flight inbound to a supported airport, and computes landing/on-blocks estimates. |
-| `BayAllocation` | Every minute | Detects bay occupancy, books bays for arrivals, resolves conflicts, and sends Hoppie/Discord notifications. |
-| `LiveBaysJob` | Hourly | Fetches real-world scheduled arrivals and maps their gates onto OzBays bay definitions. |
-| `AerodromeUpdates` | On demand | Syncs airport and bay definitions from the airport configuration JSON. |
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-Airport and bay definitions (coordinates, allowed aircraft groups, operator priorities, terminals) live in `public/config/airport.json`, with aircraft type groups in `public/config/aircraft.json`.
+### Premium Partners
 
-## Getting started
-
-Requires **PHP 8.2+**, **Composer**, **Node.js**, and a MySQL database (SQLite works for local development).
-
-```bash
-git clone https://github.com/JoshuaMicallefYBSU/OzBays.git
-cd OzBays
-
-# Install dependencies, create .env, generate a key, migrate, and build assets
-composer setup
-
-# Run the dev server, queue worker, log viewer, and Vite together
-composer dev
-```
-
-You'll also need to configure a few services in `.env`:
-
-| Key | Purpose |
-| --- | --- |
-| `CONNECT_*` | [VATSIM Connect](https://vatsim.dev/services/connect/) OAuth credentials for sign-in |
-| `HOPPIE_LOGON` | Hoppie ACARS logon code for CPDLC/TELEX uplinks |
-| `DISCORD_*` | Discord bot token, OAuth client, and guild for notifications & account linking |
-| `API_*_KEY` | Flight schedule API keys for real-world bay data |
-
-The scheduler drives the update jobs — in production run `php artisan schedule:run` each minute (cron), alongside a queue worker.
-
-## Testing
-
-```bash
-composer test
-```
-
-The suite runs on an in-memory SQLite database with the external services (Discord, Hoppie, VATSIM) faked.
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
 
 ## Contributing
 
-Found a bug or have an idea? [Open an issue](https://github.com/JoshuaMicallefYBSU/OzBays/issues) — bug reports from pilots and controllers using the site are especially welcome. Pull requests should target the `Next-Release` branch.
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
 ## License
 
-OzBays is open-source software licensed under the [Apache License 2.0](LICENSE).
-
-<p align="center">
-  <sub>© Joshua Micallef · OzBays is a community project for flight simulation on the VATSIM network and is not affiliated with any real-world airline or airport operator.</sub>
-</p>
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

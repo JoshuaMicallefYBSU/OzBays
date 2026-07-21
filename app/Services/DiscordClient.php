@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
+use App\Jobs\ProcessDiscordRoles;
+use GuzzleHttp\Exception\ClientException;
+use App\Models\Users\User;
 use Carbon\Carbon;
 
 class DiscordClient
@@ -15,7 +18,7 @@ class DiscordClient
             'base_uri' => 'https://discord.com/api/v10/',
             'headers' => [
                 'Accept' => 'application/json',
-                'Authorization' => 'Bot '.config('services.discord.bot_token'),
+                'Authorization' => 'Bot '.env('DISCORD_BOT_TOKEN'),
             ],
         ]);
     }
@@ -38,10 +41,8 @@ class DiscordClient
 
     public function sendMessageWithEmbed($channelId, $title, $description, $color)
     {
-        // Brief pause between embeds so bursts stay under Discord's rate limit
-        // (sleep() takes whole seconds - sleep(0.2) was silently sleep(0))
-        usleep(200000);
-
+        sleep(0.2);
+        
         $response = $this->client->post("channels/{$channelId}/messages", [
             'json' => [
                 "tts" => false,

@@ -69,15 +69,6 @@ class BayAllocationHelpersTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_bay_display_name_appends_the_long_name_when_configured(): void
-    {
-        $withLong = new \App\Models\Bays(['bay' => 'D55', 'long_name' => 'Domestic 55']);
-        $this->assertSame('D55 (DOMESTIC 55)', $this->callPrivate('bayDisplayName', [$withLong]));
-
-        $without = new \App\Models\Bays(['bay' => 'C4']);
-        $this->assertSame('C4', $this->callPrivate('bayDisplayName', [$without]));
-    }
-
     public function test_airport_distance_matches_the_nearest_airport_within_the_local_radius(): void
     {
         $airports = [

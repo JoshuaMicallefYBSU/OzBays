@@ -105,7 +105,6 @@
                     <thead>
                         <tr>
                             <th scope="col">Identifier</th>
-                            <th scope="col">Long Name</th>
                             <th scope="col">Max Aircraft</th>
                             <th scope="col">Operator</th>
                             <th scope="col">Bay Type</th>
@@ -116,7 +115,6 @@
                         @foreach ($airport->allBays as $bay)
                             <tr>
                                 <td>{{$bay->bay}}</td>
-                                <td>{{$bay->long_name ?? '—'}}</td>
                                 <td>{{$bay->aircraft}}</td>
                                 <td>{{$bay->operators ?? 'all operators'}}</td>
                                 <td>{{$bay->pax_type ?? 'all types'}}</td>

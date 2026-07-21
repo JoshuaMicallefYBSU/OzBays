@@ -8,8 +8,6 @@ class AirportFlightState
 {
     public const LOCAL_AIRPORT_RADIUS_NM = 3.0;
 
-    public const IMMEDIATE_REASSIGN_RADIUS_NM = 5.0;
-
     public const CONFIRMED_BAY_RADIUS_METERS = 30.0;
 
     public const STATIONARY_SPEED_KTS = 5.0;

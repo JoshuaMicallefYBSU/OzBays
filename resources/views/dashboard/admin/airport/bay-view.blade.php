@@ -25,18 +25,6 @@
                     <input type="text" class="form-control" value="{{$bay->bay}}">
                 </div>
 
-                {{-- Long Name --}}
-                <div class="input-group mb-3 hover-info">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="basic-addon1">Long Name</span>
-                    </div>
-                    <input type="text" class="form-control" value="{{$bay->long_name}}">
-
-                    <div class="hover-box">
-                        Optional descriptive name shown to pilots, e.g. "Domestic 55" for bay D55.
-                    </div>
-                </div>
-
                 {{-- Lat --}}
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">

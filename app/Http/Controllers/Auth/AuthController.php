@@ -43,18 +43,6 @@ class AuthController extends Controller
 
     public function validateConnectLogin(Request $request)
     {
-        // Reject callbacks whose state doesn't match the one issued at the
-        // start of the flow - otherwise the login is open to OAuth CSRF.
-        $expectedState = $request->session()->pull('state');
-
-        if (empty($expectedState) || ! hash_equals($expectedState, (string) $request->state)) {
-            return redirect()->route('home')->with('error', 'Login session expired or invalid. Please try signing in again.');
-        }
-
-        if (empty($request->code)) {
-            return redirect()->route('home')->with('error', 'No authorisation code was returned from VATSIM Connect.');
-        }
-
         $http = new Client();
 
         try {
@@ -97,8 +85,10 @@ class AuthController extends Controller
         $user = User::updateOrCreate(
             ['id' => $response->data->cid],
             [
-                'email' => $response->data->personal->email ?? 'no-reply@ozbays.xyz',
-                'fname' => $response->data->personal->name_first ?? $response->data->cid,
+                'email' => $response->data->personal->email ?? 'no-reply@ganderoceanic.ca',
+                'fname' => isset($response->data->personal->name_first)
+                    ? utf8_decode($response->data->personal->name_first)
+                    : $response->data->cid,
                 'lname' => $response->data->personal->name_last ?? $response->data->cid,
             ]
         );

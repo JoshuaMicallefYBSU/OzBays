@@ -26,13 +26,8 @@ class VATSIMClient
             return $this->getVATSIMData();
         });
 
-        // Datafeed unavailable - return an empty result rather than crashing
-        if ($data === null || ! isset($data->controllers)) {
-            return $precise ? null : [];
-        }
-
         $controllers = [];
-
+        
         foreach ($data->controllers as $controller) {
             if ($precise) {
                 if ($controller->callsign == $callsign) {

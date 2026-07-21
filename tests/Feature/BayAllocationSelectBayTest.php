@@ -107,39 +107,6 @@ class BayAllocationSelectBayTest extends TestCase
         $this->assertSame($fallbackBay->id, $selected->id);
     }
 
-    public function test_live_bay_assignment_is_skipped_when_the_bay_cannot_take_the_aircraft_type(): void
-    {
-        $flight = Flights::create([
-            'callsign' => 'QFA1004', 'cid' => 1, 'dep' => 'YSSY', 'arr' => 'YBBN', 'ac' => 'B738',
-            'hdg' => '0', 'type' => null, 'lat' => '-27.0', 'lon' => '153.0', 'speed' => '400',
-            'alt' => '35000', 'distance' => 100, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
-        ]);
-
-        $fallbackBay = Bays::create([
-            'airport' => 'YBBN', 'bay' => 'A1', 'lat' => '-27.0', 'lon' => '153.0',
-            'aircraft' => 'B738', 'priority' => 1, 'operators' => null, 'pax_type' => null,
-            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
-        ]);
-
-        // The IRL aircraft parked on an A321-only bay the network B738 can't use.
-        $liveOnlyBay = Bays::create([
-            'airport' => 'YBBN', 'bay' => 'Z9', 'lat' => '-27.0', 'lon' => '153.0',
-            'aircraft' => 'A321', 'priority' => 9, 'operators' => null, 'pax_type' => null,
-            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
-        ]);
-
-        FlightLiveBays::create([
-            'callsign' => 'QFA1004', 'airport' => 'YBBN', 'terminal' => 'T1', 'gate' => 'Z9',
-            'scheduled_bay' => $liveOnlyBay->id,
-        ]);
-
-        $job = new BayAllocation;
-        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A321'], ['B738']]);
-
-        $this->assertNotNull($selected);
-        $this->assertSame($fallbackBay->id, $selected->id);
-    }
-
     public function test_unknown_aircraft_type_is_recorded_and_reported_but_a_bay_is_still_selected(): void
     {
         $flight = Flights::create([

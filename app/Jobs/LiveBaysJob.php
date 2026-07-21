@@ -15,12 +15,6 @@ class LiveBaysJob implements ShouldQueue
 {
     use Queueable;
 
-    // The per-airport rate-limit sleep (61s) means this job legitimately runs
-    // for minutes - the queue default of 60s would kill it on the first airport.
-    public $timeout = 3600;
-
-    public $tries = 1;
-
     /**
      * Create a new job instance.
      */
@@ -61,10 +55,7 @@ class LiveBaysJob implements ShouldQueue
         foreach($airports as $airport){
             $schedules = $aeroapi->getAirportSchedule($airport->icao, $airport->live_type);
 
-            // API failure or unexpected shape - skip this airport rather than crash the job
-            if (! is_array($schedules) || ! is_array($schedules['scheduled_arrivals'] ?? null)) {
-                continue;
-            }
+            // dd($schedules);
 
             foreach($schedules['scheduled_arrivals'] as $schedule){
 
@@ -104,7 +95,7 @@ class LiveBaysJob implements ShouldQueue
                 foreach($all_callsigns as $callsign){
                     $flight_data[$schedule['destination']['code_icao']][] = [
                         'callsign'      =>  $callsign['operator'].''.$callsign['flight_number'],
-                        'aircraft'      =>  $schedule['aircraft_type'] ?? null,
+                        'aircraft'      =>  $callsign['aircraft_type'] ?? null,
                         'operator'      =>  $callsign['operator'],
                         'flight_number' =>  $callsign['flight_number'],
                         'arrival'       =>  $schedule['destination']['code_icao'],
@@ -124,7 +115,10 @@ class LiveBaysJob implements ShouldQueue
         foreach($flight_data as $airport_data){
             foreach($airport_data as $flight){
 
-                $bay = $this->matchBay($flight['arrival'], $flight['terminal'], $flight['gate']);
+                $bay = Bays::where('airport', $flight['arrival'])
+                    ->where('terminal', 'LIKE', '%' . $flight['terminal'] . '%')
+                    ->where('bay', 'LIKE', '%' . $flight['gate'] . '%')
+                    ->first();
 
                 if($bay == null){
                     
@@ -154,44 +148,7 @@ class LiveBaysJob implements ShouldQueue
             $os->delete();
         }
 
-    }
+        dd($flight_data);
 
-    /**
-     * Map a live feed terminal/gate pair to an OzBays bay record.
-     *
-     * Matches on the exact bay name only. The old substring LIKE match
-     * ("%4%") could link a gate to any unrelated bay containing the same
-     * digit - this is how C4 at YMML ended up pointing at B24.
-     */
-    public function matchBay(string $airport, ?string $terminal, ?string $gate): ?Bays
-    {
-        $gate = strtoupper(trim((string) $gate));
-        $terminal = trim((string) $terminal);
-
-        if ($gate === '') {
-            return null;
-        }
-
-        $bayQuery = Bays::where('airport', $airport)
-            ->whereRaw('UPPER(bay) = ?', [$gate]);
-
-        if ($terminal !== '') {
-            $bayQuery->where(function ($q) use ($terminal) {
-                $q->where('terminal', 'LIKE', '%' . $terminal . '%')
-                    ->orWhereNull('terminal');
-            });
-        }
-
-        $bay = $bayQuery->first();
-
-        // Some feeds split "C4" into terminal "C" + gate "4" - try the
-        // terminal-prefixed name before treating the bay as missing.
-        if ($bay === null && $terminal !== '') {
-            $bay = Bays::where('airport', $airport)
-                ->whereRaw('UPPER(bay) = ?', [strtoupper($terminal) . $gate])
-                ->first();
-        }
-
-        return $bay;
     }
 }

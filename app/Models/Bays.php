@@ -13,7 +13,6 @@ class Bays extends Model
     protected $fillable = [
         'airport',
         'bay',
-        'long_name',
         'lat',
         'lon',
         'aircraft',

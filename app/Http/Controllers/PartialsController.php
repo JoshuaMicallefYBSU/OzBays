@@ -132,11 +132,8 @@ class PartialsController extends Controller
 
     public function updateAirportStats()
     {
-        // "+ 0" coerces the value to a number before sorting, so counts of 10+
-        // rank correctly even where the column is still a string type
-        // (lexicographic order puts "9" above "10").
-        $stats_ground = Airports::whereIn('status', ['testing', 'active'])->where('stats_ground', '>', 0)->orderByRaw('stats_ground + 0 DESC')->limit(3)->get();
-        $stats_inbound = Airports::whereIn('status', ['testing', 'active'])->where('stats_inbound', '>', 0)->orderByRaw('stats_inbound + 0 DESC')->limit(3)->get();
+        $stats_ground = Airports::whereIn('status', ['testing', 'active'])->where('stats_ground', '>', 0)->orderBy('stats_ground', 'desc')->limit(3)->get();
+        $stats_inbound = Airports::whereIn('status', ['testing', 'active'])->where('stats_inbound', '>', 0)->orderBy('stats_inbound', 'desc')->limit(3)->get();
 
         return view('partials.airport-stats', compact('stats_ground', 'stats_inbound'))->render();
     }
