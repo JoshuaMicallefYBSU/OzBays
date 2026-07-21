@@ -485,16 +485,71 @@ class BayAllocation implements ShouldQueue
 
         $aircraftPrioritySql = 'GREATEST('.implode(', ', $aircraftPriorityParts).')';
 
-        $availableBaysQuery = Bays::where('airport', $info->arr)
+        // Try the strict match first, then progressively relax the operator
+        // restriction and finally the pax_type restriction so a momentarily
+        // exhausted bay pool doesn't leave us with zero candidates.
+        $relaxationLevels = [
+            ['operator' => true, 'pax' => true],
+            ['operator' => false, 'pax' => true],
+            ['operator' => false, 'pax' => false],
+        ];
+
+        $availableBays = collect();
+
+        foreach ($relaxationLevels as $level) {
+            $availableBays = $this->buildBayQuery(
+                $info, $allowedTypes, $aircraftPrioritySql, $operator, $isFreight,
+                $level['operator'], $level['pax']
+            )->get();
+
+            if ($availableBays->isNotEmpty()) {
+                if (! $level['operator'] || ! $level['pax']) {
+                    Log::channel('bays')->warning(
+                        "selectBay() relaxed matching for {$cs['cs']} ({$acType}) at {$info->arr} - "
+                        .'operator='.($level['operator'] ? 'strict' : 'any')
+                        .', pax_type='.($level['pax'] ? 'strict' : 'any')
+                    );
+                }
+
+                break;
+            }
+        }
+
+        if ($availableBays->isEmpty()) {
+            Log::channel('bays')->error("selectBay() found no eligible bay for {$cs['cs']} ({$acType}) at {$info->arr} - no bays match even after relaxing operator/pax_type restrictions");
+
+            return null;
+        }
+
+        if (! app()->runningUnitTests()) {
+            echo 'Available bays for '.$cs['cs'].'<br>';
+            echo $availableBays.'<br><br><br>';
+        }
+
+        // Randomise selection within the top 7 candidates so it isn't always the same bay over time.
+        $candidates = $availableBays->take(7);
+        $selectedBay = $candidates->random();
+
+        return $selectedBay;
+    }
+
+    // Builds the eligible-bay query. $enforceOperator/$enforcePax control whether
+    // the operator whitelist / pax_type match are applied, so selectBay() can
+    // relax them in stages when the strict match returns nothing.
+    private function buildBayQuery($info, $allowedTypes, $aircraftPrioritySql, $operator, $isFreight, $enforceOperator, $enforcePax)
+    {
+        return Bays::where('airport', $info->arr)
             ->whereNull('callsign')
 
-            ->when(! $isFreight, function ($q) use ($info) {
-                $q->whereRaw('(pax_type = ? OR pax_type IS NULL)', [$info->type]);
-            })
+            ->when($isFreight, function ($q) use ($enforcePax) {
+                $q->when($enforcePax, function ($q2) {
+                    $q2->where('pax_type', 'FRT');
+                });
+            }, function ($q) use ($info, $enforcePax) {
+                $q->when($enforcePax, function ($q2) use ($info) {
+                    $q2->whereRaw('(pax_type = ? OR pax_type IS NULL)', [$info->type]);
+                });
 
-            ->when($isFreight, function ($q) {
-                $q->where('pax_type', 'FRT');
-            }, function ($q) {
                 $q->where(function ($q2) {
                     $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
                 });
@@ -513,9 +568,11 @@ class BayAllocation implements ShouldQueue
                 }
             })
 
-            ->where(function ($q) use ($operator) {
-                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                    ->orWhereNull('operators');
+            ->when($enforceOperator, function ($q) use ($operator) {
+                $q->where(function ($q2) use ($operator) {
+                    $q2->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                        ->orWhereNull('operators');
+                });
             })
 
             ->orderByRaw($aircraftPrioritySql)
@@ -529,113 +586,6 @@ class BayAllocation implements ShouldQueue
                 ", [$operator])
 
             ->orderByRaw('RAND()');
-
-        $availableBays = $availableBaysQuery->get();
-
-        if ($isFreight && ($availableBays === null || $availableBays->isEmpty())) {
-            $availableBays = Bays::where('airport', $info->arr)
-                ->whereNull('callsign')
-                ->whereRaw('(pax_type = ? OR pax_type IS NULL)', [$info->type])
-                ->orderBy('priority', 'asc')
-                ->where(function ($q) use ($allowedTypes) {
-                    foreach ($allowedTypes as $type) {
-                        $q->orWhereRaw(
-                            "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
-                            [$type]
-                        );
-                    }
-                })
-                ->where(function ($q) use ($operator) {
-                    $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                        ->orWhereNull('operators');
-                })
-                ->where(function ($q2) {
-                    $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
-                })
-                ->orderByRaw($aircraftPrioritySql)
-                ->orderByRaw("
-                        CASE 
-                            WHEN operators IS NULL THEN 4
-                            ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
-                        END
-                    ", [$operator])
-                ->orderByRaw('RAND()')
-                ->get();
-        }
-
-        // ###### - Oh No, The Harder Rule returned no options!!!!!!!  We need to find something, so lets do a relaxed version.......
-        // $availableBays = null; //Set this when testing the relaxed function
-
-        if ($availableBays == null) {
-            // $aircraftPriorityParts = [];
-
-            // foreach ($allowedTypes as $i => $type) {
-            //     $aircraftPriorityParts[] =
-            //         "IF(FIND_IN_SET('$type', REPLACE(aircraft, '/', ',')) > 0, $i, -1)";
-            // }
-
-            // $aircraftPrioritySql = "GREATEST(" . implode(", ", $aircraftPriorityParts) . ")";
-
-            // $availableBaysQuery = Bays::where('airport', $info->arr)
-            //     ->whereNull('callsign')
-
-            //     ->when(!$isFreight, function ($q) use ($info) {
-            //         $q->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type]);
-            //     })
-
-            //     ->when($isFreight, function ($q) {
-            //         $q->where('pax_type', 'FRT');
-            //     }, function ($q) {
-            //         $q->where(function ($q2) {
-            //             $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
-            //         });
-            //     })
-
-            //     // Order by Bay Prioriies (1=most, 9=never?)
-            //     ->orderBy('priority', 'asc')
-
-            //     // Order bays by Aircraft Closeness to
-            //     ->where(function ($q) use ($allowedTypes) {
-            //         foreach ($allowedTypes as $type) {
-            //             $q->orWhereRaw(
-            //                 "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
-            //                 [$type]
-            //             );
-            //         }
-            //     })
-
-            //     ->where(function ($q) use ($operator) {
-            //         $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-            //         ->orWhereNull('operators');
-            //     })
-
-            //     ->orderByRaw($aircraftPrioritySql)
-
-            //     // Operator Order (QFA, QLK v QLK, QFA assignment priority)
-            //     ->orderByRaw("
-            //         CASE
-            //             WHEN operators IS NULL THEN 4
-            //             ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
-            //         END
-            //     ", [$operator])
-
-            //     ->orderByRaw("RAND()");
-
-            // $availableBays = $availableBaysQuery->get();
-
-            // dd($availableBays);
-        }
-
-        if (! app()->runningUnitTests()) {
-            echo 'Available bays for '.$cs['cs'].'<br>';
-            echo $availableBays.'<br><br><br>';
-        }
-
-        // Randomise selection within the top 7 candidates so it isn't always the same bay over time.
-        $candidates = $availableBays->take(7);
-        $selectedBay = $candidates->random();
-
-        return $selectedBay;
     }
 
     private function assignBay($cs, $aircraftJSON, $initial, $discordChannel)
@@ -651,6 +601,10 @@ class BayAllocation implements ShouldQueue
             $value = $this->selectBay($cs, $aircraftJSON, $discordChannel);
 
             // dd($value);
+
+            if ($value === null) {
+                return null;
+            }
 
             $eobt = $this->bayTimeCalcs($info['eibt']);
             $core = $this->bayCore($value->bay);

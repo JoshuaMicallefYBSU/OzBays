@@ -163,4 +163,73 @@ class BayAllocationSelectBayTest extends TestCase
         $this->assertNotNull($selected);
         $this->assertSame($b738Bay->id, $selected->id);
     }
+
+    public function test_operator_restricted_bay_is_still_selected_when_it_is_the_only_compatible_bay(): void
+    {
+        // Reproduces the RCL13/YPPH bug: the only aircraft-compatible bay belongs to
+        // an operator whitelist that doesn't include this flight's operator. Strict
+        // matching finds nothing, so selectBay() should relax the operator restriction
+        // instead of crashing on Collection::random() against an empty result.
+        $flight = Flights::create([
+            'callsign' => 'RCL13', 'cid' => 1, 'dep' => 'YMML', 'arr' => 'YPPH', 'ac' => 'B77W',
+            'hdg' => '0', 'type' => 'DOM', 'lat' => '-32.0', 'lon' => '116.0', 'speed' => '371',
+            'alt' => '14964', 'distance' => 46, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
+        ]);
+
+        $restrictedBay = Bays::create([
+            'airport' => 'YPPH', 'bay' => '17A', 'lat' => '-31.9', 'lon' => '115.9',
+            'aircraft' => 'B77W', 'priority' => 1, 'operators' => 'QFA, NWK', 'pax_type' => 'DOM',
+            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        $job = new BayAllocation;
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YPPH'], [['B77W']]);
+
+        $this->assertNotNull($selected);
+        $this->assertSame($restrictedBay->id, $selected->id);
+    }
+
+    public function test_pax_type_restriction_is_relaxed_when_no_operator_open_bay_matches_the_flight_pax_type(): void
+    {
+        $flight = Flights::create([
+            'callsign' => 'RCL15', 'cid' => 1, 'dep' => 'YMML', 'arr' => 'YPPH', 'ac' => 'B77W',
+            'hdg' => '0', 'type' => 'DOM', 'lat' => '-32.0', 'lon' => '116.0', 'speed' => '371',
+            'alt' => '14964', 'distance' => 46, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
+        ]);
+
+        // Aircraft-compatible bay exists, operators is open, but pax_type is INTL, not DOM.
+        $intlBay = Bays::create([
+            'airport' => 'YPPH', 'bay' => '153', 'lat' => '-31.9', 'lon' => '115.9',
+            'aircraft' => 'B77W', 'priority' => 1, 'operators' => null, 'pax_type' => 'INTL',
+            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        $job = new BayAllocation;
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YPPH'], [['B77W']]);
+
+        $this->assertNotNull($selected);
+        $this->assertSame($intlBay->id, $selected->id);
+    }
+
+    public function test_selectbay_returns_null_without_crashing_when_no_bay_matches_even_after_relaxing(): void
+    {
+        $flight = Flights::create([
+            'callsign' => 'RCL16', 'cid' => 1, 'dep' => 'YMML', 'arr' => 'YPPH', 'ac' => 'B77W',
+            'hdg' => '0', 'type' => 'DOM', 'lat' => '-32.0', 'lon' => '116.0', 'speed' => '371',
+            'alt' => '14964', 'distance' => 46, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
+        ]);
+
+        // Only bay at the airport is aircraft-incompatible (A320 vs B77W), so no
+        // amount of operator/pax_type relaxation should conjure up a match.
+        Bays::create([
+            'airport' => 'YPPH', 'bay' => '10', 'lat' => '-31.9', 'lon' => '115.9',
+            'aircraft' => 'A320', 'priority' => 1, 'operators' => null, 'pax_type' => 'DOM',
+            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        $job = new BayAllocation;
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YPPH'], [['B77W']]);
+
+        $this->assertNull($selected);
+    }
 }
