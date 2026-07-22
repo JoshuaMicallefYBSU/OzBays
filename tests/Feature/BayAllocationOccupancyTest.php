@@ -178,6 +178,63 @@ class BayAllocationOccupancyTest extends TestCase
         $this->assertStringContainsString('Diversion', $this->discord->embeds[0]['title']);
     }
 
+    public function test_flight_that_overflies_its_arrival_airport_has_its_planned_bay_released_and_is_notified(): void
+    {
+        $bay = Bays::create([
+            'airport' => 'YBBN', 'bay' => 'D2', 'lat' => '-27.0', 'lon' => '153.0',
+            'aircraft' => 'A321', 'priority' => 1, 'operators' => null, 'pax_type' => null,
+            'status' => 1, 'callsign' => 'QFA401', 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        // Still filed to YBBN and still airborne, but now well past the 200NM release
+        // radius — it flew over the field instead of landing.
+        $flight = Flights::create([
+            'callsign' => 'QFA401', 'cid' => 1, 'dep' => 'YSSY', 'arr' => 'YBBN', 'ac' => 'A321',
+            'hdg' => '0', 'type' => null, 'lat' => '-29.0', 'lon' => '153.0', 'speed' => '450',
+            'alt' => '35000', 'distance' => 220, 'elt' => null, 'eibt' => now(), 'status' => 'Inbound', 'online' => 1,
+        ]);
+
+        BayAllocations::create([
+            'airport' => 'YBBN', 'bay' => $bay->id, 'bay_core' => 'D2', 'callsign' => $flight->id,
+            'status' => 'PLANNED', 'eibt' => now()->addHour(), 'eobt' => now()->addHours(2),
+        ]);
+
+        ob_start();
+        (new BayAllocation)->handle();
+        ob_end_clean();
+
+        $this->assertSame(0, BayAllocations::count());
+        $this->assertNotEmpty($this->discord->embeds);
+        $this->assertStringContainsString('Overflight', $this->discord->embeds[0]['title']);
+    }
+
+    public function test_flight_still_inside_the_release_radius_keeps_its_planned_bay(): void
+    {
+        $bay = Bays::create([
+            'airport' => 'YBBN', 'bay' => 'D3', 'lat' => '-27.0', 'lon' => '153.0',
+            'aircraft' => 'A321', 'priority' => 1, 'operators' => null, 'pax_type' => null,
+            'status' => 1, 'callsign' => 'QFA402', 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        $flight = Flights::create([
+            'callsign' => 'QFA402', 'cid' => 1, 'dep' => 'YSSY', 'arr' => 'YBBN', 'ac' => 'A321',
+            'hdg' => '0', 'type' => null, 'lat' => '-27.5', 'lon' => '153.0', 'speed' => '250',
+            'alt' => '10000', 'distance' => 120, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
+        ]);
+
+        BayAllocations::create([
+            'airport' => 'YBBN', 'bay' => $bay->id, 'bay_core' => 'D3', 'callsign' => $flight->id,
+            'status' => 'PLANNED', 'eibt' => now()->addMinutes(20), 'eobt' => now()->addHours(1),
+        ]);
+
+        ob_start();
+        (new BayAllocation)->handle();
+        ob_end_clean();
+
+        $this->assertSame(1, BayAllocations::count());
+        $this->assertEmpty($this->discord->embeds);
+    }
+
     public function test_conflicting_arrival_is_recorded_when_wrong_aircraft_parks_on_a_planned_bay(): void
     {
         $bay = Bays::create([

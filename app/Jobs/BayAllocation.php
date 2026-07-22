@@ -229,6 +229,51 @@ class BayAllocation implements ShouldQueue
             }
         }
 
+        // Check for Aircraft that have overflown their arrival airport - still filed to
+        // the same destination and still airborne, but now further away than the release
+        // radius. A bay is only ever assigned once a flight is "On Approach" (< 200NM), so
+        // seeing it beyond that radius again means it flew past without landing. Release
+        // the PLANNED bay slot(s) rather than leaving them blocked until the flight
+        // eventually goes fully offline.
+        foreach ($allFlights as $flight) {
+
+            if (! $flight->relationLoaded('assignedBay') || $flight->assignedBay->isEmpty()) {
+                continue;
+            }
+
+            if ($flight->speed === null || (float) $flight->speed <= AirportFlightState::AIRBORNE_SPEED_KTS) {
+                continue;
+            }
+
+            if ($flight->distance === null || (float) $flight->distance <= AirportFlightState::OVERFLIGHT_RELEASE_RADIUS_NM) {
+                continue;
+            }
+
+            $plannedSlots = $flight->assignedBay->filter(
+                fn ($bay) => $bay->status === 'PLANNED' && $flight->id == $bay->callsign
+            );
+
+            if ($plannedSlots->isEmpty()) {
+                continue;
+            }
+
+            echo "Overflight detected for {$flight->callsign} - releasing bay(s), now {$flight->distance}NM from {$flight->arr}\n";
+
+            $firstSlot = $plannedSlots->first();
+
+            foreach ($plannedSlots as $slot) {
+                $slot->delete();
+            }
+
+            $discord = app(DiscordClient::class);
+            try {
+                $discord->sendMessageWithEmbed($discordChannel, 'Overflight of '.$flight->arr.' | '.$flight->callsign, 'Aircraft has overflown '.$flight->arr.' and is now '.round($flight->distance).'NM away. Bay '.$firstSlot->bay_core.' at '.$firstSlot->airport.' has now been marked as available.', 'fc1c03');
+            } catch (\Exception $e) {
+                // if discord fails, log the error, but don't kill the whole job
+                Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
+            }
+        }
+
         // ########### 2. Update Slot Infromation for Aircraft on the Ground!
 
         // Slot Allocation - Check it exists for the aircraft at the bay

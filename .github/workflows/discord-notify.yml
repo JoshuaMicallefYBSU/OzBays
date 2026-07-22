@@ -3,7 +3,7 @@ name: OzBays - Send Discord Notification
 on:
   pull_request_target:
     branches:
-      - main
+      - live-site
     types:
       - closed
 

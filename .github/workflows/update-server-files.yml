@@ -2,7 +2,7 @@ name: 🚀 ozBays - Server Upload
 on: 
   push:
     branches:
-      - main
+      - live-site
 jobs:
   web-deploy:
     name: 🎉 Deploy Program
