@@ -217,7 +217,7 @@ class BayAllocation implements ShouldQueue
 
                     $bay->delete();
 
-                    $discord = new DiscordClient;
+                    $discord = app(DiscordClient::class);
                     try {
                         $discord->sendMessageWithEmbed($discordChannel, 'Aircraft Diversion / Refile | '.$flight->callsign, 'Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay '.$bay->bay_core.' at '.$bay->airport.' has now been marked as available.', 'fc1c03');
                     } catch (\Exception $e) {
@@ -226,6 +226,51 @@ class BayAllocation implements ShouldQueue
                     }
                     break;
                 }
+            }
+        }
+
+        // Check for Aircraft that have overflown their arrival airport - still filed to
+        // the same destination and still airborne, but now further away than the release
+        // radius. A bay is only ever assigned once a flight is "On Approach" (< 200NM), so
+        // seeing it beyond that radius again means it flew past without landing. Release
+        // the PLANNED bay slot(s) rather than leaving them blocked until the flight
+        // eventually goes fully offline.
+        foreach ($allFlights as $flight) {
+
+            if (! $flight->relationLoaded('assignedBay') || $flight->assignedBay->isEmpty()) {
+                continue;
+            }
+
+            if ($flight->speed === null || (float) $flight->speed <= AirportFlightState::AIRBORNE_SPEED_KTS) {
+                continue;
+            }
+
+            if ($flight->distance === null || (float) $flight->distance <= AirportFlightState::OVERFLIGHT_RELEASE_RADIUS_NM) {
+                continue;
+            }
+
+            $plannedSlots = $flight->assignedBay->filter(
+                fn ($bay) => $bay->status === 'PLANNED' && $flight->id == $bay->callsign
+            );
+
+            if ($plannedSlots->isEmpty()) {
+                continue;
+            }
+
+            echo "Overflight detected for {$flight->callsign} - releasing bay(s), now {$flight->distance}NM from {$flight->arr}\n";
+
+            $firstSlot = $plannedSlots->first();
+
+            foreach ($plannedSlots as $slot) {
+                $slot->delete();
+            }
+
+            $discord = app(DiscordClient::class);
+            try {
+                $discord->sendMessageWithEmbed($discordChannel, 'Overflight of '.$flight->arr.' | '.$flight->callsign, 'Aircraft has overflown '.$flight->arr.' and is now '.round($flight->distance).'NM away. Bay '.$firstSlot->bay_core.' at '.$firstSlot->airport.' has now been marked as available.', 'fc1c03');
+            } catch (\Exception $e) {
+                // if discord fails, log the error, but don't kill the whole job
+                Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
             }
         }
 
@@ -359,7 +404,7 @@ class BayAllocation implements ShouldQueue
 
                 // Delete the BayConflicts Entry
                 $conflict = BayConflicts::where('bay', $slot['bay'])->first();
-                $conflict->delete();
+                $conflict?->delete();
             }
 
             // Assign a bay to the Aircraft--\
@@ -423,7 +468,7 @@ class BayAllocation implements ShouldQueue
         $acType = strtoupper((string) $info->ac);
         $isFreight = in_array($acType, $this->freightOnlyTypes, true) || Airline::isFreightCallsign($info->callsign);
 
-        // Index the AC so it can be used later
+        // Index the AC so we know which priority group it belongs to.
         $aircraftIndex = null;
         foreach ($aircraftJSON as $index => $types) {
             if (in_array($info->ac, $types, true)) {
@@ -432,23 +477,31 @@ class BayAllocation implements ShouldQueue
             }
         }
 
-        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex);
-        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
-
-        if (! in_array($info->ac, $allowedTypes, true)) {
+        if ($aircraftIndex === null) {
             Log::channel('aircraft')->error($info->ac.' type does not exist');
             MissingAircraftType::recordMiss($acType);
-            $discord = new DiscordClient;
+            $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
             }
+
+            // Fall back to treating the unknown type like a B738 for bay-matching purposes.
             $ac = 'B738';
+            foreach ($aircraftJSON as $index => $types) {
+                if (in_array($ac, $types, true)) {
+                    $aircraftIndex = $index;
+                    break;
+                }
+            }
         } else {
             $ac = $info->ac;
         }
+
+        $allowedGroups = array_slice($aircraftJSON, $aircraftIndex ?? 0);
+        $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
 
         // ## - Preferred Bay Assignment Check can go Here - Pulls data every hour from FLIGHTAWARE API
 
@@ -477,16 +530,71 @@ class BayAllocation implements ShouldQueue
 
         $aircraftPrioritySql = 'GREATEST('.implode(', ', $aircraftPriorityParts).')';
 
-        $availableBaysQuery = Bays::where('airport', $info->arr)
+        // Try the strict match first, then progressively relax the operator
+        // restriction and finally the pax_type restriction so a momentarily
+        // exhausted bay pool doesn't leave us with zero candidates.
+        $relaxationLevels = [
+            ['operator' => true, 'pax' => true],
+            ['operator' => false, 'pax' => true],
+            ['operator' => false, 'pax' => false],
+        ];
+
+        $availableBays = collect();
+
+        foreach ($relaxationLevels as $level) {
+            $availableBays = $this->buildBayQuery(
+                $info, $allowedTypes, $aircraftPrioritySql, $operator, $isFreight,
+                $level['operator'], $level['pax']
+            )->get();
+
+            if ($availableBays->isNotEmpty()) {
+                if (! $level['operator'] || ! $level['pax']) {
+                    Log::channel('bays')->warning(
+                        "selectBay() relaxed matching for {$cs['cs']} ({$acType}) at {$info->arr} - "
+                        .'operator='.($level['operator'] ? 'strict' : 'any')
+                        .', pax_type='.($level['pax'] ? 'strict' : 'any')
+                    );
+                }
+
+                break;
+            }
+        }
+
+        if ($availableBays->isEmpty()) {
+            Log::channel('bays')->error("selectBay() found no eligible bay for {$cs['cs']} ({$acType}) at {$info->arr} - no bays match even after relaxing operator/pax_type restrictions");
+
+            return null;
+        }
+
+        if (! app()->runningUnitTests()) {
+            echo 'Available bays for '.$cs['cs'].'<br>';
+            echo $availableBays.'<br><br><br>';
+        }
+
+        // Randomise selection within the top 7 candidates so it isn't always the same bay over time.
+        $candidates = $availableBays->take(7);
+        $selectedBay = $candidates->random();
+
+        return $selectedBay;
+    }
+
+    // Builds the eligible-bay query. $enforceOperator/$enforcePax control whether
+    // the operator whitelist / pax_type match are applied, so selectBay() can
+    // relax them in stages when the strict match returns nothing.
+    private function buildBayQuery($info, $allowedTypes, $aircraftPrioritySql, $operator, $isFreight, $enforceOperator, $enforcePax)
+    {
+        return Bays::where('airport', $info->arr)
             ->whereNull('callsign')
 
-            ->when(! $isFreight, function ($q) use ($info) {
-                $q->whereRaw('(pax_type = ? OR pax_type IS NULL)', [$info->type]);
-            })
+            ->when($isFreight, function ($q) use ($enforcePax) {
+                $q->when($enforcePax, function ($q2) {
+                    $q2->where('pax_type', 'FRT');
+                });
+            }, function ($q) use ($info, $enforcePax) {
+                $q->when($enforcePax, function ($q2) use ($info) {
+                    $q2->whereRaw('(pax_type = ? OR pax_type IS NULL)', [$info->type]);
+                });
 
-            ->when($isFreight, function ($q) {
-                $q->where('pax_type', 'FRT');
-            }, function ($q) {
                 $q->where(function ($q2) {
                     $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
                 });
@@ -505,9 +613,11 @@ class BayAllocation implements ShouldQueue
                 }
             })
 
-            ->where(function ($q) use ($operator) {
-                $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                    ->orWhereNull('operators');
+            ->when($enforceOperator, function ($q) use ($operator) {
+                $q->where(function ($q2) use ($operator) {
+                    $q2->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
+                        ->orWhereNull('operators');
+                });
             })
 
             ->orderByRaw($aircraftPrioritySql)
@@ -521,114 +631,6 @@ class BayAllocation implements ShouldQueue
                 ", [$operator])
 
             ->orderByRaw('RAND()');
-
-        $availableBays = $availableBaysQuery->get();
-
-        if ($isFreight && ($availableBays === null || $availableBays->isEmpty())) {
-            $availableBays = Bays::where('airport', $info->arr)
-                ->whereNull('callsign')
-                ->whereRaw('(pax_type = ? OR pax_type IS NULL)', [$info->type])
-                ->orderBy('priority', 'asc')
-                ->where(function ($q) use ($allowedTypes) {
-                    foreach ($allowedTypes as $type) {
-                        $q->orWhereRaw(
-                            "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
-                            [$type]
-                        );
-                    }
-                })
-                ->where(function ($q) use ($operator) {
-                    $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                        ->orWhereNull('operators');
-                })
-                ->where(function ($q2) {
-                    $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
-                })
-                ->orderByRaw($aircraftPrioritySql)
-                ->orderByRaw("
-                        CASE 
-                            WHEN operators IS NULL THEN 4
-                            ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
-                        END
-                    ", [$operator])
-                ->orderByRaw('RAND()')
-                ->get();
-        }
-
-        // ###### - Oh No, The Harder Rule returned no options!!!!!!!  We need to find something, so lets do a relaxed version.......
-        // $availableBays = null; //Set this when testing the relaxed function
-
-        if ($availableBays == null) {
-            // $aircraftPriorityParts = [];
-
-            // foreach ($allowedTypes as $i => $type) {
-            //     $aircraftPriorityParts[] =
-            //         "IF(FIND_IN_SET('$type', REPLACE(aircraft, '/', ',')) > 0, $i, -1)";
-            // }
-
-            // $aircraftPrioritySql = "GREATEST(" . implode(", ", $aircraftPriorityParts) . ")";
-
-            // $availableBaysQuery = Bays::where('airport', $info->arr)
-            //     ->whereNull('callsign')
-
-            //     ->when(!$isFreight, function ($q) use ($info) {
-            //         $q->whereRaw("(pax_type = ? OR pax_type IS NULL)", [$info->type]);
-            //     })
-
-            //     ->when($isFreight, function ($q) {
-            //         $q->where('pax_type', 'FRT');
-            //     }, function ($q) {
-            //         $q->where(function ($q2) {
-            //             $q2->whereNull('pax_type')->orWhere('pax_type', '!=', 'FRT');
-            //         });
-            //     })
-
-            //     // Order by Bay Prioriies (1=most, 9=never?)
-            //     ->orderBy('priority', 'asc')
-
-            //     // Order bays by Aircraft Closeness to
-            //     ->where(function ($q) use ($allowedTypes) {
-            //         foreach ($allowedTypes as $type) {
-            //             $q->orWhereRaw(
-            //                 "aircraft REGEXP CONCAT('(^|/)', ?, '(/|$)')",
-            //                 [$type]
-            //             );
-            //         }
-            //     })
-
-            //     ->where(function ($q) use ($operator) {
-            //         $q->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-            //         ->orWhereNull('operators');
-            //     })
-
-            //     ->orderByRaw($aircraftPrioritySql)
-
-            //     // Operator Order (QFA, QLK v QLK, QFA assignment priority)
-            //     ->orderByRaw("
-            //         CASE
-            //             WHEN operators IS NULL THEN 4
-            //             ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
-            //         END
-            //     ", [$operator])
-
-            //     ->orderByRaw("RAND()");
-
-            // $availableBays = $availableBaysQuery->get();
-
-            // dd($availableBays);
-        }
-
-        $candidates = $availableBays->take(7);
-        $selectedBay = $candidates->random();
-        if (! app()->runningUnitTests()) {
-            echo 'Available bays for '.$cs['cs'].'<br>';
-            echo $availableBays.'<br><br><br>';
-        }
-
-        // Randomise selection within top 7 - Wamt it to be a bit random over time :)
-        $selectedBay = $availableBays->first();
-
-        return $selectedBay;
     }
 
     private function assignBay($cs, $aircraftJSON, $initial, $discordChannel)
@@ -644,6 +646,10 @@ class BayAllocation implements ShouldQueue
             $value = $this->selectBay($cs, $aircraftJSON, $discordChannel);
 
             // dd($value);
+
+            if ($value === null) {
+                return null;
+            }
 
             $eobt = $this->bayTimeCalcs($info['eibt']);
             $core = $this->bayCore($value->bay);
@@ -685,7 +691,7 @@ class BayAllocation implements ShouldQueue
                 $aircraftBay->save();
 
                 // Send Discord Embed Message
-                $discord = new DiscordClient;
+                $discord = app(DiscordClient::class);
                 try {
                     $discord->sendMessageWithEmbed($discordChannel, 'Bay Assigned | '.$info['cs'].', '.$info['ac'], ' '.$value->bay.' inbound '.$info['arr']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', '27F58B');
                 } catch (\Exception $e) {
@@ -710,7 +716,7 @@ class BayAllocation implements ShouldQueue
                 $aircraftBay->save();
 
                 // Send Discord Embed Message
-                $discord = new DiscordClient;
+                $discord = app(DiscordClient::class);
                 try {
                     $discord->sendMessageWithEmbed($discordChannel, 'Bay Re-Assignment | '.$info['cs'].', '.$info['ac'], ' Bay '.$info['OLD_BAY'].' now occupied. Reassigning ACFT '.$value->bay.' inbound '.$bayID['airport']."\n\nEIBT ".Carbon::parse($info['eibt'])->format('Hi').'z', 'fca503');
                 } catch (\Exception $e) {
@@ -732,7 +738,7 @@ class BayAllocation implements ShouldQueue
             return $value;
         } catch (\Throwable $e) {
             Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
-            $discord = new DiscordClient;
+            $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
             } catch (\Exception $e) {
@@ -766,11 +772,9 @@ class BayAllocation implements ShouldQueue
         $cid = (int) $cid;
         $user_preferences = UserPreference::where('user_id', $cid)->first();
 
-        if ($user_preferences !== null) {
-            if ($user_preferences->hoppie_usage == 0) {
-                // User preference section exists and it is set as do not do...
-                echo 'Cancel Hoppie Message - User has it disabled';
-            }
+        if ($user_preferences !== null && $user_preferences->hoppie_usage == 0) {
+            // User preference section exists and it is set as do not do...
+            echo 'Cancel Hoppie Message - User has it disabled';
 
             return null;
         }
@@ -806,7 +810,7 @@ class BayAllocation implements ShouldQueue
                 if ($send_message == true) {
                     $hoppie->sendTelex($arr, $flight, $Uplink);
 
-                    $discord = new DiscordClient;
+                    $discord = app(DiscordClient::class);
                     try {
                         $discord->sendMessageWithEmbed($discordChannel, $flight.' | CPDLC UPLINK', $Uplink, '808080');
                     } catch (\Exception $e) {

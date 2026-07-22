@@ -11,7 +11,9 @@ class UserPreference extends Model
     protected $fillable = [
         'user_id',
         'name_format',
-        'hoppie',
+        'hoppie_usage',
         'news_notifications',
+        'news_general',
+        'ozbays_updates',
     ];
 }

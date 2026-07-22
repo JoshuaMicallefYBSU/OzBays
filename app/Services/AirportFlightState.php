@@ -16,6 +16,8 @@ class AirportFlightState
 
     public const AIRBORNE_SPEED_KTS = 80.0;
 
+    public const OVERFLIGHT_RELEASE_RADIUS_NM = 200.0;
+
     public function distanceNm(float|int|string $lat1, float|int|string $lon1, float|int|string $lat2, float|int|string $lon2): float
     {
         $lat1 = deg2rad((float) $lat1);

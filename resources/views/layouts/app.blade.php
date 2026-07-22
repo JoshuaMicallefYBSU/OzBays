@@ -84,6 +84,14 @@ use Carbon\Carbon;
                 </a>
             </li>
 
+            <!-- Team Button -->
+            <li class="nav-item">
+                <a class="nav-link {{ str_contains(request()->url(), 'team') == true ? 'active' : '' }} " href="{{route('team.index')}}">
+                    <i class="fa fa-users"></i>The Team
+                    <span class="sr-only"></span>
+                </a>
+            </li>
+
             <!-- Map Button -->
             <li class="nav-item">
                 <a class="nav-link {{ str_contains(request()->url(), 'map') == true ? 'active' : '' }} " href="{{route('mapIndex')}}">
@@ -152,6 +160,7 @@ use Carbon\Carbon;
                 {{-- <a class="dropdown-item">{{Auth::user()->highestRole()->name}}</a>
                 <div class="dropdown-divider"></div> --}}
                 <a class="dropdown-item" href="{{route('dashboard.index')}}">Dashboard</a>
+                <a class="dropdown-item" href="{{route('dashboard.settings.index')}}">My Settings</a>
                 {{-- <a class="dropdown-item disabled" href="#">My Data</a> --}}
                 <div class="dropdown-divider"></div> {{-- Divider --}}
                 <a class="dropdown-item" href="{{ route('auth.logout') }}"onclick="event.preventDefault();document.getElementById('logout-form').submit();">{{ __('Logout') }}</a><form id="logout-form" action="{{ route('auth.logout') }}" method="GET" class="d-none">@csrf</form>

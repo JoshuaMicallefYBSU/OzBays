@@ -7,69 +7,19 @@ use App\Models\Airline;
 use App\Models\Bays;
 use App\Models\Flights;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
+use Tests\Concerns\InteractsWithBayAllocationSqlite;
 use Tests\TestCase;
 
 class BayAllocationFreightFilteringTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithBayAllocationSqlite;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (DB::connection()->getDriverName() !== 'sqlite') {
-            return;
-        }
-
-        $pdo = DB::connection()->getPdo();
-
-        if (method_exists($pdo, 'sqliteCreateFunction')) {
-            $pdo->sqliteCreateFunction('REGEXP', function ($pattern, $value) {
-                if ($pattern === null || $value === null) {
-                    return 0;
-                }
-
-                $pattern = (string) $pattern;
-                $value = (string) $value;
-
-                $delimited = '/' . str_replace('/', '\\/', $pattern) . '/';
-                return @preg_match($delimited, $value) ? 1 : 0;
-            }, 2);
-
-            $pdo->sqliteCreateFunction('CONCAT', function (...$args) {
-                return implode('', array_map(fn ($v) => $v === null ? '' : (string) $v, $args));
-            }, -1);
-
-            $pdo->sqliteCreateFunction('FIND_IN_SET', function ($needle, $haystack) {
-                if ($needle === null || $haystack === null) {
-                    return 0;
-                }
-
-                $needle = (string) $needle;
-                $haystack = (string) $haystack;
-
-                $parts = $haystack === '' ? [] : explode(',', $haystack);
-                $parts = array_map('trim', $parts);
-
-                $idx = array_search($needle, $parts, true);
-                return $idx === false ? 0 : ($idx + 1);
-            }, 2);
-
-            $pdo->sqliteCreateFunction('IF', function ($cond, $then, $else) {
-                return $cond ? $then : $else;
-            }, 3);
-
-            $pdo->sqliteCreateFunction('RAND', function () {
-                return mt_rand() / mt_getrandmax();
-            }, 0);
-
-            $pdo->sqliteCreateFunction('GREATEST', function (...$args) {
-                $args = array_map(fn ($v) => $v === null ? null : (float) $v, $args);
-                $args = array_values(array_filter($args, fn ($v) => $v !== null));
-                return empty($args) ? null : max($args);
-            }, -1);
-        }
+        $this->registerBayAllocationSqliteShims();
     }
 
     public function test_freight_flight_only_uses_frt_bays_when_available(): void
@@ -134,7 +84,7 @@ class BayAllocationFreightFilteringTest extends TestCase
         $method = $ref->getMethod('selectBay');
         $method->setAccessible(true);
 
-        $selected = $method->invoke($job, ['cs' => $flight->callsign], [['B77L']], null);
+        $selected = $method->invoke($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['B77L']], null);
 
         $this->assertNotNull($selected);
         $this->assertSame($frtBay->id, $selected->id);
@@ -198,7 +148,7 @@ class BayAllocationFreightFilteringTest extends TestCase
         $method = $ref->getMethod('selectBay');
         $method->setAccessible(true);
 
-        $selected = $method->invoke($job, ['cs' => $flight->callsign], [['A321']], null);
+        $selected = $method->invoke($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A321']], null);
 
         $this->assertNotNull($selected);
         $this->assertSame($paxBay->id, $selected->id);
@@ -266,7 +216,7 @@ class BayAllocationFreightFilteringTest extends TestCase
         $method = $ref->getMethod('selectBay');
         $method->setAccessible(true);
 
-        $selected = $method->invoke($job, ['cs' => $flight->callsign], [['A33B']], null);
+        $selected = $method->invoke($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A33B']], null);
 
         $this->assertNotNull($selected);
         $this->assertSame($frtBay->id, $selected->id);

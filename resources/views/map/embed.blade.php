@@ -494,10 +494,10 @@ map.on('load', () => {
             ],
             'icon-rotate': ['get','bearing'],
             'icon-rotation-alignment': 'map',
-            // Let Mapbox hide overlapping arrows instead of stacking them illegibly;
-            // they reappear as you zoom in and space opens up.
-            'icon-allow-overlap': false,
-            'icon-ignore-placement': false
+            // Always render every aircraft icon, even when overlapping - hiding
+            // overlapping icons at low zoom made inbound traffic disappear.
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true
         },
         paint: { 'icon-color': ['get','colour'] }
     });
