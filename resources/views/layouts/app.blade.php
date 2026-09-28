@@ -186,6 +186,10 @@ use Carbon\Carbon;
     <script>
         $(document).ready(function() {
             $('#dataTable').DataTable();
+
+            // The content container has its own z-index stacking context, which traps modals
+            // underneath Bootstrap's backdrop. Move them to <body> so they can be clicked.
+            $('.modal').appendTo('body');
         } );
     </script>
 

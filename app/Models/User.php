@@ -92,6 +92,20 @@ class User extends Authenticatable
         return null;
     }
 
+    // Discord profile picture, falling back to Discord's default avatar for linked users without one
+    public function discordAvatarUrl()
+    {
+        if ($this->discord_avatar) {
+            return $this->discord_avatar;
+        }
+
+        if ($this->discord_user_id) {
+            return 'https://cdn.discordapp.com/embed/avatars/'.(((int) $this->discord_user_id >> 22) % 6).'.png';
+        }
+
+        return null;
+    }
+
     public function userPreferences()
     {
         return $this->hasOne(UserPreference::class, 'user_id', 'id');
