@@ -9,7 +9,7 @@ use App\Models\Airports;
 use App\Models\Bays;
 use App\Models\FlightLiveBays;
 use App\Models\FlightLiveMissingBays;
-use App\Services\AeroAPIClient;
+use App\Services\AirLabsClient;
 
 class LiveBaysJob implements ShouldQueue
 {
@@ -34,14 +34,14 @@ class LiveBaysJob implements ShouldQueue
         
         ###### Airport Live Bay Updater
         // This function grabs live flight bay assignments for specific airports, and saves that data for the next 24 hours. 
-        // All data older than one week gets auto deleted at the beginning of the function. Then goes through each airport via the AIRLABS API and tries to pull the next 10hrs of data of data. 
-        // If it fails at all, then it disables the live_bays airport entry, and stops using an API query to find the data.
+        // All data older than one week gets auto deleted at the beginning of the function. Then goes through each airport via the AIRLABS API and pulls all scheduled arrivals.
+        // If it fails at all, then it skips that airport and tries again on the next update.
 
         // Load the Array Variable for when working this function
         $flight_data = [];
 
         // Load the Airlabs Client
-        $aeroapi = new AeroAPIClient();
+        $airlabs = new AirLabsClient();
 
         // Find all airports that data needs to be updated in this check.
         $nowHour = Carbon::now()->hour;
@@ -53,72 +53,59 @@ class LiveBaysJob implements ShouldQueue
 
         ###### Find the Live Flight information for each airport that is active, and should update this hour
         foreach($airports as $airport){
-            $schedules = $aeroapi->getAirportSchedule($airport->icao, $airport->live_type);
+            $schedules = $airlabs->getAirportArrivals($airport->icao);
 
-            // dd($schedules);
+            if ($schedules === null) {
+                continue;
+            }
 
-            foreach($schedules['scheduled_arrivals'] as $schedule){
-
-                // dd($schedule);
-
-                // If there is no gate assignment, or the entry does not exist, then skip adding the data (as it cant be used)
-                if($schedule['gate_destination']){
-                    if($schedule['gate_destination'] == null || $schedule['destination']['code_icao'] == null && $schedule['terminal_destination']) {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-
-                $all_callsigns = [];
-
-                // Add Official CAllsign to callsigns array
-                $all_callsigns[] = [
-                    'operator'    => $schedule['operator'],
-                    'flight_number' => $schedule['flight_number'],
-                ];
-
-                // Find Each Callsign which needs to be included as a possible callsign a pilot could be flying in as
-                foreach($schedule['codeshares'] as $callsign){
-
-                    if (!preg_match('/^([A-Z]+)(\d+)$/', $callsign, $m)) {
-                        continue;
-                    }
-
-                    $all_callsigns[] = [
-                        'operator'    => $m[1],
-                        'flight_number' => $m[2],
-                    ];
-                }
-
-                // Loop through each Callsign Possibility, and create a new entry
-                foreach($all_callsigns as $callsign){
-                    $flight_data[$schedule['destination']['code_icao']][] = [
-                        'callsign'      =>  $callsign['operator'].''.$callsign['flight_number'],
-                        'aircraft'      =>  $callsign['aircraft_type'] ?? null,
-                        'operator'      =>  $callsign['operator'],
-                        'flight_number' =>  $callsign['flight_number'],
-                        'arrival'       =>  $schedule['destination']['code_icao'],
-                        'terminal'      =>  $schedule['terminal_destination'],
-                        'gate'          =>  $schedule['gate_destination'],
-                    ];
+            // AirLabs returns codeshares as their own rows, pointing at the operating flight via cs_flight_iata.
+            // Index the operating flights so a codeshare row without gate info can inherit it.
+            $operating = [];
+            foreach($schedules as $schedule){
+                if (empty($schedule['cs_flight_iata']) && !empty($schedule['flight_iata'])) {
+                    $operating[$schedule['flight_iata']] = $schedule;
                 }
             }
 
-            sleep(61);
+            foreach($schedules as $schedule){
+
+                $parent = !empty($schedule['cs_flight_iata']) ? ($operating[$schedule['cs_flight_iata']] ?? null) : null;
+
+                $gate     = $schedule['arr_gate'] ?? $parent['arr_gate'] ?? null;
+                $terminal = $schedule['arr_terminal'] ?? $parent['arr_terminal'] ?? null;
+                $arrival  = $schedule['arr_icao'] ?? $airport->icao;
+
+                // If there is no gate assignment, or no ICAO callsign, then skip adding the data (as it cant be used)
+                if(empty($gate) || empty($schedule['flight_icao']) || empty($schedule['airline_icao'])) {
+                    continue;
+                }
+
+                $flight_data[$arrival][] = [
+                    'callsign'      =>  strtoupper($schedule['flight_icao']),
+                    'aircraft'      =>  $schedule['aircraft_icao'] ?? null,
+                    'operator'      =>  strtoupper($schedule['airline_icao']),
+                    'flight_number' =>  $schedule['flight_number'] ?? null,
+                    'arrival'       =>  $arrival,
+                    'terminal'      =>  $terminal,
+                    'gate'          =>  $gate,
+                ];
+            }
         }
 
 
         ###### BAY ALLOCATION CALCULATION - Lets make an entry, and also map it to an existing bay if it is found.
-        $bays = Bays::all();
-
         foreach($flight_data as $airport_data){
             foreach($airport_data as $flight){
 
-                $bay = Bays::where('airport', $flight['arrival'])
-                    ->where('terminal', 'LIKE', '%' . $flight['terminal'] . '%')
-                    ->where('bay', 'LIKE', '%' . $flight['gate'] . '%')
-                    ->first();
+                // Try an exact bay match first, then fall back to a partial match (e.g. gate "5" vs bay "5A")
+                $bayQuery = Bays::where('airport', $flight['arrival'])
+                    ->when($flight['terminal'], function ($q) use ($flight) {
+                        $q->where('terminal', 'LIKE', '%' . $flight['terminal'] . '%');
+                    });
+
+                $bay = (clone $bayQuery)->where('bay', $flight['gate'])->first()
+                    ?? (clone $bayQuery)->where('bay', 'LIKE', '%' . $flight['gate'] . '%')->first();
 
                 if($bay == null){
                     
@@ -147,8 +134,6 @@ class LiveBaysJob implements ShouldQueue
         foreach($old_slots as $os){
             $os->delete();
         }
-
-        dd($flight_data);
 
     }
 }

@@ -235,7 +235,7 @@
                 <form action="{{route('dashboard.admin.airport.live-activate')}}" method="POST">
                     @csrf
                     <div class="modal-body">
-                        <p>This will mark the Live Bay status as 'Active', which will <b>enable</b> pulling IRL Flight Data via the FlightAware API.</p>
+                        <p>This will mark the Live Bay status as 'Active', which will <b>enable</b> pulling IRL Flight Data via the AirLabs API.</p>
 
                         <input required type="hidden" value={{$airport->icao}} name="icao" maxlength="9" id="" class="form-control">
                     </div>

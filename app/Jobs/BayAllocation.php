@@ -14,6 +14,7 @@ use App\Models\UserPreference;
 use App\Services\AirportFlightState;
 use App\Services\DiscordClient;
 use App\Services\HoppieClient;
+use App\Services\OzStripsClient;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -508,14 +509,18 @@ class BayAllocation implements ShouldQueue
         // Grab Live Bay Assignment
         $live_bay = FlightLiveBays::where('callsign', $cs['cs'])->where('airport', $cs['arr'])->with('bayInfo')->first();
 
-        if ($live_bay !== null) {
-            // Check if the IRL Bay Assignment is available - If so, select it
-            if ($live_bay->scheduled_bay !== null) {
-                if ($live_bay->bayInfo->status == null) {
-                    $live_bay_details = $live_bay->bayInfo;
+        if ($live_bay !== null && $live_bay->scheduled_bay !== null && $live_bay->bayInfo !== null) {
+            $irlBay = $live_bay->bayInfo;
 
-                    return $live_bay_details;
+            // Check if the IRL Bay Assignment is available - If so, select it
+            if ($irlBay->status == null && $irlBay->callsign == null) {
+
+                // The network aircraft may not be the same type flown IRL - make sure it actually fits the bay
+                if ($this->bayFitsAircraft($irlBay, $allowedTypes)) {
+                    return $irlBay;
                 }
+
+                Log::channel('bays')->warning("IRL bay {$irlBay->bay} at {$irlBay->airport} for {$cs['cs']} cannot fit a {$ac} - falling back to normal allocation");
             }
         }
 
@@ -576,6 +581,19 @@ class BayAllocation implements ShouldQueue
         $selectedBay = $candidates->random();
 
         return $selectedBay;
+    }
+
+    // Checks a bay can accept the aircraft - same rule as buildBayQuery(): one of the
+    // bay's listed aircraft types must be in the aircraft's allowed (same or larger) groups.
+    private function bayFitsAircraft($bay, array $allowedTypes): bool
+    {
+        if (empty($bay->aircraft)) {
+            return false;
+        }
+
+        $bayTypes = array_map(fn ($type) => strtoupper(trim($type)), explode('/', $bay->aircraft));
+
+        return count(array_intersect($bayTypes, $allowedTypes)) > 0;
     }
 
     // Builds the eligible-bay query. $enforceOperator/$enforcePax control whether
@@ -808,7 +826,9 @@ class BayAllocation implements ShouldQueue
                 }
 
                 if ($send_message == true) {
-                    $hoppie->sendTelex($arr, $flight, $Uplink);
+                    // Uplink is sent to the aircraft via the OzStrips server
+                    $sent = app(OzStripsClient::class)->sendPdc($arr, $flight, $Uplink);
+                    Log::channel('hoppie')->error($flight.($sent ? ' message sent via OzStrips.' : ' OzStrips send failed.'));
 
                     $discord = app(DiscordClient::class);
                     try {
@@ -833,23 +853,23 @@ class BayAllocation implements ShouldQueue
     {
         if ($version == 1) {
             $messageLines = [
-                "{$arr} ARRIVAL INFO \\",
-                "@{$flight}@, {$dep}-{$arr} \\",
-                "ARR BAY: @{$bayType}, {$arrBay}@ \\",
-                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \\',
-                'RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ \\',
-                'RMK/ ACK NOT REQUIRED WITH ATC',
-                'END BAY UPLINK',
+                "{$arr} ARRIVAL INFO
+                @{$flight}@, {$dep}-{$arr}
+                ARR BAY: @{$bayType}, {$arrBay}@
+                IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC
+                RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ
+                RMK/ ACK NOT REQUIRED WITH ATC
+                END BAY UPLINK"
             ];
         } elseif ($version == 2) {
             $messageLines = [
-                "{$arr} ARRIVAL UPDATE \\",
-                "@{$flight}@, {$dep}-{$arr} \\",
-                "ARR BAY: @{$bayType}, {$arrBay}@ \\",
-                'IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC \\',
-                'RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY \\',
-                'RMK/ ACK NOT REQUIRED WITH ATC',
-                'END BAY UPLINK',
+                "{$arr} ARRIVAL UPDATE
+                @{$flight}@, {$dep}-{$arr}
+                ARR BAY: @{$bayType}, {$arrBay}@
+                IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC
+                RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY
+                RMK/ ACK NOT REQUIRED WITH ATC
+                END BAY UPLINK",
             ];
         }
 

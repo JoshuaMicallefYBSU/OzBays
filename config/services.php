@@ -39,6 +39,14 @@ return [
         'token' => env('CHANGELOG_TOKEN'),
     ],
 
+    'airlabs' => [
+        'key' => env('AIRLABS_API_KEY'),
+    ],
+
+    'ozstrips' => [
+        'pdc_code' => env('OZSTRIPS_PDC_CODE'),
+    ],
+
     'discord' => [
         // Local System Logic
         'local' => [

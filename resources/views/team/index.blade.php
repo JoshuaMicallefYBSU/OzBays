@@ -10,12 +10,12 @@
 <div class="row mt-3">
     @forelse($leadership as $user)
         <div class="col-md-3 col-sm-6 text-center mb-4">
-            @if($user->discord_avatar)
-                <img src="{{ $user->discord_avatar }}" alt="{{ $user->discord_username ?? $user->fullName('F') }}" style="width: 90px; height: 90px; border-radius: 50%;">
+            @if($user->discordAvatarUrl())
+                <img src="{{ $user->discordAvatarUrl() }}" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/embed/avatars/0.png';" alt="{{ $user->fullName('FLC') }}" style="width: 90px; height: 90px; border-radius: 50%;">
             @else
                 <i class="fas fa-user-circle" style="font-size: 90px; color: #ccc;"></i>
             @endif
-            <h5 class="mt-2 mb-0">{{ $user->discord_username ?? $user->fullName('F') }}</h5>
+            <h5 class="mt-2 mb-0">{{ $user->fullName('FLC') }}</h5>
             <small class="text-muted">{{ $user->hasRole('Lead Developer') ? 'Lead Developer' : 'Developer' }}</small>
         </div>
     @empty
@@ -29,12 +29,12 @@
 <div class="row mt-3">
     @forelse($community as $user)
         <div class="col-md-3 col-sm-6 text-center mb-4">
-            @if($user->discord_avatar)
-                <img src="{{ $user->discord_avatar }}" alt="{{ $user->discord_username ?? $user->fullName('F') }}" style="width: 90px; height: 90px; border-radius: 50%;">
+            @if($user->discordAvatarUrl())
+                <img src="{{ $user->discordAvatarUrl() }}" onerror="this.onerror=null;this.src='https://cdn.discordapp.com/embed/avatars/0.png';" alt="{{ $user->fullName('FLC') }}" style="width: 90px; height: 90px; border-radius: 50%;">
             @else
                 <i class="fas fa-user-circle" style="font-size: 90px; color: #ccc;"></i>
             @endif
-            <h5 class="mt-2 mb-0">{{ $user->discord_username ?? $user->fullName('F') }}</h5>
+            <h5 class="mt-2 mb-0">{{ $user->fullName('FLC') }}</h5>
             <small class="text-muted">{{ $user->hasRole('Maintainer') ? 'Maintainer' : 'Contributor' }}</small>
         </div>
     @empty
