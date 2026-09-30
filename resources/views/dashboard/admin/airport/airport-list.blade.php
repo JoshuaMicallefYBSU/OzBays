@@ -2,7 +2,13 @@
 
 @section('content')
     <h1>Airport Admin View</h1>
-    <p>View all airports maintained by OzBays. <i>Data is updated hourly via the <u>airports.json</u> file housed on the OzBays Servers.</i></p>
+    <p>View all airports maintained by OzBays. <i>Data is updated hourly via the airport JSON files in <u>config/airports</u> housed on the OzBays Servers.</i></p>
+
+    @can('import airports')
+        <div class="pb-3">
+            <a href="{{route('dashboard.admin.airport.import')}}" class="btn oz-btn oz-btn-primary"><i class="fas fa-upload"></i> Import New Airport</a>
+        </div>
+    @endcan
 
     <table id="dataTable" class="table table-hover" style="text-align: center; font-size: 12px;">
             <thead>

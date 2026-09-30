@@ -9,6 +9,7 @@ use App\Models\Bays;
 use App\Models\MissingAircraftType;
 use App\Models\User;
 use App\Models\UserPreference;
+use App\Services\AirportImporter;
 use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
@@ -45,6 +46,42 @@ class DashboardController extends Controller
         $airports = Airports::all();
 
         return view('dashboard.admin.airport.airport-list', compact('airports'));
+    }
+
+    // New Airport Importer
+    public function airportImport()
+    {
+        return view('dashboard.admin.airport.airport-import');
+    }
+
+    public function airportImportStore(Request $request, AirportImporter $importer)
+    {
+        $request->validate([
+            'airport_file' => 'required|file|max:5120',
+        ]);
+
+        $airport = json_decode(file_get_contents($request->file('airport_file')->getRealPath()), true);
+
+        $errors = $importer->validate($airport);
+        if (!empty($errors)) {
+            return back()->withErrors(['airport_file' => $errors]);
+        }
+
+        $icao = $airport['icao'];
+        $path = AirportImporter::directory().'/'.$icao.'.json';
+
+        // Importer is for new airports only - existing ones are updated through their JSON file
+        if (File::exists($path) || Airports::where('icao', $icao)->exists()) {
+            return back()->withErrors(['airport_file' => [$icao.' already exists in OzBays.']]);
+        }
+
+        File::ensureDirectoryExists(AirportImporter::directory());
+        File::put($path, json_encode($airport, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
+
+        $importer->import($airport);
+
+        return redirect()->route('dashboard.admin.airport.view', $icao)
+            ->with('success', $airport['name'].' ('.$icao.') imported with '.count($airport['parking']).' bays!');
     }
 
     public function airportView($icao)

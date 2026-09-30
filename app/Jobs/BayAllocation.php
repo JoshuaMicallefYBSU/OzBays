@@ -25,7 +25,13 @@ class BayAllocation implements ShouldQueue
 {
     use Queueable;
 
+    // Aircraft this close to their arrival have bay conflicts resolved immediately rather than waiting 4 mins
+    private const IMMEDIATE_REASSIGN_RADIUS_NM = 5;
+
     protected array $freightOnlyTypes = [];
+
+    // Types never assigned a bay (Helicopters etc) - they can still occupy one when parked on it
+    protected array $ignoredTypes = [];
 
     /**
      * Create a new job instance.
@@ -54,6 +60,12 @@ class BayAllocation implements ShouldQueue
             $this->freightOnlyTypes = array_values(array_unique(array_map('strtoupper', $rawJson['FreightOnly'])));
         }
 
+        // Ignored Types (Helicopters etc)
+        $this->ignoredTypes = [];
+        if (is_array($rawJson) && isset($rawJson['Ignored']) && is_array($rawJson['Ignored'])) {
+            $this->ignoredTypes = array_values(array_unique(array_map('strtoupper', $rawJson['Ignored'])));
+        }
+
         $aircraftJSON = [];
         $priorityIndex = 0;
 
@@ -64,7 +76,7 @@ class BayAllocation implements ShouldQueue
                 continue;
             }
 
-            if ($groupKey === 'FreightOnly') {
+            if ($groupKey === 'FreightOnly' || $groupKey === 'Ignored') {
                 continue;
             }
 
@@ -168,7 +180,10 @@ class BayAllocation implements ShouldQueue
             }
 
             // Does an arrival aircraft require bay assignment?
-            if ((empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->status == 'On Approach' && $ac->eibt !== null) {
+            // Ignored types (Helicopters etc) are never assigned a bay, but still block one above if parked on it
+            $isIgnoredType = in_array(strtoupper((string) $ac->ac), $this->ignoredTypes, true);
+
+            if (! $isIgnoredType && (empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->status == 'On Approach' && $ac->eibt !== null) {
                 $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
             }
         }
@@ -362,7 +377,13 @@ class BayAllocation implements ShouldQueue
         // - Does conflict still exist (e.g. is bay occupied) - Yes, reassign | No, delete entry and continue.
         // - Set assigned bay to null, and
 
-        $conflicts = BayConflicts::where('created_at', '<=', now()->subMinutes(4))->with('SlotInfo')->with('FlightInfo')->get();
+        // - Aircraft within 5NM of the airport skip the wait so the bay is resolved before they arrive
+        $conflicts = BayConflicts::where(function ($q) {
+            $q->where('created_at', '<=', now()->subMinutes(4))
+                ->orWhereHas('FlightInfo', function ($f) {
+                    $f->where('distance', '<=', self::IMMEDIATE_REASSIGN_RADIUS_NM);
+                });
+        })->with('SlotInfo')->with('FlightInfo')->get();
         $info2 = [];
         foreach ($conflicts as $conflict) {
 
@@ -373,6 +394,13 @@ class BayAllocation implements ShouldQueue
                 ->where('bay', $conflict->bay)
                 ->with('FlightInfo')
                 ->first();
+
+            // Conflict no longer exists (slot cleared, or the flight has gone) - remove it so it isn't checked forever
+            if ($conflict_bay === null || $conflict_bay->FlightInfo === null) {
+                $conflict->delete();
+
+                continue;
+            }
 
             // Loop through each conflict
             if ($conflict_bay !== null) {
@@ -634,19 +662,23 @@ class BayAllocation implements ShouldQueue
             ->when($enforceOperator, function ($q) use ($operator) {
                 $q->where(function ($q2) use ($operator) {
                     $q2->whereRaw("FIND_IN_SET(?, REPLACE(operators, ' ', ''))", [$operator])
-                        ->orWhereNull('operators');
+                        ->orWhereNull('operators')
+                        // A "*" in the operator list opens the bay to any operator
+                        ->orWhereRaw("FIND_IN_SET('*', REPLACE(operators, ' ', ''))");
                 });
             })
 
             ->orderByRaw($aircraftPrioritySql)
 
             // Operator Order (QFA, QLK v QLK, QFA assignment priority)
+            // Listed operators first (in list order), then open bays, then bays only matched via "*"
             ->orderByRaw("
                     CASE
+                        WHEN FIND_IN_SET(?, REPLACE(operators, ' ', '')) > 0 THEN FIND_IN_SET(?, REPLACE(operators, ' ', ''))
                         WHEN operators IS NULL THEN 4
-                        ELSE FIND_IN_SET(?, REPLACE(operators, ' ', ''))
+                        ELSE 99
                     END
-                ", [$operator])
+                ", [$operator, $operator])
 
             ->orderByRaw('RAND()');
     }
@@ -669,7 +701,13 @@ class BayAllocation implements ShouldQueue
                 return null;
             }
 
-            $eobt = $this->bayTimeCalcs($info['eibt']);
+            // EIBT is cleared once an aircraft lands or refiles, which is common by the time a conflict
+            // reassignment runs. The aircraft is effectively arriving now, so use the current time.
+            $eibt = $info['eibt'] ?? Carbon::now('UTC');
+            $info['eibt'] = $eibt;
+
+            // Turnaround is based on the flight type (DOM/INTL), counted from when the aircraft blocks in
+            $eobt = $this->bayTimeCalcs($info['ac_model']->type ?? null, $eibt);
             $core = $this->bayCore($value->bay);
 
             // Find all bays to block off
@@ -724,7 +762,7 @@ class BayAllocation implements ShouldQueue
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
-                $arrBay = $value->bay;
+                $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
             } elseif ($initial == 2) {
@@ -749,7 +787,7 @@ class BayAllocation implements ShouldQueue
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
                 $bayType = $aircraftBay->type;
-                $arrBay = $value->bay;
+                $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
             }
 
@@ -876,12 +914,14 @@ class BayAllocation implements ShouldQueue
         return implode("\n", $messageLines);
     }
 
-    private function bayTimeCalcs($type)
+    private function bayTimeCalcs($type, $from = null)
     {
+        $from = $from !== null ? Carbon::parse($from) : Carbon::now();
+
         if ($type == 'INTL' || $type == null) {
-            $eobt = Carbon::now()->addMinutes(60);
+            $eobt = $from->copy()->addMinutes(60);
         } else {
-            $eobt = Carbon::now()->addMinutes(45);
+            $eobt = $from->copy()->addMinutes(45);
         }
 
         return $eobt;

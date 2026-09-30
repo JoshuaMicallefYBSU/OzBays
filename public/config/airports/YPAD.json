@@ -1,0 +1,232 @@
+{
+    "icao": "YPAD",
+    "name": "Adelaide",
+    "lat": -34.94659219,
+    "lon": 138.5248029,
+    "settings": {
+        "color": "#1A3B8E",
+        "eibt_config": "1.4",
+        "taxi_time": "10",
+        "status": "testing",
+        "airport_type": "Major2",
+        "update_time_utc": "0,2,4,6,8,10,12,14,20,22"
+    },
+    "parking": {
+        "10B": {
+            "lat": -34.93748019,
+            "lon": 138.54092694,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "SF34",
+            "Type": null,
+            "Priority": 1
+        },
+        "10C": {
+            "lat": -34.93748019,
+            "lon": 138.54092694,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "SF34",
+            "Type": null,
+            "Priority": 1
+        },
+        "12L": {
+            "lat": -34.93752792,
+            "lon": 138.54101482,
+            "Operator": "VOZ",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "13": {
+            "lat": -34.93777759,
+            "lon": 138.5406399,
+            "Operator": "VOZ",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "14L": {
+            "lat": -34.93803165,
+            "lon": 138.54028169,
+            "Operator": "VOZ",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "15": {
+            "lat": -34.93826804,
+            "lon": 138.53992066,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "16R": {
+            "lat": -34.9382327,
+            "lon": 138.53950578,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "B747/B767",
+            "Type": null,
+            "Priority": 1
+        },
+        "16L": {
+            "lat": -34.93855978,
+            "lon": 138.53955969,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "18R": {
+            "lat": -34.93880048,
+            "lon": 138.53890603,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "B747/B767",
+            "Type": null,
+            "Priority": 1
+        },
+        "19": {
+            "lat": -34.93927341,
+            "lon": 138.53844879,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": null,
+            "Priority": 1
+        },
+        "20L": {
+            "lat": -34.93952851,
+            "lon": 138.53810648,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "21": {
+            "lat": -34.93978714,
+            "lon": 138.53774868,
+            "Operator": "QFA, JST",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "22L": {
+            "lat": -34.94007217,
+            "lon": 138.53734714,
+            "Operator": "QFA, JST",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "23": {
+            "lat": -34.94031774,
+            "lon": 138.53697892,
+            "Operator": "QFA, JST",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "24L": {
+            "lat": -34.94056335,
+            "lon": 138.53659876,
+            "Operator": "QFA, JST",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "25": {
+            "lat": -34.94083289,
+            "lon": 138.536241,
+            "Operator": "QFA, JST",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "26L": {
+            "lat": -34.94106266,
+            "lon": 138.53588018,
+            "Operator": "QFA, JST",
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "27": {
+            "lat": -34.94130562,
+            "lon": 138.53550002,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": null,
+            "Priority": 1
+        },
+        "28L": {
+            "lat": -34.94158786,
+            "lon": 138.53515852,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": null,
+            "Priority": 2
+        },
+        "29": {
+            "lat": -34.94182819,
+            "lon": 138.53477837,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "A320/B738",
+            "Type": null,
+            "Priority": 2
+        },
+        "50A": {
+            "lat": -34.9396547,
+            "lon": 138.53596665,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "SF34",
+            "Type": null,
+            "Priority": 1
+        },
+        "50B": {
+            "lat": -34.93992219,
+            "lon": 138.53569509,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "SF34",
+            "Type": null,
+            "Priority": 1
+        },
+        "50D": {
+            "lat": -34.94038891,
+            "lon": 138.53512178,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "DH8D",
+            "Type": null,
+            "Priority": 1
+        },
+        "50G": {
+            "lat": -34.94122789,
+            "lon": 138.53405491,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "E190",
+            "Type": null,
+            "Priority": 1
+        }
+    }
+}

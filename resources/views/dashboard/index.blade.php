@@ -110,6 +110,18 @@
                         </div>
                     </li>
 
+                {{-- Contributor Application --}}
+                    @if(\App\Http\Controllers\ContributorApplicationController::canApply(Auth::user()))
+                    <li style="margin-bottom: 5px; border-width: 1px; border-radius: 5px;" class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{route('dashboard.contribute')}}" class="card-link">
+                                <h6 class="card-title mb-1"><i class="fa fa-hands-helping"></i> Apply to Contribute</h6>
+                                <small class="text-muted">Help maintain OzBays airport & bay data</small>
+                            </a>
+                        </div>
+                    </li>
+                    @endif
+
                 </div>
             </div>
         </div>

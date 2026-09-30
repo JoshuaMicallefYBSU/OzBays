@@ -103,11 +103,13 @@ use Carbon\Carbon;
 
           <ul class="navbar-nav ">
             @can('view data')
+            @php($pendingApplications = auth()->user()->can('review applications') ? \App\Models\ContributorApplication::pending()->count() : 0)
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'admin') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-cog">
                 </i>
                 Administration
+                @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">Airports</a>
@@ -115,6 +117,14 @@ use Carbon\Carbon;
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>
+                @endcan
+
+                @can('review applications')
+                  <div class="dropdown-divider"></div> {{-- Divider --}}
+                  <a class="dropdown-item" href="{{route('dashboard.admin.applications.index')}}">
+                    Contributor Applications
+                    @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
+                  </a>
                 @endcan
 
                 @can('manage news')

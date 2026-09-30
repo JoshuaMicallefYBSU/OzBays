@@ -3,6 +3,7 @@
 use App\Http\Controllers\AirportsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChangelogController;
+use App\Http\Controllers\ContributorApplicationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\FlightDisplayController;
@@ -56,12 +57,18 @@ Route::prefix('admin')->group(function () {
 
     // Airport Information
     Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
+    Route::middleware(['auth', 'can:import airports'])->group(function () {
+        Route::get('airport/import', [DashboardController::class, 'airportImport'])->name('dashboard.admin.airport.import');
+        Route::post('airport/import', [DashboardController::class, 'airportImportStore'])->name('dashboard.admin.airport.import.store');
+    });
     Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
     Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
-    Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
-    Route::post('airport/live-activate', [DashboardController::class, 'activateLiveAirport'])->name('dashboard.admin.airport.live-activate');
-    Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
-    Route::post('airport/activate', [DashboardController::class, 'activateAirport'])->name('dashboard.admin.airport.activate');
+    Route::middleware(['auth', 'can:update status'])->group(function () {
+        Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
+        Route::post('airport/live-activate', [DashboardController::class, 'activateLiveAirport'])->name('dashboard.admin.airport.live-activate');
+        Route::post('airport/disable', [DashboardController::class, 'disableAirport'])->name('dashboard.admin.airport.disable');
+        Route::post('airport/activate', [DashboardController::class, 'activateAirport'])->name('dashboard.admin.airport.activate');
+    });
     // Route::post('airport/{icao}/update', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.update');
     // Route::post('airport/{icao}/approve', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.approve.change');
 
@@ -91,6 +98,13 @@ Route::prefix('admin/news')->middleware(['auth', 'can:manage news'])->group(func
     Route::delete('/{news}', [NewsController::class, 'destroy'])->name('dashboard.admin.news.destroy');
 });
 
+// Contributor Applications Administration
+Route::prefix('admin/applications')->middleware(['auth', 'can:review applications'])->group(function () {
+    Route::get('/', [ContributorApplicationController::class, 'index'])->name('dashboard.admin.applications.index');
+    Route::post('/{application}/approve', [ContributorApplicationController::class, 'approve'])->name('dashboard.admin.applications.approve');
+    Route::post('/{application}/reject', [ContributorApplicationController::class, 'reject'])->name('dashboard.admin.applications.reject');
+});
+
 // Notification Administration
 Route::prefix('admin/notifications')->middleware(['auth', 'can:send notifications'])->group(function () {
     Route::get('/', [NotificationController::class, 'adminIndex'])->name('dashboard.admin.notifications.index');
@@ -103,6 +117,8 @@ Route::prefix('admin/notifications')->middleware(['auth', 'can:send notification
 Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/my-settings', [DashboardController::class, 'settingsView'])->name('dashboard.settings.index');
+    Route::get('/contribute', [ContributorApplicationController::class, 'create'])->name('dashboard.contribute');
+    Route::post('/contribute', [ContributorApplicationController::class, 'store'])->name('dashboard.contribute.store');
     Route::post('/my-settings/save', [DashboardController::class, 'settingsSave'])->name('dashboard.settings.save');
 
     // Discord Linking
