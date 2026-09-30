@@ -41,6 +41,8 @@ class DatabaseSeeder extends Seeder
         Permission::create(['name' => 'approve changes']);
         Permission::create(['name' => 'update status']);
         Permission::create(['name' => 'view data']);
+        Permission::create(['name' => 'import airports']);
+        Permission::create(['name' => 'review applications']);
 
         // News
         Permission::create(['name' => 'manage news']);
@@ -60,6 +62,8 @@ class DatabaseSeeder extends Seeder
             'approve changes',
             'update status',
             'view data',
+            'import airports',
+            'review applications',
 
             'manage news',
             'send notifications'
@@ -67,6 +71,8 @@ class DatabaseSeeder extends Seeder
 
         $developer->syncPermissions([
             'view users',
+
+            'import airports',
 
             'manage news',
             'send notifications'
@@ -76,6 +82,7 @@ class DatabaseSeeder extends Seeder
             'approve changes',
             'update status',
             'view data',
+            'review applications',
         ]);
         $contributor->syncPermissions([
             'view data'

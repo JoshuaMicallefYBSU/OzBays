@@ -79,6 +79,10 @@ class DiscordRoleSyncTest extends TestCase
         $this->assertContains('discord-dev-role', $patches[0]['json']['roles']);
         $this->assertContains('discord-news-general-role', $patches[0]['json']['roles']);
         $this->assertSame($user->fullName('FLC'), $patches[0]['json']['nick']);
+
+        // A summary is posted because someone was updated
+        $this->assertCount(1, $this->discord->messages);
+        $this->assertStringContainsString('1/1 members updated', $this->discord->messages[0]['message']);
     }
 
     public function test_user_already_matching_their_target_roles_and_nickname_is_left_alone(): void
@@ -96,6 +100,9 @@ class DiscordRoleSyncTest extends TestCase
         (new DiscordRoleSync)->handle();
 
         $this->assertEmpty($this->discord->getClient()->patches);
+
+        // Nobody was updated, so no summary message is sent
+        $this->assertEmpty($this->discord->messages);
     }
 
     public function test_unmanaged_roles_the_member_already_has_are_preserved(): void

@@ -89,6 +89,11 @@ class DiscordRoleSync implements ShouldQueue
             }
         }
 
+        // Only post the summary when someone was actually updated
+        if ($updated === 0) {
+            return;
+        }
+
         try {
             $discord->sendMessage(
                 config('services.discord.'.env('APP_ENV').'.server_logs'),

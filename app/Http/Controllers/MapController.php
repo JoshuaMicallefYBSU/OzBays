@@ -72,6 +72,7 @@ class MapController extends Controller
                         'properties' => [
                             'icao'     => $stand->airport,
                             'bay'      => $stand->bay,
+                            'display_name' => $stand->display_name,
                             'status'   => $status,
                             'color'    => $color,
                             'type'     => 'parking',

@@ -10,9 +10,13 @@ class Bays extends Model
         'status' => 'integer',
     ];
 
+    // Included in JSON so the map/API can show the full bay name
+    protected $appends = ['display_name'];
+
     protected $fillable = [
         'airport',
         'bay',
+        'long_name',
         'lat',
         'lon',
         'aircraft',
@@ -25,6 +29,12 @@ class Bays extends Model
         'check_exist',
         'terminal',
     ];
+
+    // Pilot/map friendly name - e.g. "Domestic 55A (D55A)", or just "D55A" when there is no long name
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->long_name ? "{$this->long_name} ({$this->bay})" : (string) $this->bay;
+    }
 
     public function scopeForAirport($query, $icao)
     {

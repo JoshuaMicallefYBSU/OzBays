@@ -234,7 +234,7 @@ function refreshBayColours() {
                 const popup = bayMarkers[key].marker.getPopup();
                 if (popup) {
                     popup.setHTML(`
-                        <strong>Bay ${bay.bay}</strong><br>
+                        <strong>Bay ${bay.display_name ?? bay.bay}</strong><br>
                         ${label}
                     `);
                 }
@@ -339,7 +339,7 @@ function refreshAircraft() {
                         elt: toHHMM(ac.elt) ?? 'N/A',
                         eibt: toHHMM(ac.eibt) ?? 'N/A',
                         ac: ac.ac,
-                        bay: ac.map_bay ? ac.map_bay.bay : 'N/A',
+                        bay: ac.map_bay ? (ac.map_bay.display_name ?? ac.map_bay.bay) : 'N/A',
                         bearing: Number(ac.hdg ?? 0)
                     }
                 }))
@@ -420,7 +420,7 @@ map.on('load', () => {
             .setLngLat(f.geometry.coordinates)
             .setPopup(
                 new mapboxgl.Popup({ offset: 10 }).setHTML(`
-                    <strong>${f.properties.icao} &mdash; Bay ${f.properties.bay}</strong><br>
+                    <strong>${f.properties.icao} &mdash; Bay ${f.properties.display_name ?? f.properties.bay}</strong><br>
                     Status: ${f.properties.status}
                 `)
             )

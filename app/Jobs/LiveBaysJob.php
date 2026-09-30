@@ -98,14 +98,7 @@ class LiveBaysJob implements ShouldQueue
         foreach($flight_data as $airport_data){
             foreach($airport_data as $flight){
 
-                // Try an exact bay match first, then fall back to a partial match (e.g. gate "5" vs bay "5A")
-                $bayQuery = Bays::where('airport', $flight['arrival'])
-                    ->when($flight['terminal'], function ($q) use ($flight) {
-                        $q->where('terminal', 'LIKE', '%' . $flight['terminal'] . '%');
-                    });
-
-                $bay = (clone $bayQuery)->where('bay', $flight['gate'])->first()
-                    ?? (clone $bayQuery)->where('bay', 'LIKE', '%' . $flight['gate'] . '%')->first();
+                $bay = $this->findBay($flight);
 
                 if($bay == null){
                     
@@ -135,5 +128,29 @@ class LiveBaysJob implements ShouldQueue
             $os->delete();
         }
 
+    }
+
+    // Match an IRL gate to an OzBays bay. Exact match first, then a bay with the same number and an
+    // optional letter prefix/suffix (gate "4" -> "C4" or "4A", but never "B24"). If that finds more
+    // than one bay the gate is ambiguous, so return null and let it be recorded as a missing bay.
+    private function findBay(array $flight): ?Bays
+    {
+        $gate = strtoupper(trim((string) $flight['gate']));
+
+        $bays = Bays::where('airport', $flight['arrival'])
+            ->when($flight['terminal'], function ($q) use ($flight) {
+                $q->where('terminal', 'LIKE', '%' . $flight['terminal'] . '%');
+            })
+            ->get();
+
+        $exact = $bays->first(fn ($bay) => strtoupper($bay->bay) === $gate);
+        if ($exact !== null) {
+            return $exact;
+        }
+
+        $pattern = '/^[A-Z]*' . preg_quote($gate, '/') . '[A-Z]?$/';
+        $matches = $bays->filter(fn ($bay) => preg_match($pattern, strtoupper($bay->bay)));
+
+        return $matches->count() === 1 ? $matches->first() : null;
     }
 }

@@ -1,0 +1,1168 @@
+{
+    "icao": "YMML",
+    "name": "Melbourne",
+    "lat": -37.6733,
+    "lon": 144.8433,
+    "settings": {
+        "color": "green",
+        "eibt_config": "1.4",
+        "taxi_time": "10",
+        "status": "testing",
+        "airport_type": "Major2",
+        "update_time_utc": "0,1,2,3,4,5,6,8,10,12,20,22,23"
+    },
+    "parking": {
+        "B21": {
+            "lat": -37.667953,
+            "lon": 144.852559,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A333",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B22": {
+            "lat": -37.668156,
+            "lon": 144.851819,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B23": {
+            "lat": -37.667328,
+            "lon": 144.852439,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A333",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B24": {
+            "lat": -37.667739,
+            "lon": 144.851781,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B25": {
+            "lat": -37.6667583333,
+            "lon": 144.8524388889,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B25A": {
+            "lat": -37.6665861111,
+            "lon": 144.8523277778,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A333/B789",
+            "Type": "DOM",
+            "Priority": 2
+        },
+        "B26": {
+            "lat": -37.667308,
+            "lon": 144.851725,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B27": {
+            "lat": -37.666375,
+            "lon": 144.852389,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B28": {
+            "lat": -37.666928,
+            "lon": 144.851642,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "B30": {
+            "lat": -37.666539,
+            "lon": 144.851567,
+            "Operator": "QLK, QFA",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C1": {
+            "lat": -37.668278,
+            "lon": 144.850069,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C3": {
+            "lat": -37.667656,
+            "lon": 144.849931,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C4": {
+            "lat": -37.66795451,
+            "lon": 144.84923874,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C6": {
+            "lat": -37.66754496,
+            "lon": 144.84914785,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C7": {
+            "lat": -37.666936,
+            "lon": 144.849825,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C8": {
+            "lat": -37.66714435,
+            "lon": 144.84908516,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C9": {
+            "lat": -37.666519,
+            "lon": 144.849747,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C10": {
+            "lat": -37.66674907,
+            "lon": 144.84894823,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "C11": {
+            "lat": -37.666358,
+            "lon": 144.849442,
+            "Operator": "QFA, QLK",
+            "Terminal": "T1",
+            "AC": "A333/B789",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "D1": {
+            "lat": -37.668495,
+            "lon": 144.847256,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D2": {
+            "lat": -37.6694,
+            "lon": 144.847517,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D4": {
+            "lat": -37.668989,
+            "lon": 144.846794,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A359/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D4A": {
+            "lat": -37.669145,
+            "lon": 144.846892,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D5": {
+            "lat": -37.667761,
+            "lon": 144.847047,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B744/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D6": {
+            "lat": -37.669144,
+            "lon": 144.845869,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A359",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D7": {
+            "lat": -37.667403,
+            "lon": 144.847,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B772/B78X",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D8": {
+            "lat": -37.66899838,
+            "lon": 144.84516229,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A346/B744",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D9": {
+            "lat": -37.66765,
+            "lon": 144.846475,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A346/A388",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D9A": {
+            "lat": -37.667364,
+            "lon": 144.846719,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D9B": {
+            "lat": -37.667558,
+            "lon": 144.846292,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D10": {
+            "lat": -37.667936,
+            "lon": 144.844592,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A346/B744",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D11": {
+            "lat": -37.667761,
+            "lon": 144.845472,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A388/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D11A": {
+            "lat": -37.667517,
+            "lon": 144.8457,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D11B": {
+            "lat": -37.667637,
+            "lon": 144.84545,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D12": {
+            "lat": -37.669267,
+            "lon": 144.844069,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B77W",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D13": {
+            "lat": -37.665581,
+            "lon": 144.844831,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A388/B773",
+            "Type": null,
+            "Priority": 2
+        },
+        "D13A": {
+            "lat": -37.665834,
+            "lon": 144.844653,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B739",
+            "Type": null,
+            "Priority": 2
+        },
+        "D13B": {
+            "lat": -37.665778,
+            "lon": 144.845125,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B739",
+            "Type": null,
+            "Priority": 2
+        },
+        "D14": {
+            "lat": -37.669439,
+            "lon": 144.843756,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B744/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D15": {
+            "lat": -37.665472,
+            "lon": 144.845817,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A388/B773",
+            "Type": null,
+            "Priority": 2
+        },
+        "D15A": {
+            "lat": -37.665722,
+            "lon": 144.84561,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B739",
+            "Type": null,
+            "Priority": 2
+        },
+        "D15B": {
+            "lat": -37.665654,
+            "lon": 144.846083,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B739",
+            "Type": null,
+            "Priority": 2
+        },
+        "D16": {
+            "lat": -37.668944,
+            "lon": 144.843753,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A388/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D16A": {
+            "lat": -37.668783,
+            "lon": 144.843372,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D16B": {
+            "lat": -37.668989,
+            "lon": 144.843692,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D17": {
+            "lat": -37.665611,
+            "lon": 144.846544,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "D18": {
+            "lat": -37.668228,
+            "lon": 144.843617,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B744/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D18A": {
+            "lat": -37.667972,
+            "lon": 144.843247,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D18B": {
+            "lat": -37.668161,
+            "lon": 144.843586,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A388/B748",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D18C": {
+            "lat": -37.668256,
+            "lon": 144.843525,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B38M",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D19": {
+            "lat": -37.665579,
+            "lon": 144.846958,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "D20": {
+            "lat": -37.667583,
+            "lon": 144.843499,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B744/B773",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "D20A": {
+            "lat": -37.66755,
+            "lon": 144.843283,
+            "Operator": null,
+            "Terminal": "T2",
+            "AC": "B762",
+            "Type": "INTL",
+            "Priority": 1
+        },
+        "E1": {
+            "lat": -37.670675,
+            "lon": 144.847253,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E2": {
+            "lat": -37.671311,
+            "lon": 144.847667,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E3": {
+            "lat": -37.670728,
+            "lon": 144.846784,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E4": {
+            "lat": -37.671094,
+            "lon": 144.847224,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E5": {
+            "lat": -37.670793,
+            "lon": 144.846267,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E6": {
+            "lat": -37.671093,
+            "lon": 144.84632,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E7": {
+            "lat": -37.670843,
+            "lon": 144.845761,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E8": {
+            "lat": -37.671197,
+            "lon": 144.845839,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E9": {
+            "lat": -37.670875,
+            "lon": 144.845264,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "E10": {
+            "lat": -37.671253,
+            "lon": 144.845397,
+            "Operator": "VOZ",
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F11": {
+            "lat": -37.672672,
+            "lon": 144.847683,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F12": {
+            "lat": -37.67325,
+            "lon": 144.847978,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F13": {
+            "lat": -37.6727,
+            "lon": 144.847164,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F14": {
+            "lat": -37.673228,
+            "lon": 144.847194,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F15": {
+            "lat": -37.672756,
+            "lon": 144.846622,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F16": {
+            "lat": -37.673347,
+            "lon": 144.846744,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B739",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F17": {
+            "lat": -37.6728,
+            "lon": 144.846181,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F18": {
+            "lat": -37.673403,
+            "lon": 144.846306,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B39M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F19": {
+            "lat": -37.672856,
+            "lon": 144.845678,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F20": {
+            "lat": -37.673456,
+            "lon": 144.845819,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "F21": {
+            "lat": -37.6729194444,
+            "lon": 144.8451277778,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F21A": {
+            "lat": -37.6731722222,
+            "lon": 144.8450111111,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A359",
+            "Type": null,
+            "Priority": 2
+        },
+        "F22": {
+            "lat": -37.6735305556,
+            "lon": 144.84505,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B77L/B78X",
+            "Type": null,
+            "Priority": 2
+        },
+        "F22A": {
+            "lat": -37.6735416667,
+            "lon": 144.8452083333,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F22B": {
+            "lat": -37.6737472222,
+            "lon": 144.8448944444,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F23": {
+            "lat": -37.6728611111,
+            "lon": 144.8446527778,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B38M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F24": {
+            "lat": -37.6736277778,
+            "lon": 144.8442916667,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A35K/B77W",
+            "Type": null,
+            "Priority": 2
+        },
+        "F24A": {
+            "lat": -37.6735861111,
+            "lon": 144.8440611111,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F24B": {
+            "lat": -37.6737222222,
+            "lon": 144.8442694444,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F25": {
+            "lat": -37.6731305556,
+            "lon": 144.8443027778,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "B748",
+            "Type": null,
+            "Priority": 2
+        },
+        "F25A": {
+            "lat": -37.6728638889,
+            "lon": 144.8440055556,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "F25B": {
+            "lat": -37.6731027778,
+            "lon": 144.8441527778,
+            "Operator": null,
+            "Terminal": "T3",
+            "AC": "A321/B39M",
+            "Type": null,
+            "Priority": 2
+        },
+        "G41": {
+            "lat": -37.6752583333,
+            "lon": 144.8483833333,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G42": {
+            "lat": -37.6760777778,
+            "lon": 144.8484333333,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G42A": {
+            "lat": -37.67620867,
+            "lon": 144.84847583,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A332/B788",
+            "Type": null,
+            "Priority": 1
+        },
+        "G43": {
+            "lat": -37.6754,
+            "lon": 144.8479361111,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G44": {
+            "lat": -37.6761833333,
+            "lon": 144.8479833333,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G45": {
+            "lat": -37.6753138889,
+            "lon": 144.8474361111,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G46": {
+            "lat": -37.6761583333,
+            "lon": 144.8475083333,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G46A": {
+            "lat": -37.67628347,
+            "lon": 144.84750482,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A332/B788",
+            "Type": null,
+            "Priority": 1
+        },
+        "G47": {
+            "lat": -37.6754583333,
+            "lon": 144.8469777778,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G48": {
+            "lat": -37.6763694444,
+            "lon": 144.847075,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G49": {
+            "lat": -37.675325,
+            "lon": 144.8464027778,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G50": {
+            "lat": -37.6764055556,
+            "lon": 144.8467444444,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G51": {
+            "lat": -37.6756972222,
+            "lon": 144.8467,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G52": {
+            "lat": -37.6760722222,
+            "lon": 144.8467694444,
+            "Operator": "JST",
+            "Terminal": "T4",
+            "AC": "A321/B738",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G54": {
+            "lat": -37.6774472222,
+            "lon": 144.8449861111,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A321/B739",
+            "Type": null,
+            "Priority": 5
+        },
+        "G54A": {
+            "lat": -37.6771055556,
+            "lon": 144.8450305556,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "B748",
+            "Type": null,
+            "Priority": 5
+        },
+        "G56": {
+            "lat": -37.6770611111,
+            "lon": 144.8449138889,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A321/B739",
+            "Type": null,
+            "Priority": 5
+        },
+        "G57": {
+            "lat": -37.6755472222,
+            "lon": 144.8445777778,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A321/C130",
+            "Type": null,
+            "Priority": 5
+        },
+        "G57A": {
+            "lat": -37.6757222222,
+            "lon": 144.8447666667,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "B748",
+            "Type": null,
+            "Priority": 5
+        },
+        "G57B": {
+            "lat": -37.6757972222,
+            "lon": 144.8446222222,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G57C": {
+            "lat": -37.6758944444,
+            "lon": 144.8445166667,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G57D": {
+            "lat": -37.6755083333,
+            "lon": 144.8446194444,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G57E": {
+            "lat": -37.6753777778,
+            "lon": 144.8445361111,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G57F": {
+            "lat": -37.6754472222,
+            "lon": 144.84425,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G57G": {
+            "lat": -37.6753083333,
+            "lon": 144.844225,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 1
+        },
+        "G58": {
+            "lat": -37.6766222222,
+            "lon": 144.8448305556,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A321/B738",
+            "Type": null,
+            "Priority": 5
+        },
+        "G59": {
+            "lat": -37.6758472222,
+            "lon": 144.8446861111,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A321/B738",
+            "Type": null,
+            "Priority": 5
+        },
+        "G60": {
+            "lat": -37.6762333333,
+            "lon": 144.8447583333,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A321/B738",
+            "Type": null,
+            "Priority": 5
+        },
+        "G60A": {
+            "lat": -37.6767444444,
+            "lon": 144.8449583333,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A124/A346",
+            "Type": null,
+            "Priority": 6
+        },
+        "G60B": {
+            "lat": -37.6762305556,
+            "lon": 144.8445944444,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 6
+        },
+        "G60C": {
+            "lat": -37.6761555556,
+            "lon": 144.8444166667,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 6
+        },
+        "G60D": {
+            "lat": -37.6765638889,
+            "lon": 144.84485,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 6
+        },
+        "G60E": {
+            "lat": -37.6764416667,
+            "lon": 144.844825,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 6
+        },
+        "G60F": {
+            "lat": -37.6767194444,
+            "lon": 144.8444722222,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 6
+        },
+        "G60G": {
+            "lat": -37.6767416667,
+            "lon": 144.8442972222,
+            "Operator": null,
+            "Terminal": "T4",
+            "AC": "SF34",
+            "Type": "DOM",
+            "Priority": 6
+        },
+        "H1": {
+            "lat": -37.6783055556,
+            "lon": 144.8487194444,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A346/B748",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H1A": {
+            "lat": -37.6781222222,
+            "lon": 144.8487916667,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A320/B739",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H1B": {
+            "lat": -37.6780277778,
+            "lon": 144.8483083333,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A320/B739",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H2": {
+            "lat": -37.6783416667,
+            "lon": 144.8479166667,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "B748",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H2A": {
+            "lat": -37.6783444444,
+            "lon": 144.8478972222,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A346/B748",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H3": {
+            "lat": -37.6783583333,
+            "lon": 144.8473833333,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "B748",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H3A": {
+            "lat": -37.6780972222,
+            "lon": 144.8472805556,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A320/B738",
+            "Type": "FRT",
+            "Priority": 1
+        },
+        "H3B": {
+            "lat": -37.678425,
+            "lon": 144.8470972222,
+            "Operator": null,
+            "Terminal": null,
+            "AC": "A320/B738",
+            "Type": "FRT",
+            "Priority": 1
+        }
+    }
+}
