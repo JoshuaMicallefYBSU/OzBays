@@ -11,6 +11,7 @@
         "airport_type": "Major2",
         "update_time_utc": "0,2,4,6,8,10,12,14,20,22"
     },
+    "long_name": {},
     "parking": {
         "10B": {
             "lat": -34.93748019,
@@ -33,7 +34,7 @@
         "12L": {
             "lat": -34.93752792,
             "lon": 138.54101482,
-            "Operator": "VOZ",
+            "Operator": "VOZ, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -42,7 +43,7 @@
         "13": {
             "lat": -34.93777759,
             "lon": 138.5406399,
-            "Operator": "VOZ",
+            "Operator": "VOZ, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -51,7 +52,7 @@
         "14L": {
             "lat": -34.93803165,
             "lon": 138.54028169,
-            "Operator": "VOZ",
+            "Operator": "VOZ, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -114,7 +115,7 @@
         "21": {
             "lat": -34.93978714,
             "lon": 138.53774868,
-            "Operator": "QFA, JST",
+            "Operator": "QFA, JST, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -123,7 +124,7 @@
         "22L": {
             "lat": -34.94007217,
             "lon": 138.53734714,
-            "Operator": "QFA, JST",
+            "Operator": "QFA, JST, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -132,7 +133,7 @@
         "23": {
             "lat": -34.94031774,
             "lon": 138.53697892,
-            "Operator": "QFA, JST",
+            "Operator": "QFA, JST, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -141,7 +142,7 @@
         "24L": {
             "lat": -34.94056335,
             "lon": 138.53659876,
-            "Operator": "QFA, JST",
+            "Operator": "QFA, JST, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -150,7 +151,7 @@
         "25": {
             "lat": -34.94083289,
             "lon": 138.536241,
-            "Operator": "QFA, JST",
+            "Operator": "QFA, JST, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
@@ -159,7 +160,7 @@
         "26L": {
             "lat": -34.94106266,
             "lon": 138.53588018,
-            "Operator": "QFA, JST",
+            "Operator": "QFA, JST, *",
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",

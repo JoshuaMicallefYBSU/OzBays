@@ -7,10 +7,12 @@ use App\Models\Bays;
 
 class AirportImporter
 {
-    // Folder holding one JSON file per airport (e.g. YMML.json)
+    // Folder holding the site's airport files - one JSON file per airport (e.g. YMML.json).
+    // Kept in storage so it isn't publicly downloadable or tracked by git - the copies in
+    // public/config/airports on GitHub are for reference only and are never read by the site.
     public static function directory(): string
     {
-        return public_path('config/airports');
+        return storage_path('app/airports');
     }
 
     /**
@@ -53,8 +55,8 @@ class AirportImporter
     }
 
     /**
-     * Create/update the airport and all of its bays in the database.
-     * Everything touched is flagged check_exist = 1 so AerodromeUpdates keeps it.
+     * Create/update the airport and all of its bays in the database, and remove any of
+     * the airport's bays that are no longer in the file.
      */
     public function import(array $airport): void
     {
@@ -87,6 +89,12 @@ class AirportImporter
                 'check_exist' => 1,
                 'terminal'  => $bay['Terminal'] ?? null,
             ]);
+        }
+
+        // Delete Bays no longer in the airport's file
+        $removed = Bays::where('airport', $icao)->whereNotIn('bay', array_map('strval', array_keys($airport['parking'])))->get();
+        foreach ($removed as $bay) {
+            $bay->delete();
         }
     }
 

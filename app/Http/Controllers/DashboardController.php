@@ -70,9 +70,9 @@ class DashboardController extends Controller
         $icao = $airport['icao'];
         $path = AirportImporter::directory().'/'.$icao.'.json';
 
-        // Importer is for new airports only - existing ones are updated through their JSON file
-        if (File::exists($path) || Airports::where('icao', $icao)->exists()) {
-            return back()->withErrors(['airport_file' => [$icao.' already exists in OzBays.']]);
+        // Importer is for airports without a site file yet (new airports, or ones only in the database)
+        if (File::exists($path)) {
+            return back()->withErrors(['airport_file' => [$icao.' has already been uploaded to OzBays.']]);
         }
 
         File::ensureDirectoryExists(AirportImporter::directory());

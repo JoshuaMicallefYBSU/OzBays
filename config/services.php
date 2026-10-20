@@ -43,8 +43,9 @@ return [
         'key' => env('AIRLABS_API_KEY'),
     ],
 
-    'ozstrips' => [
-        'pdc_code' => env('OZSTRIPS_PDC_CODE'),
+    'hoppie' => [
+        'logon'    => env('HOPPIE_LOGON'),
+        'callsign' => env('HOPPIE_CALLSIGN', 'OZBAYS'),
     ],
 
     'discord' => [

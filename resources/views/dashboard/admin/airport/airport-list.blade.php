@@ -2,7 +2,7 @@
 
 @section('content')
     <h1>Airport Admin View</h1>
-    <p>View all airports maintained by OzBays. <i>Data is updated hourly via the airport JSON files in <u>config/airports</u> housed on the OzBays Servers.</i></p>
+    <p>View all airports maintained by OzBays. <i>Data is updated hourly from the airport JSON files uploaded to the OzBays Servers.</i></p>
 
     @can('import airports')
         <div class="pb-3">

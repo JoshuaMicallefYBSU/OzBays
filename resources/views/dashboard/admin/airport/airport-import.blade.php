@@ -2,7 +2,7 @@
 
 @section('content')
     <h1>Import New Airport</h1>
-    <p>Upload an airport JSON file to add a new airport and all of its bays to OzBays. A copy of the file is saved to <u>config/airports</u> and kept in sync hourly.</p>
+    <p>Upload an airport JSON file to add an airport and all of its bays to OzBays. The file is saved privately on the OzBays server and kept in sync hourly.</p>
 
     <div class="pb-3">
         <a href="{{route('dashboard.admin.airport.all')}}"> <i class="fas fa-arrow-left"></i> See All Airports</a>
@@ -14,7 +14,7 @@
         <div class="form-group">
             <label for="airport_file">Airport JSON File</label>
             <input type="file" name="airport_file" id="airport_file" class="form-control-file @error('airport_file') is-invalid @enderror" accept=".json,application/json" required>
-            <small class="form-text text-muted">One airport per file. Existing airports can't be imported again.</small>
+            <small class="form-text text-muted">One airport per file. Airports that have already been uploaded can't be uploaded again.</small>
             @if($errors->has('airport_file'))
                 <div class="invalid-feedback d-block">
                     <ul class="mb-0 pl-3">

@@ -61,6 +61,29 @@ class BayAllocationHoppieTest extends TestCase
         $this->assertStringContainsString('YBBN ARRIVAL INFO', $uplink);
     }
 
+    private function arrBayLine(?string $bayType, string $arrBay): string
+    {
+        $method = (new \ReflectionClass(BayAllocation::class))->getMethod('BuildCPDLCMessage');
+        $method->setAccessible(true);
+
+        $uplink = $method->invoke(new BayAllocation, 1, 'QFA123', 'YSSY', 'YPPH', $bayType, $arrBay, 1);
+        preg_match('/ARR BAY: @(.*)@/', $uplink, $m);
+
+        return $m[1];
+    }
+
+    public function test_arr_bay_shows_the_bay_type_when_the_bay_has_one(): void
+    {
+        $this->assertSame('INTL, I8', $this->arrBayLine('INTL', 'I8'));
+        $this->assertSame('DOM, 10', $this->arrBayLine('DOM', '10'));
+    }
+
+    public function test_arr_bay_shows_only_the_name_when_the_bay_has_no_type(): void
+    {
+        $this->assertSame('Maroomba 2 (MB2)', $this->arrBayLine(null, 'Maroomba 2 (MB2)'));
+        $this->assertSame('National Jet 6R (NJ6R)', $this->arrBayLine(null, 'National Jet 6R (NJ6R)'));
+    }
+
     public function test_uplink_is_cancelled_for_a_user_who_disabled_hoppie(): void
     {
         $this->createUserWithId(1000002);
