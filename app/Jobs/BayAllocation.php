@@ -14,7 +14,6 @@ use App\Models\UserPreference;
 use App\Services\AirportFlightState;
 use App\Services\DiscordClient;
 use App\Services\HoppieClient;
-use App\Services\OzStripsClient;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -47,6 +46,11 @@ class BayAllocation implements ShouldQueue
     public function handle(): void
     {
         $test = [];
+
+        // Keep the OzBays Hoppie station logged in (runs every minute with this job) - Production only
+        if (env('APP_ENV') == 'production') {
+            app(HoppieClient::class)->logon();
+        }
 
         // ########### 1. Check Bay Status = Either Occupied, Or Empty
 
@@ -761,7 +765,7 @@ class BayAllocation implements ShouldQueue
                 $cid = $aircraftBay->cid;
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
-                $bayType = $aircraftBay->type;
+                $bayType = $value->pax_type;
                 $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
@@ -786,7 +790,7 @@ class BayAllocation implements ShouldQueue
                 $cid = $aircraftBay->cid;
                 $dep = $aircraftBay->dep;
                 $arr = $aircraftBay->arr;
-                $bayType = $aircraftBay->type;
+                $bayType = $value->pax_type;
                 $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
             }
@@ -845,7 +849,7 @@ class BayAllocation implements ShouldQueue
         if (env('APP_ENV') == 'production') {
             Log::channel('hoppie')->error('Attempting Hoppie Message for Flight '.$flight);
 
-            if ($hoppie->isConnected($flight, $arr)) {
+            if ($hoppie->isConnected($flight)) {
                 if ($arrival->status == 'testing') {
                     Log::channel('hoppie')->error($flight.' connected to the Hoppie Network & airport is in tester mode.');
 
@@ -864,9 +868,9 @@ class BayAllocation implements ShouldQueue
                 }
 
                 if ($send_message == true) {
-                    // Uplink is sent to the aircraft via the OzStrips server
-                    $sent = app(OzStripsClient::class)->sendPdc($arr, $flight, $Uplink);
-                    Log::channel('hoppie')->error($flight.($sent ? ' message sent via OzStrips.' : ' OzStrips send failed.'));
+                    // Uplink is sent from the OzBays Hoppie station
+                    $sent = $hoppie->sendTelex($flight, $Uplink);
+                    Log::channel('hoppie')->error($flight.($sent ? ' message sent from ' : ' message failed from ').$hoppie->callsign());
 
                     $discord = app(DiscordClient::class);
                     try {
@@ -889,25 +893,23 @@ class BayAllocation implements ShouldQueue
 
     private function BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid): string
     {
+        // Bay's Type (DOM/INTL etc) goes in front when the bay has one - e.g. "INTL, I8" or "Maroomba 1 (MB1)"
+        $arrBayText = $bayType ? "{$bayType}, {$arrBay}" : $arrBay;
+
         if ($version == 1) {
             $messageLines = [
                 "{$arr} ARRIVAL INFO
                 @{$flight}@, {$dep}-{$arr}
-                ARR BAY: @{$bayType}, {$arrBay}@
-                IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC
-                RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ
-                RMK/ ACK NOT REQUIRED WITH ATC
-                END BAY UPLINK"
+                ARR BAY: @{$arrBayText}@
+                IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
+                RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.ORG"
             ];
         } elseif ($version == 2) {
             $messageLines = [
                 "{$arr} ARRIVAL UPDATE
-                @{$flight}@, {$dep}-{$arr}
-                ARR BAY: @{$bayType}, {$arrBay}@
-                IF UNABLE ADVISE GND FOR ALTN BAY ON FIRST CTC
-                RMK/ BAY CHANGED DUE OTHER AC ON ASSIGNED BAY
-                RMK/ ACK NOT REQUIRED WITH ATC
-                END BAY UPLINK",
+                ARR BAY: @{$arrBayText}@
+                IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
+                RMK/ BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
             ];
         }
 
