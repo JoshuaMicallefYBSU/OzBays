@@ -1565,7 +1565,7 @@
             "Operator": null,
             "Terminal": "T2",
             "AC": "DH8C",
-            "Type": "DOM3B",
+            "Type": "DOM",
             "Priority": 5
         },
         "F15A": {
