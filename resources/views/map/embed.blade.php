@@ -450,6 +450,8 @@ function addAircraftArrowIcon() {
  * Until an icon has loaded the aircraft shows as the plain arrow.
  * -------------------------------------------------------- */
 const AIRCRAFT_ICONS = @json($aircraftIcons ?? []);
+// Built with asset() so the path is right on every server (the live site serves files from /public)
+const AIRCRAFT_ICON_BASE = @json(asset('img/aircraft-icon'));
 const aircraftIconLoads = new Map();
 let lastAircraftPoints = null;
 
@@ -482,7 +484,7 @@ function loadAircraftIcon(icao) {
             resolve();
         };
         img.onerror = () => { console.warn(`Aircraft icon ${icao}.svg could not be loaded - using the arrow`); resolve(); };
-        img.src = `/img/aircraft-icon/${icao}.svg`;
+        img.src = `${AIRCRAFT_ICON_BASE}/${icao}.svg`;
     });
 
     aircraftIconLoads.set(name, load);

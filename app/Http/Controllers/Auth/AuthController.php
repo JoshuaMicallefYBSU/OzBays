@@ -96,6 +96,6 @@ class AuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->route('home')->with('success', "Welcome back, {$user->fullName('F')}!");
+        return redirect()->intended(route('home'))->with('success', "Welcome back, {$user->fullName('F')}!");
     }
 }

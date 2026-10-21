@@ -49,6 +49,9 @@ return [
     ],
 
     'discord' => [
+        // Webhook for the public feedback form (posts each submission with a link to /dashboard/feedback)
+        'feedback_webhook' => env('DISCORD_FEEDBACK_WEBHOOK'),
+
         // Local System Logic
         'local' => [
             'bay_assign'    => 1454375087473168405,
