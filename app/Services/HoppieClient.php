@@ -101,13 +101,13 @@ class HoppieClient
     }
 
     /**
-     * Send a TELEX and CPDLC message to an aircraft from the OzBays station
+     * Send a TELEX message to an aircraft from the OzBays station
      */
     public function sendTelex(string $to, string $message): bool
     {
         // TELEX Message
         try {
-            $this->client->get('/acars/system/connect.html', [
+            $response = $this->client->get('/acars/system/connect.html', [
                 'query' => [
                     'logon'  => $this->logon,
                     'from'   => $this->callsign,
@@ -117,12 +117,16 @@ class HoppieClient
                 ],
             ]);
 
+            return trim((string) $response->getBody()) === 'ok';
+
         } catch (GuzzleException $e) {
             Log::error('Hoppie telex send failed', [
                 'from'  => $this->callsign,
                 'to'    => $to,
                 'error' => $e->getMessage(),
             ]);
+
+            return false;
         }
     }
 

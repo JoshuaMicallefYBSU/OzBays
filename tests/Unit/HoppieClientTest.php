@@ -65,16 +65,20 @@ class HoppieClientTest extends TestCase
 
     public function test_messages_are_sent_from_the_ozbays_station(): void
     {
-        $this->assertTrue($this->client(['ok', 'ok'])->sendTelex('qfa123', 'YBBN ARRIVAL INFO'));
+        $this->assertTrue($this->client(['ok'])->sendTelex('qfa123', 'YBBN ARRIVAL INFO'));
 
-        $this->assertCount(2, $this->history);
+        // TELEX only
+        $this->assertCount(1, $this->history);
 
-        foreach ([0 => 'telex', 1 => 'cpdlc'] as $request => $type) {
-            $query = $this->query($request);
-            $this->assertSame('OZBAYS', $query['from']);
-            $this->assertSame('QFA123', $query['to']);
-            $this->assertSame($type, $query['type']);
-        }
+        $query = $this->query(0);
+        $this->assertSame('OZBAYS', $query['from']);
+        $this->assertSame('QFA123', $query['to']);
+        $this->assertSame('telex', $query['type']);
+    }
+
+    public function test_failed_send_returns_false(): void
+    {
+        $this->assertFalse($this->client(['error {callsign already in use}'])->sendTelex('qfa123', 'YBBN ARRIVAL INFO'));
     }
 
     public function test_callsign_defaults_to_ozbays(): void
