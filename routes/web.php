@@ -4,6 +4,7 @@ use App\Http\Controllers\AirportsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\ContributorApplicationController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscordController;
 use App\Http\Controllers\FlightDisplayController;
@@ -115,6 +116,18 @@ Route::prefix('admin/notifications')->middleware(['auth', 'can:send notification
 });
 
 // Dashboard
+// Public trial feedback - login required, 5 submissions an hour per user
+Route::middleware('auth')->group(function () {
+    Route::get('/provide-feedback', [FeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('/provide-feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,60')->name('feedback.store');
+});
+
+// Feedback admin view
+Route::prefix('dashboard/feedback')->middleware(['auth', 'can:view feedback'])->group(function () {
+    Route::get('/', [FeedbackController::class, 'index'])->name('dashboard.feedback.index');
+    Route::get('/{feedback}', [FeedbackController::class, 'show'])->name('dashboard.feedback.show');
+});
+
 Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/my-settings', [DashboardController::class, 'settingsView'])->name('dashboard.settings.index');

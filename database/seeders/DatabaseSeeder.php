@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
         Permission::create(['name' => 'view data']);
         Permission::create(['name' => 'import airports']);
         Permission::create(['name' => 'review applications']);
+        Permission::create(['name' => 'view feedback']);
 
         // News
         Permission::create(['name' => 'manage news']);
@@ -64,6 +65,7 @@ class DatabaseSeeder extends Seeder
             'view data',
             'import airports',
             'review applications',
+            'view feedback',
 
             'manage news',
             'send notifications'
@@ -73,6 +75,7 @@ class DatabaseSeeder extends Seeder
             'view users',
 
             'import airports',
+            'view feedback',
 
             'manage news',
             'send notifications'

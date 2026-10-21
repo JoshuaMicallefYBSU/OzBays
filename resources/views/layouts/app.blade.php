@@ -102,7 +102,14 @@ use Carbon\Carbon;
           </ul>
 
           <ul class="navbar-nav ">
-            @can('view data')
+            <!-- Public trial feedback (login required) -->
+            <li class="nav-item d-flex align-items-center">
+                <a class="oz-feedback-cta" href="{{ route('feedback.create') }}">
+                    <i class="fa fa-comment"></i> Provide your Feedback!
+                </a>
+            </li>
+
+            @canany(['view data', 'view feedback'])
             @php($pendingApplications = auth()->user()->can('review applications') ? \App\Models\ContributorApplication::pending()->count() : 0)
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'admin') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -137,9 +144,14 @@ use Carbon\Carbon;
                   <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item" href="{{route('dashboard.admin.users.list')}}">View All Users</a>
                 @endcan
+
+                @can('view feedback')
+                  <div class="dropdown-divider"></div> {{-- Divider --}}
+                  <a class="dropdown-item" href="{{route('dashboard.feedback.index')}}">View Feedback</a>
+                @endcan
               </div>
             </li>
-          @endcan
+          @endcanany
 
             @if(Auth::guest())
             <!-- Login/Signup if not logged in-->

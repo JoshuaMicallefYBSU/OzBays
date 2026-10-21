@@ -1706,3 +1706,36 @@ footer.oz-footer .copyright * {
     0%, 100% { filter: brightness(1); }
     50% { filter: brightness(1.18); }
 }
+
+/* ---------- Public trial feedback button (navbar) ---------- */
+.oz-feedback-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.25rem 0.5rem;
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #06202e !important;
+    background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6);
+    animation: oz-feedback-pulse 2.4s ease-out infinite;
+    text-decoration: none !important;
+    white-space: nowrap;
+}
+
+.oz-feedback-cta:hover {
+    color: #06202e !important;
+    background: linear-gradient(135deg, #bae6fd, #7dd3fc);
+}
+
+@keyframes oz-feedback-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .oz-feedback-cta { animation: none; }
+}
