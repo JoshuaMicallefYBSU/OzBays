@@ -124,30 +124,6 @@ class HoppieClient
                 'error' => $e->getMessage(),
             ]);
         }
-
-        // CPDLC Message
-        try {
-            $response = $this->client->get('/acars/system/connect.html', [
-                'query' => [
-                    'logon'  => $this->logon,
-                    'from'   => $this->callsign,
-                    'to'     => strtoupper($to),
-                    'type'   => 'cpdlc',
-                    'packet' => '/data2/2/1/NE/ '.$message,
-                ],
-            ]);
-
-            return trim((string) $response->getBody()) === 'ok';
-
-        } catch (GuzzleException $e) {
-            Log::error('CPDLC message send failed', [
-                'from'  => $this->callsign,
-                'to'    => $to,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
     }
 
     /**
