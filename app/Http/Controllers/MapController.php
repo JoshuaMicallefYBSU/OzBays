@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Flights;
 use App\Models\Airports;
 use App\Models\Bays;
+use App\Services\AircraftSizes;
 
 class MapController extends Controller
 {
@@ -13,7 +14,7 @@ class MapController extends Controller
         return view('map.index');
     }
 
-    public function embed()
+    public function embed(AircraftSizes $sizes)
     {
         $airports = Airports::all();
         $bays     = Bays::all();
@@ -94,6 +95,7 @@ class MapController extends Controller
             ]),
             'airportsJson' => $airports->toJson(),
             'aircraftJson' => $flights->toJson(),
+            'aircraftIcons' => $sizes->mapIcons(),
         ]);
     }
 }

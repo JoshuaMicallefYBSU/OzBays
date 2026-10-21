@@ -168,6 +168,57 @@ class BayAllocationIssueFixesTest extends TestCase
         $this->assertSame([$listed->id, $open->id, $wildcard->id], $bays->pluck('id')->all());
     }
 
+    public function test_random_pick_is_limited_to_the_best_matching_bays(): void
+    {
+        $this->flight('QFA30', ['ac' => 'A333']);
+        $best = [
+            $this->bay('B21', ['aircraft' => 'A333', 'operators' => 'QLK, QFA, *'])->id,
+            $this->bay('C11', ['aircraft' => 'A333/B789', 'operators' => 'QFA, QLK, *'])->id,
+        ];
+        $this->bay('G42A', ['aircraft' => 'A333', 'operators' => 'JST, *']);     // other airline via "*"
+        $this->bay('N1', ['aircraft' => 'A333', 'operators' => null]);           // open bay
+        $this->bay('F21A', ['aircraft' => 'A333', 'operators' => 'QFA', 'priority' => 2]); // lower priority
+
+        $method = (new \ReflectionClass(BayAllocation::class))->getMethod('selectBay');
+        $method->setAccessible(true);
+
+        for ($i = 0; $i < 25; $i++) {
+            $selected = $method->invoke(new BayAllocation, ['cs' => 'QFA30', 'arr' => 'YBBN'], [['A333', 'B789']], null);
+            $this->assertContains($selected->id, $best);
+        }
+    }
+
+    public function test_aircraft_is_kept_on_its_own_size_bays_over_bigger_ones(): void
+    {
+        $this->flight('QFA31', ['ac' => 'B738']);
+        $narrow = $this->bay('N1', ['aircraft' => 'B738', 'operators' => 'QFA, *']);
+        $this->bay('W1', ['aircraft' => 'A333', 'operators' => 'QFA, *']);
+
+        $method = (new \ReflectionClass(BayAllocation::class))->getMethod('selectBay');
+        $method->setAccessible(true);
+
+        for ($i = 0; $i < 10; $i++) {
+            $selected = $method->invoke(new BayAllocation, ['cs' => 'QFA31', 'arr' => 'YBBN'], [['B738'], ['A333']], null);
+            $this->assertSame($narrow->id, $selected->id);
+        }
+    }
+
+    public function test_next_best_bays_are_used_once_the_best_are_taken(): void
+    {
+        $this->flight('QFA32', ['ac' => 'A333']);
+        $this->bay('B21', ['aircraft' => 'A333', 'operators' => 'QFA, *', 'callsign' => 'VOZ1', 'status' => 1]);
+        $open = $this->bay('N1', ['aircraft' => 'A333', 'operators' => null]);
+        $this->bay('G42A', ['aircraft' => 'A333', 'operators' => 'JST, *']);
+
+        $method = (new \ReflectionClass(BayAllocation::class))->getMethod('selectBay');
+        $method->setAccessible(true);
+
+        for ($i = 0; $i < 10; $i++) {
+            $selected = $method->invoke(new BayAllocation, ['cs' => 'QFA32', 'arr' => 'YBBN'], [['A333']], null);
+            $this->assertSame($open->id, $selected->id);
+        }
+    }
+
     public function test_ignored_types_are_never_assigned_a_bay_or_reported_missing(): void
     {
         $this->stubAircraftJson();
