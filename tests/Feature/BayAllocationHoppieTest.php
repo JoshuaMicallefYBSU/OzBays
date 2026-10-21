@@ -67,7 +67,7 @@ class BayAllocationHoppieTest extends TestCase
         $method->setAccessible(true);
 
         $uplink = $method->invoke(new BayAllocation, 1, 'QFA123', 'YSSY', 'YPPH', $bayType, $arrBay, 1);
-        preg_match('/ARR BAY: @(.*)@/', $uplink, $m);
+        preg_match('/ASSIGNED BAY: @(.*)@/', $uplink, $m);
 
         return $m[1];
     }
