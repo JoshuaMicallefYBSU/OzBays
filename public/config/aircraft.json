@@ -117,7 +117,68 @@
         "JS31",
         "JS32",
         "JS41",
-        "JAB4"
+        "JAB4",
+        "E55P",
+        "E50P",
+        "C25B",
+        "C25C",
+        "C550",
+        "C680",
+        "H25B",
+        "FA50",
+        "LEG2",
+        "DA40",
+        "DA42",
+        "DA50",
+        "DA62",
+        "TBM8",
+        "TBM9",
+        "K100",
+        "B58",
+        "B58T",
+        "B60T",
+        "B200",
+        "PA18",
+        "PA24",
+        "PA28",
+        "P28S",
+        "P28U",
+        "S22T",
+        "C206",
+        "T210",
+        "R182",
+        "185",
+        "DHC2",
+        "DHC6",
+        "PIAT",
+        "P212",
+        "SW4",
+        "STAR",
+        "COL4",
+        "RV10",
+        "RV14",
+        "VL3",
+        "AT8T",
+        "E300",
+        "A5",
+        "SAVG",
+        "F35",
+        "F35A",
+        "F18",
+        "F15",
+        "EUFI",
+        "SU57",
+        "SR71",
+        "HAWK",
+        "L39",
+        "M339",
+        "T6",
+        "A4",
+        "SPIT",
+        "CORS",
+        "PTS2",
+        "ME09",
+        "FW90"
     ],
 
     "AllocationInfo_1": "Aircraft with wingspan between 20m - 26m",
@@ -142,7 +203,15 @@
         "L410",
         "L610",
         "RJ1H",
-        "SF34"
+        "SF34",
+        "AT45",
+        "AT46",
+        "DH8A",
+        "C408",
+        "C700",
+        "E135",
+        "E145",
+        "CONC"
     ],
 
     "AllocationInfo_2": "Aircraft with wingspan between 26m - 30m",
@@ -169,8 +238,18 @@
         "RJ85",
         "T134",
         "T154",
-        "T160"
-
+        "T160",
+        "B146",
+        "E170",
+        "B712",
+        "AT72",
+        "AT75",
+        "AT76",
+        "FA8X",
+        "C27J",
+        "SU95",
+        "CL2T",
+        "DC3"
     ],
 
     "AllocationInfo_3": "***B738 and A320 AIRCRAFT ALL HERE** Aircraft with wingspan between 30m - 37m",
@@ -205,8 +284,14 @@
         "MD87",
         "MD88",
         "MD90",
-        "P3"
-
+        "P3",
+        "A32N",
+        "32N",
+        "A220",
+        "BBJ1",
+        "E737",
+        "R722",
+        "DC6"
     ],
 
     "AllocationInfo_4": "Aircraft with wingspan between 37nm - 40m",
@@ -214,7 +299,9 @@
         "B701",
         "B753",
         "B752",
-        "C135"
+        "C135",
+        "B757",
+        "P8"
     ],
     
     "AllocationInfo_6": "Aircraft with wingspan between 40m - 45m",
@@ -235,7 +322,8 @@
         "A400",
         "B762",
         "B763",
-        "L101"
+        "L101",
+        "B767"
     ],
 
     "AllocationInfo_8": "Aircraft with wingspan between 50m - 55m",    
@@ -257,7 +345,8 @@
         "B74S",
         "B74R",
         "B74D",
-        "MD11"
+        "MD11",
+        "B747"
     ],
 
     "AllocationInfo_10": "AIRCRAFT ALL HERE**Aircraft with Wingspan between 60m - 65m",
@@ -282,13 +371,17 @@
         "B773",
         "B788",
         "B789",
-        "B78X"
+        "B78X",
+        "B777",
+        "B77F",
+        "KC30"
     ],
 
     "AllocationInfo_11": "Super Catagory: Aircraft with Wingspan between 65m - 80m",
     "11": [
         "A124",
-        "A388"
+        "A388",
+        "A225"
     ],
 
     "FreightOnly": [
@@ -338,6 +431,11 @@
         "R66",
         "S76",
         "S92",
-        "UH1"
+        "UH1",
+        "H47",
+        "CH47",
+        "H64",
+        "H145",
+        "AW13"
     ]
 }
