@@ -900,16 +900,16 @@ class BayAllocation implements ShouldQueue
             $messageLines = [
                 "{$arr} ARRIVAL INFO
                 @{$flight}@, {$dep}-{$arr}
-                ARR BAY: @{$arrBayText}@
+                ASSIGNED BAY: @{$arrBayText}@
                 IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
-                RMK/ AUTO BAY ASSIGNMENT SENT FROM OZBAYS.ORG"
+                AUTO BAY ASSIGNMENT SENT FROM OZBAYS.ORG"
             ];
         } elseif ($version == 2) {
             $messageLines = [
                 "{$arr} ARRIVAL UPDATE
-                ARR BAY: @{$arrBayText}@
+                ASSIGNED BAY: @{$arrBayText}@
                 IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
-                RMK/ BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
+                BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
             ];
         }
 
