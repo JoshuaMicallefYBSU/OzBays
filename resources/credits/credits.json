@@ -1,0 +1,834 @@
+{
+    "sections": [
+        {
+            "title": "Front-End Libraries",
+            "description": "Loaded by the website from public CDNs.",
+            "items": [
+                {
+                    "name": "Bootstrap",
+                    "version": "4.6",
+                    "license": "MIT",
+                    "license_url": "https://github.com/twbs/bootstrap/blob/v4.6.2/LICENSE",
+                    "url": "https://getbootstrap.com",
+                    "usage": "Page layout, navigation, forms and modals"
+                },
+                {
+                    "name": "jQuery",
+                    "version": "3.x",
+                    "license": "MIT",
+                    "license_url": "https://jquery.org/license/",
+                    "url": "https://jquery.com",
+                    "usage": "Page scripting used by Bootstrap and DataTables"
+                },
+                {
+                    "name": "Popper.js",
+                    "version": "1.16",
+                    "license": "MIT",
+                    "license_url": "https://github.com/popperjs/popper-core/blob/v1.16.1/LICENSE.md",
+                    "url": "https://popper.js.org",
+                    "usage": "Dropdown and tooltip positioning"
+                },
+                {
+                    "name": "DataTables",
+                    "version": "1.10",
+                    "license": "MIT",
+                    "license_url": "https://datatables.net/license/",
+                    "url": "https://datatables.net",
+                    "usage": "Sortable and searchable tables"
+                },
+                {
+                    "name": "TinyMCE",
+                    "version": "6",
+                    "license": "MIT (served by Tiny Cloud under Tiny's Terms of Service)",
+                    "license_url": "https://www.tiny.cloud/legal/",
+                    "url": "https://www.tiny.cloud",
+                    "usage": "Text editor for news articles"
+                },
+                {
+                    "name": "Mapbox GL JS",
+                    "version": "2.15",
+                    "license": "Mapbox Terms of Service",
+                    "license_url": "https://www.mapbox.com/legal/tos",
+                    "url": "https://www.mapbox.com/mapbox-gljs",
+                    "usage": "Live network map"
+                }
+            ]
+        },
+        {
+            "title": "Fonts & Icons",
+            "description": "",
+            "items": [
+                {
+                    "name": "Font Awesome Free",
+                    "version": "6.5 & 4.7",
+                    "license": "Icons CC BY 4.0, Fonts SIL OFL 1.1, Code MIT",
+                    "license_url": "https://fontawesome.com/license/free",
+                    "url": "https://fontawesome.com",
+                    "usage": "Interface icons"
+                },
+                {
+                    "name": "Inter",
+                    "version": "",
+                    "license": "SIL Open Font License 1.1",
+                    "license_url": "https://openfontlicense.org",
+                    "url": "https://fonts.google.com/specimen/Inter",
+                    "usage": "Main text font, served by Google Fonts"
+                },
+                {
+                    "name": "Sora",
+                    "version": "",
+                    "license": "SIL Open Font License 1.1",
+                    "license_url": "https://openfontlicense.org",
+                    "url": "https://fonts.google.com/specimen/Sora",
+                    "usage": "Heading font, served by Google Fonts"
+                },
+                {
+                    "name": "IBM Plex Mono",
+                    "version": "",
+                    "license": "SIL Open Font License 1.1",
+                    "license_url": "https://openfontlicense.org",
+                    "url": "https://fonts.google.com/specimen/IBM+Plex+Mono",
+                    "usage": "Monospace font for flight boards, served by Google Fonts"
+                },
+                {
+                    "name": "VATSIM Radar aircraft icons",
+                    "version": "",
+                    "license": "CC BY-NC 4.0",
+                    "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+                    "url": "https://github.com/VATSIM-Radar/vatsim-radar",
+                    "usage": "Aircraft icons on the live map, shown as single-colour silhouettes. Non-commercial use only."
+                }
+            ]
+        },
+        {
+            "title": "Maps, Data & Services",
+            "description": "Third-party data and services OzBays relies on. Each is used under its provider's terms.",
+            "items": [
+                {
+                    "name": "Mapbox",
+                    "version": "",
+                    "license": "© Mapbox, Mapbox Terms of Service",
+                    "license_url": "https://www.mapbox.com/legal/tos",
+                    "url": "https://www.mapbox.com",
+                    "usage": "Map tiles and the dark map style"
+                },
+                {
+                    "name": "OpenStreetMap",
+                    "version": "",
+                    "license": "© OpenStreetMap contributors, ODbL",
+                    "license_url": "https://www.openstreetmap.org/copyright",
+                    "url": "https://www.openstreetmap.org",
+                    "usage": "Map data shown in the Mapbox map tiles"
+                },
+                {
+                    "name": "VATSIM",
+                    "version": "",
+                    "license": "VATSIM Data Protection & Handling Policy",
+                    "license_url": "https://vatsim.net/docs/policy/data-protection-and-handling-policy",
+                    "url": "https://vatsim.net",
+                    "usage": "Live pilot positions and flight plans from the VATSIM network"
+                },
+                {
+                    "name": "AirLabs Data API",
+                    "version": "",
+                    "license": "AirLabs Terms of Service",
+                    "license_url": "https://airlabs.co/terms-of-service",
+                    "url": "https://airlabs.co",
+                    "usage": "Real-world flight schedules and gate assignments"
+                },
+                {
+                    "name": "Hoppie's ACARS",
+                    "version": "",
+                    "license": "Hoppie ACARS service",
+                    "license_url": "https://www.hoppie.nl/acars/",
+                    "url": "https://www.hoppie.nl/acars/",
+                    "usage": "Bay assignment messages sent to pilots"
+                },
+                {
+                    "name": "Discord",
+                    "version": "",
+                    "license": "Discord Developer Terms of Service",
+                    "license_url": "https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service",
+                    "url": "https://discord.com",
+                    "usage": "Account linking, roles and notifications"
+                }
+            ]
+        },
+        {
+            "title": "PHP Packages",
+            "description": "The server-side packages OzBays runs on (from composer.lock). Packages marked \"direct\" are installed by OzBays; the rest are libraries they depend on.",
+            "items": [
+                {
+                    "name": "laravel/framework",
+                    "version": "12.41.1",
+                    "license": "MIT",
+                    "url": "https://laravel.com",
+                    "usage": "The Laravel Framework.",
+                    "direct": true
+                },
+                {
+                    "name": "laravel/tinker",
+                    "version": "2.10.2",
+                    "license": "MIT",
+                    "url": "https://github.com/laravel/tinker",
+                    "usage": "Powerful REPL for the Laravel framework.",
+                    "direct": true
+                },
+                {
+                    "name": "league/commonmark",
+                    "version": "2.8.2",
+                    "license": "BSD-3-Clause",
+                    "url": "https://commonmark.thephpleague.com",
+                    "usage": "Highly-extensible PHP Markdown parser which fully supports the CommonMark spec and GitHub-Flavored Markdown (GFM)",
+                    "direct": true
+                },
+                {
+                    "name": "spatie/laravel-permission",
+                    "version": "6.24.0",
+                    "license": "MIT",
+                    "url": "https://github.com/spatie/laravel-permission",
+                    "usage": "Permission handling for Laravel 8.0 and up",
+                    "direct": true
+                },
+                {
+                    "name": "brick/math",
+                    "version": "0.14.1",
+                    "license": "MIT",
+                    "url": "https://github.com/brick/math",
+                    "usage": "Arbitrary-precision arithmetic library",
+                    "direct": false
+                },
+                {
+                    "name": "carbonphp/carbon-doctrine-types",
+                    "version": "3.2.0",
+                    "license": "MIT",
+                    "url": "https://github.com/CarbonPHP/carbon-doctrine-types",
+                    "usage": "Types to use Carbon in Doctrine",
+                    "direct": false
+                },
+                {
+                    "name": "dflydev/dot-access-data",
+                    "version": "3.0.3",
+                    "license": "MIT",
+                    "url": "https://github.com/dflydev/dflydev-dot-access-data",
+                    "usage": "Given a deep data structure, access data by dot notation.",
+                    "direct": false
+                },
+                {
+                    "name": "doctrine/inflector",
+                    "version": "2.1.0",
+                    "license": "MIT",
+                    "url": "https://www.doctrine-project.org/projects/inflector.html",
+                    "usage": "PHP Doctrine Inflector is a small library that can perform string manipulations with regard to upper/lowercase and singular/plural forms of words.",
+                    "direct": false
+                },
+                {
+                    "name": "doctrine/lexer",
+                    "version": "3.0.1",
+                    "license": "MIT",
+                    "url": "https://www.doctrine-project.org/projects/lexer.html",
+                    "usage": "PHP Doctrine Lexer parser library that can be used in Top-Down, Recursive Descent Parsers.",
+                    "direct": false
+                },
+                {
+                    "name": "dragonmantank/cron-expression",
+                    "version": "3.6.0",
+                    "license": "MIT",
+                    "url": "https://github.com/dragonmantank/cron-expression",
+                    "usage": "CRON for PHP: Calculate the next or previous run date and determine if a CRON expression is due",
+                    "direct": false
+                },
+                {
+                    "name": "egulias/email-validator",
+                    "version": "4.0.4",
+                    "license": "MIT",
+                    "url": "https://github.com/egulias/EmailValidator",
+                    "usage": "A library for validating emails against several RFCs",
+                    "direct": false
+                },
+                {
+                    "name": "fruitcake/php-cors",
+                    "version": "1.4.0",
+                    "license": "MIT",
+                    "url": "https://github.com/fruitcake/php-cors",
+                    "usage": "Cross-origin resource sharing library for the Symfony HttpFoundation",
+                    "direct": false
+                },
+                {
+                    "name": "graham-campbell/result-type",
+                    "version": "1.1.3",
+                    "license": "MIT",
+                    "url": "https://github.com/GrahamCampbell/Result-Type",
+                    "usage": "An Implementation Of The Result Type",
+                    "direct": false
+                },
+                {
+                    "name": "guzzlehttp/guzzle",
+                    "version": "7.10.0",
+                    "license": "MIT",
+                    "url": "https://github.com/guzzle/guzzle",
+                    "usage": "Guzzle is a PHP HTTP client library",
+                    "direct": false
+                },
+                {
+                    "name": "guzzlehttp/promises",
+                    "version": "2.3.0",
+                    "license": "MIT",
+                    "url": "https://github.com/guzzle/promises",
+                    "usage": "Guzzle promises library",
+                    "direct": false
+                },
+                {
+                    "name": "guzzlehttp/psr7",
+                    "version": "2.8.0",
+                    "license": "MIT",
+                    "url": "https://github.com/guzzle/psr7",
+                    "usage": "PSR-7 message implementation that also provides common utility methods",
+                    "direct": false
+                },
+                {
+                    "name": "guzzlehttp/uri-template",
+                    "version": "1.0.5",
+                    "license": "MIT",
+                    "url": "https://github.com/guzzle/uri-template",
+                    "usage": "A polyfill class for uri_template of PHP",
+                    "direct": false
+                },
+                {
+                    "name": "laravel/prompts",
+                    "version": "0.3.8",
+                    "license": "MIT",
+                    "url": "https://github.com/laravel/prompts",
+                    "usage": "Add beautiful and user-friendly forms to your command-line applications.",
+                    "direct": false
+                },
+                {
+                    "name": "laravel/serializable-closure",
+                    "version": "2.0.7",
+                    "license": "MIT",
+                    "url": "https://github.com/laravel/serializable-closure",
+                    "usage": "Laravel Serializable Closure provides an easy and secure way to serialize closures in PHP.",
+                    "direct": false
+                },
+                {
+                    "name": "league/config",
+                    "version": "1.2.0",
+                    "license": "BSD-3-Clause",
+                    "url": "https://config.thephpleague.com",
+                    "usage": "Define configuration arrays with strict schemas and access values with dot notation",
+                    "direct": false
+                },
+                {
+                    "name": "league/flysystem",
+                    "version": "3.30.2",
+                    "license": "MIT",
+                    "url": "https://github.com/thephpleague/flysystem",
+                    "usage": "File storage abstraction for PHP",
+                    "direct": false
+                },
+                {
+                    "name": "league/flysystem-local",
+                    "version": "3.30.2",
+                    "license": "MIT",
+                    "url": "https://github.com/thephpleague/flysystem-local",
+                    "usage": "Local filesystem adapter for Flysystem.",
+                    "direct": false
+                },
+                {
+                    "name": "league/mime-type-detection",
+                    "version": "1.16.0",
+                    "license": "MIT",
+                    "url": "https://github.com/thephpleague/mime-type-detection",
+                    "usage": "Mime-type detection for Flysystem",
+                    "direct": false
+                },
+                {
+                    "name": "league/uri",
+                    "version": "7.6.0",
+                    "license": "MIT",
+                    "url": "https://uri.thephpleague.com",
+                    "usage": "URI manipulation library",
+                    "direct": false
+                },
+                {
+                    "name": "league/uri-interfaces",
+                    "version": "7.6.0",
+                    "license": "MIT",
+                    "url": "https://uri.thephpleague.com",
+                    "usage": "Common tools for parsing and resolving RFC3987/RFC3986 URI",
+                    "direct": false
+                },
+                {
+                    "name": "monolog/monolog",
+                    "version": "3.9.0",
+                    "license": "MIT",
+                    "url": "https://github.com/Seldaek/monolog",
+                    "usage": "Sends your logs to files, sockets, inboxes, databases and various web services",
+                    "direct": false
+                },
+                {
+                    "name": "nesbot/carbon",
+                    "version": "3.11.0",
+                    "license": "MIT",
+                    "url": "https://carbon.nesbot.com",
+                    "usage": "An API extension for DateTime that supports 281 different languages.",
+                    "direct": false
+                },
+                {
+                    "name": "nette/schema",
+                    "version": "1.3.3",
+                    "license": "BSD-3-Clause OR GPL-2.0-only OR GPL-3.0-only",
+                    "url": "https://nette.org",
+                    "usage": "📐 Nette Schema: validating data structures against a given Schema.",
+                    "direct": false
+                },
+                {
+                    "name": "nette/utils",
+                    "version": "4.1.0",
+                    "license": "BSD-3-Clause OR GPL-2.0-only OR GPL-3.0-only",
+                    "url": "https://nette.org",
+                    "usage": "🛠  Nette Utils: lightweight utilities for string & array manipulation, image handling, safe JSON encoding/decoding, validation, slug or strong password generating etc.",
+                    "direct": false
+                },
+                {
+                    "name": "nikic/php-parser",
+                    "version": "5.7.0",
+                    "license": "BSD-3-Clause",
+                    "url": "https://github.com/nikic/PHP-Parser",
+                    "usage": "A PHP parser written in PHP",
+                    "direct": false
+                },
+                {
+                    "name": "nunomaduro/termwind",
+                    "version": "2.3.3",
+                    "license": "MIT",
+                    "url": "https://github.com/nunomaduro/termwind",
+                    "usage": "Its like Tailwind CSS, but for the console.",
+                    "direct": false
+                },
+                {
+                    "name": "phpoption/phpoption",
+                    "version": "1.9.4",
+                    "license": "Apache-2.0",
+                    "url": "https://github.com/schmittjoh/php-option",
+                    "usage": "Option Type for PHP",
+                    "direct": false
+                },
+                {
+                    "name": "psr/clock",
+                    "version": "1.0.0",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/clock",
+                    "usage": "Common interface for reading the clock.",
+                    "direct": false
+                },
+                {
+                    "name": "psr/container",
+                    "version": "2.0.2",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/container",
+                    "usage": "Common Container Interface (PHP FIG PSR-11)",
+                    "direct": false
+                },
+                {
+                    "name": "psr/event-dispatcher",
+                    "version": "1.0.0",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/event-dispatcher",
+                    "usage": "Standard interfaces for event handling.",
+                    "direct": false
+                },
+                {
+                    "name": "psr/http-client",
+                    "version": "1.0.3",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/http-client",
+                    "usage": "Common interface for HTTP clients",
+                    "direct": false
+                },
+                {
+                    "name": "psr/http-factory",
+                    "version": "1.1.0",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/http-factory",
+                    "usage": "PSR-17: Common interfaces for PSR-7 HTTP message factories",
+                    "direct": false
+                },
+                {
+                    "name": "psr/http-message",
+                    "version": "2.0",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/http-message",
+                    "usage": "Common interface for HTTP messages",
+                    "direct": false
+                },
+                {
+                    "name": "psr/log",
+                    "version": "3.0.2",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/log",
+                    "usage": "Common interface for logging libraries",
+                    "direct": false
+                },
+                {
+                    "name": "psr/simple-cache",
+                    "version": "3.0.0",
+                    "license": "MIT",
+                    "url": "https://github.com/php-fig/simple-cache",
+                    "usage": "Common interfaces for simple caching",
+                    "direct": false
+                },
+                {
+                    "name": "psy/psysh",
+                    "version": "0.12.16",
+                    "license": "MIT",
+                    "url": "https://psysh.org",
+                    "usage": "An interactive shell for modern PHP.",
+                    "direct": false
+                },
+                {
+                    "name": "ralouphie/getallheaders",
+                    "version": "3.0.3",
+                    "license": "MIT",
+                    "url": "https://github.com/ralouphie/getallheaders",
+                    "usage": "A polyfill for getallheaders.",
+                    "direct": false
+                },
+                {
+                    "name": "ramsey/collection",
+                    "version": "2.1.1",
+                    "license": "MIT",
+                    "url": "https://github.com/ramsey/collection",
+                    "usage": "A PHP library for representing and manipulating collections.",
+                    "direct": false
+                },
+                {
+                    "name": "ramsey/uuid",
+                    "version": "4.9.1",
+                    "license": "MIT",
+                    "url": "https://github.com/ramsey/uuid",
+                    "usage": "A PHP library for generating and working with universally unique identifiers (UUIDs).",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/clock",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Decouples applications from the system clock",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/console",
+                    "version": "7.4.1",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Eases the creation of beautiful and testable command line interfaces",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/css-selector",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Converts CSS selectors to XPath expressions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/deprecation-contracts",
+                    "version": "3.6.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "A generic function and convention to trigger deprecation notices",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/error-handler",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides tools to manage errors and ease debugging PHP code",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/event-dispatcher",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides tools that allow your application components to communicate with each other by dispatching events and listening to them",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/event-dispatcher-contracts",
+                    "version": "3.6.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Generic abstractions related to dispatching event",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/finder",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Finds files and directories via an intuitive fluent interface",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/http-foundation",
+                    "version": "7.4.1",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Defines an object-oriented layer for the HTTP specification",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/http-kernel",
+                    "version": "7.4.2",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides a structured process for converting a Request into a Response",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/mailer",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Helps sending emails",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/mime",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Allows manipulating MIME messages",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-ctype",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill for ctype functions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-intl-grapheme",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill for intl's grapheme_* functions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-intl-idn",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill for intl's idn_to_ascii and idn_to_utf8 functions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-intl-normalizer",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill for intl's Normalizer class and related functions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-mbstring",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill for the Mbstring extension",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-php80",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill backporting some PHP 8.0+ features to lower PHP versions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-php83",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill backporting some PHP 8.3+ features to lower PHP versions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-php84",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill backporting some PHP 8.4+ features to lower PHP versions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-php85",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill backporting some PHP 8.5+ features to lower PHP versions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/polyfill-uuid",
+                    "version": "1.33.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Symfony polyfill for uuid functions",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/process",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Executes commands in sub-processes",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/routing",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Maps an HTTP request to a set of configuration variables",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/service-contracts",
+                    "version": "3.6.1",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Generic abstractions related to writing services",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/string",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides an object-oriented API to strings and deals with bytes, UTF-8 code points and grapheme clusters in a unified way",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/translation",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides tools to internationalize your application",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/translation-contracts",
+                    "version": "3.6.1",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Generic abstractions related to translation",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/uid",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides an object-oriented API to generate and represent UIDs",
+                    "direct": false
+                },
+                {
+                    "name": "symfony/var-dumper",
+                    "version": "7.4.0",
+                    "license": "MIT",
+                    "url": "https://symfony.com",
+                    "usage": "Provides mechanisms for walking through any arbitrary PHP variable",
+                    "direct": false
+                },
+                {
+                    "name": "tijsverkoyen/css-to-inline-styles",
+                    "version": "2.3.0",
+                    "license": "BSD-3-Clause",
+                    "url": "https://github.com/tijsverkoyen/CssToInlineStyles",
+                    "usage": "CssToInlineStyles is a class that enables you to convert HTML-pages/files into HTML-pages/files with inline styles. This is very useful when you're sending emails.",
+                    "direct": false
+                },
+                {
+                    "name": "vlucas/phpdotenv",
+                    "version": "5.6.2",
+                    "license": "BSD-3-Clause",
+                    "url": "https://github.com/vlucas/phpdotenv",
+                    "usage": "Loads environment variables from `.env` to `getenv()`, `$_ENV` and `$_SERVER` automagically.",
+                    "direct": false
+                },
+                {
+                    "name": "voku/portable-ascii",
+                    "version": "2.0.3",
+                    "license": "MIT",
+                    "url": "https://github.com/voku/portable-ascii",
+                    "usage": "Portable ASCII library - performance optimized (ascii) string functions for php.",
+                    "direct": false
+                }
+            ]
+        },
+        {
+            "title": "Build Tools",
+            "description": "Used to build the website's assets (from package.json).",
+            "items": [
+                {
+                    "name": "@tailwindcss/vite",
+                    "version": "4.3.2",
+                    "license": "MIT",
+                    "url": "https://www.npmjs.com/package/@tailwindcss/vite",
+                    "usage": "Front-end build tooling",
+                    "direct": true
+                },
+                {
+                    "name": "axios",
+                    "version": "1.18.1",
+                    "license": "MIT",
+                    "url": "https://www.npmjs.com/package/axios",
+                    "usage": "Front-end build tooling",
+                    "direct": true
+                },
+                {
+                    "name": "concurrently",
+                    "version": "9.2.4",
+                    "license": "MIT",
+                    "url": "https://www.npmjs.com/package/concurrently",
+                    "usage": "Front-end build tooling",
+                    "direct": true
+                },
+                {
+                    "name": "laravel-vite-plugin",
+                    "version": "2.1.0",
+                    "license": "MIT",
+                    "url": "https://www.npmjs.com/package/laravel-vite-plugin",
+                    "usage": "Front-end build tooling",
+                    "direct": true
+                },
+                {
+                    "name": "tailwindcss",
+                    "version": "4.3.2",
+                    "license": "MIT",
+                    "url": "https://www.npmjs.com/package/tailwindcss",
+                    "usage": "Front-end build tooling",
+                    "direct": true
+                },
+                {
+                    "name": "vite",
+                    "version": "7.3.6",
+                    "license": "MIT",
+                    "url": "https://www.npmjs.com/package/vite",
+                    "usage": "Front-end build tooling",
+                    "direct": true
+                }
+            ]
+        }
+    ]
+}

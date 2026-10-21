@@ -11,6 +11,7 @@ use App\Models\FlightLiveBays;
 use App\Models\Flights;
 use App\Models\MissingAircraftType;
 use App\Models\UserPreference;
+use App\Services\AircraftSizes;
 use App\Services\AirportFlightState;
 use App\Services\DiscordClient;
 use App\Services\HoppieClient;
@@ -608,24 +609,54 @@ class BayAllocation implements ShouldQueue
             echo $availableBays.'<br><br><br>';
         }
 
-        // Randomise selection within the top 7 candidates so it isn't always the same bay over time.
-        $candidates = $availableBays->take(7);
+        // Randomise only between the bays tied for the best match, so it isn't always the same bay over time
+        // without sending aircraft to a worse bay (e.g. another airline's terminal) while better ones are free.
+        $candidates = $this->bestMatchingBays($availableBays, $allowedGroups, $operator);
         $selectedBay = $candidates->random();
 
         return $selectedBay;
+    }
+
+    // Bays tied for the best rank, using the same order as buildBayQuery():
+    //  1. Bay priority (lowest first)
+    //  2. Aircraft size - how close the bay's size group is to the aircraft's
+    //  3. Operator - listed on the bay, then open bays (no operators), then bays only open via "*"
+    private function bestMatchingBays($availableBays, array $allowedGroups, string $operator)
+    {
+        // Size group offset for each allowed type (0 = the aircraft's own group)
+        $typeGroup = [];
+        foreach (array_values($allowedGroups) as $offset => $types) {
+            foreach ($types as $type) {
+                $typeGroup[strtoupper($type)] ??= $offset;
+            }
+        }
+
+        $rank = function ($bay) use ($typeGroup, $operator) {
+            $sizes = [];
+            foreach (explode('/', (string) $bay->aircraft) as $type) {
+                $type = strtoupper(trim($type));
+                if (isset($typeGroup[$type])) {
+                    $sizes[] = $typeGroup[$type];
+                }
+            }
+
+            $operators = $bay->operators === null ? null : array_map('trim', explode(',', $bay->operators));
+            $operatorRank = $operators === null ? 1 : (in_array($operator, $operators, true) ? 0 : 2);
+
+            return [(int) $bay->priority, $sizes ? min($sizes) : PHP_INT_MAX, $operatorRank];
+        };
+
+        $ranked = $availableBays->map(fn ($bay) => ['bay' => $bay, 'rank' => $rank($bay)]);
+        $best = $ranked->pluck('rank')->sort()->first();
+
+        return $ranked->filter(fn ($row) => $row['rank'] === $best)->pluck('bay')->values();
     }
 
     // Checks a bay can accept the aircraft - same rule as buildBayQuery(): one of the
     // bay's listed aircraft types must be in the aircraft's allowed (same or larger) groups.
     private function bayFitsAircraft($bay, array $allowedTypes): bool
     {
-        if (empty($bay->aircraft)) {
-            return false;
-        }
-
-        $bayTypes = array_map(fn ($type) => strtoupper(trim($type)), explode('/', $bay->aircraft));
-
-        return count(array_intersect($bayTypes, $allowedTypes)) > 0;
+        return AircraftSizes::bayFits($bay->aircraft, $allowedTypes);
     }
 
     // Builds the eligible-bay query. $enforceOperator/$enforcePax control whether
@@ -899,15 +930,15 @@ class BayAllocation implements ShouldQueue
         if ($version == 1) {
             $messageLines = [
                 "{$arr} ARRIVAL INFO
-                @{$flight}@, {$dep}-{$arr}
-                ASSIGNED BAY: @{$arrBayText}@
+                {$flight}, {$dep}-{$arr}
+                ASSIGNED BAY: {$arrBayText}
                 IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
                 AUTO BAY ASSIGNMENT SENT FROM OZBAYS.ORG"
             ];
         } elseif ($version == 2) {
             $messageLines = [
                 "{$arr} ARRIVAL UPDATE
-                ASSIGNED BAY: @{$arrBayText}@
+                ASSIGNED BAY: {$arrBayText}
                 IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
                 BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
             ];

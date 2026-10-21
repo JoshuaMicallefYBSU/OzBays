@@ -30,6 +30,7 @@ Route::get('/500', function () {
 // Privacy Policy - Required for VATSIM SSO
 Route::prefix('policy')->group(function () {
     Route::get('privacy', [PagesController::class, 'PrivacyPolicy'])->name('privacy.policy');
+    Route::get('credits', [PagesController::class, 'Credits'])->name('policy.credits');
 });
 
 // Changelog

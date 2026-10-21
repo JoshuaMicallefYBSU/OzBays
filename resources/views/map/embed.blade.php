@@ -85,6 +85,76 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
+        /* ---------- Popups (aircraft / bay / airport labels) ---------- */
+        .mapboxgl-popup-content {
+            background: rgba(19, 27, 46, 0.97);
+            color: #e8ecf6;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        }
+        .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+        .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+        .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip { border-top-color: rgba(19, 27, 46, 0.97); }
+        .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+        .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+        .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip { border-bottom-color: rgba(19, 27, 46, 0.97); }
+        .mapboxgl-popup-anchor-left .mapboxgl-popup-tip { border-right-color: rgba(19, 27, 46, 0.97); }
+        .mapboxgl-popup-anchor-right .mapboxgl-popup-tip { border-left-color: rgba(19, 27, 46, 0.97); }
+        .mapboxgl-popup-close-button {
+            color: #94a3b8;
+            font-size: 18px;
+            padding: 2px 8px;
+            border-radius: 0 12px 0 6px;
+        }
+        .mapboxgl-popup-close-button:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+        .oz-pop { min-width: 210px; font-size: 12px; line-height: 1.4; }
+        .oz-pop-head {
+            padding: 10px 30px 8px 12px;
+            border-top: 3px solid var(--accent, #38bdf8);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .oz-pop-title { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; display: flex; align-items: center; gap: 6px; }
+        .oz-pop-sub { color: #94a3b8; margin-top: 2px; }
+        .oz-chip {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+        }
+        .oz-pop-body { padding: 8px 12px 10px; }
+        .oz-pop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+        .oz-pop-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: grid; gap: 6px; }
+        .oz-stat-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #7c8aa5; }
+        .oz-stat-value { font-weight: 600; }
+        .oz-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .oz-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .oz-badge-ok   { background: rgba(34, 197, 94, 0.15);  color: #86efac; }
+        .oz-badge-warn { background: rgba(255, 140, 0, 0.18);  color: #ffb45c; }
+        .oz-badge-none { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
+        .oz-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+        #status-legend .legend-ring {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -98,6 +168,8 @@
     <div class="legend-row"><span class="legend-dot" style="background:green;"></span>Available</div>
     <div class="legend-row"><span class="legend-dot" style="background:#b37202;"></span>Reserved for arrival</div>
     <div class="legend-row"><span class="legend-dot" style="background:red;"></span>Occupied</div>
+    <div class="legend-row"><span class="legend-ring" style="border-style:solid;"></span>Aircraft has a real-world bay</div>
+    <div class="legend-row"><span class="legend-ring" style="border-style:dashed; border-color:#ff8c00;"></span>Real-world bay too small</div>
 </div>
 
 <script>
@@ -165,6 +237,11 @@ const map = new mapboxgl.Map({
             Each airport has all bays mapped according to their specifications.
             Clicking on a bay will show its live status &mdash; see the legend in the bottom-left for what each colour means.
         </p>
+        <p style="color:#94a3b8;">
+            Aircraft icons by <a href="https://github.com/VATSIM-Radar/vatsim-radar" target="_blank" rel="noopener" style="color:#7dd3fc;">VATSIM Radar</a>,
+            used under <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener" style="color:#7dd3fc;">CC BY-NC 4.0</a>
+            (shown as single-colour silhouettes).
+        </p>
     `;
 
     // Info panel starts collapsed; the (i) button toggles it. hide_info=1 removes the button/legend entirely.
@@ -215,6 +292,59 @@ function bayStatusMap(status, arrCallsign, arr) {
     }
 }
 
+/* ----------------------------------------------------------
+ * Popup (label) builders
+ * -------------------------------------------------------- */
+function bayPopupHtml(title, subtitle, statusColour, statusLabel) {
+    return `
+        <div class="oz-pop" style="--accent:${statusColour};">
+            <div class="oz-pop-head">
+                <div class="oz-pop-title">${title}</div>
+                ${subtitle ? `<div class="oz-pop-sub">${subtitle}</div>` : ''}
+            </div>
+            <div class="oz-pop-body">
+                <div class="oz-row"><span class="oz-dot" style="background:${statusColour};"></span><span style="flex:1;">${statusLabel}</span></div>
+            </div>
+        </div>`;
+}
+
+function aircraftPopupHtml(p) {
+    const stat = (label, value) => `<div><span class="oz-stat-label">${label}</span><span class="oz-stat-value">${value}</span></div>`;
+    const alt = Number(p.alt);
+
+    let irlBadge = '<span class="oz-badge oz-badge-none">No data</span>';
+    if (p.irl_state === 'fits') {
+        irlBadge = `<span class="oz-badge oz-badge-ok">${p.irl_bay} &#10003; fits</span>`;
+    } else if (p.irl_state === 'too_small') {
+        irlBadge = `<span class="oz-badge oz-badge-warn">${p.irl_bay} &#9888; too small</span>`;
+    }
+
+    return `
+        <div class="oz-pop" style="--accent:${p.colour};">
+            <div class="oz-pop-head">
+                <div class="oz-pop-title">${p.callsign} <span class="oz-chip">${p.ac ?? '?'}</span></div>
+                <div class="oz-pop-sub">${p.dep ?? '????'} &rarr; ${p.arr ?? '????'}</div>
+            </div>
+            <div class="oz-pop-body">
+                <div class="oz-pop-grid">
+                    ${stat('Altitude', isNaN(alt) ? p.alt : alt.toLocaleString() + 'ft')}
+                    ${stat('Ground Speed', p.speed + 'kt')}
+                    ${stat('ELT', p.elt === 'N/A' ? 'N/A' : p.elt + 'z')}
+                    ${stat('EIBT', p.eibt === 'N/A' ? 'N/A' : p.eibt + 'z')}
+                </div>
+                <div class="oz-pop-section">
+                    <div class="oz-row"><span class="oz-stat-label">Status</span><span class="oz-stat-value">${p.status}</span></div>
+                    ${p.ignored ? `
+                    <div class="oz-row"><span class="oz-badge oz-badge-none" style="white-space:normal;">Aircraft ignored from OzBays</span></div>
+                    ` : `
+                    <div class="oz-row"><span class="oz-stat-label">Assigned Bay</span><span class="oz-stat-value">${p.bay}</span></div>
+                    <div class="oz-row"><span class="oz-stat-label">Real-World Bay</span>${irlBadge}</div>
+                    `}
+                </div>
+            </div>
+        </div>`;
+}
+
 function refreshBayColours() {
 
     fetch('/api/v1/bays/live')
@@ -233,10 +363,7 @@ function refreshBayColours() {
 
                 const popup = bayMarkers[key].marker.getPopup();
                 if (popup) {
-                    popup.setHTML(`
-                        <strong>Bay ${bay.display_name ?? bay.bay}</strong><br>
-                        ${label}
-                    `);
+                    popup.setHTML(bayPopupHtml(`Bay ${bay.display_name ?? bay.bay}`, bay.airport, color, label));
                 }
             });
 
@@ -249,9 +376,17 @@ function refreshBayColours() {
 function formatTime(datetime) {
     if (!datetime) return 'N/A';
 
-    const d = new Date(datetime);
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
+    // Bay slot times come without a timezone (e.g. "2026-10-21 06:46:12") - they are UTC, so mark them as such
+    // before parsing, otherwise the browser reads them as local time
+    const iso = typeof datetime === 'string' && !/[zZ]|[+-]\d\d:?\d\d$/.test(datetime)
+        ? datetime.replace(' ', 'T') + 'Z'
+        : datetime;
+
+    const d = new Date(iso);
+    if (isNaN(d)) return 'N/A';
+
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
 
     return `${hh}${mm}`;   // → 2023
 }
@@ -310,6 +445,88 @@ function addAircraftArrowIcon() {
 }
 
 /* ----------------------------------------------------------
+ * Aircraft type icons (public/img/aircraft-icon/<ICAO>.svg, picked per size group in aircraft.json)
+ * Loaded on first use and drawn as a silhouette so they can be tinted in the arrival airport colour.
+ * Until an icon has loaded the aircraft shows as the plain arrow.
+ * -------------------------------------------------------- */
+const AIRCRAFT_ICONS = @json($aircraftIcons ?? []);
+const aircraftIconLoads = new Map();
+let lastAircraftPoints = null;
+
+// Resolves once the icon is on the map (or failed - the aircraft then keeps the arrow)
+function loadAircraftIcon(icao) {
+    const name = `ac-${icao}`;
+    if (aircraftIconLoads.has(name)) return aircraftIconLoads.get(name);
+
+    const load = new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const size = 64;
+            const c = document.createElement('canvas');
+            c.width = size; c.height = size;
+            const ctx = c.getContext('2d');
+
+            // Fit the icon inside the square, keeping its proportions
+            const scale = Math.min(size / img.width, size / img.height);
+            const w = img.width * scale, h = img.height * scale;
+            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+
+            if (!map.hasImage(name)) {
+                map.addImage(name, ctx.getImageData(0, 0, size, size), { sdf: true });
+            }
+
+            // Mapbox picks each aircraft's icon when the data is set - re-apply it so a late icon shows straight away
+            if (lastAircraftPoints && map.getSource('aircraft')) {
+                map.getSource('aircraft').setData(lastAircraftPoints);
+            }
+            resolve();
+        };
+        img.onerror = () => { console.warn(`Aircraft icon ${icao}.svg could not be loaded - using the arrow`); resolve(); };
+        img.src = `/img/aircraft-icon/${icao}.svg`;
+    });
+
+    aircraftIconLoads.set(name, load);
+    return load;
+}
+
+// Icon size per aircraft: zoom-based size x the aircraft's size-group scale
+function aircraftIconSize() {
+    return [
+        'interpolate', ['linear'], ['zoom'],
+        3, ['*', 0.22, ['get', 'icon_scale']],
+        6, ['*', 0.35, ['get', 'icon_scale']],
+        10, ['*', 0.5, ['get', 'icon_scale']]
+    ];
+}
+
+/* ----------------------------------------------------------
+ * Aircraft real-world bay rings (solid + dashed)
+ * Larger canvas than the arrow so, at the same icon-size, the ring sits around it.
+ * -------------------------------------------------------- */
+const IRL_TOO_SMALL_COLOUR = '#ff8c00';
+
+function addAircraftRingIcons() {
+    const size = 112;
+
+    [['aircraft-ring-solid', []], ['aircraft-ring-dashed', [14, 10]]].forEach(([name, dash]) => {
+        if (map.hasImage(name)) return;
+
+        const c = document.createElement('canvas');
+        c.width = size; c.height = size;
+        const ctx = c.getContext('2d');
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 7;
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        map.addImage(name, ctx.getImageData(0, 0, size, size), { sdf: true });
+    });
+}
+
+/* ----------------------------------------------------------
  * Aircraft refresh logic
  * -------------------------------------------------------- */
 function refreshAircraft() {
@@ -340,22 +557,22 @@ function refreshAircraft() {
                         eibt: toHHMM(ac.eibt) ?? 'N/A',
                         ac: ac.ac,
                         bay: ac.map_bay ? (ac.map_bay.display_name ?? ac.map_bay.bay) : 'N/A',
+                        // Real-world bay: 'none' (no IRL data), 'fits', or 'too_small' for the network aircraft
+                        irl_state: !ac.irl_bay ? 'none' : (ac.irl_bay.fits ? 'fits' : 'too_small'),
+                        irl_bay: ac.irl_bay ? (ac.irl_bay.display_name ?? ac.irl_bay.bay) : null,
+                        // Aircraft type icon for its size group - falls back to the arrow (see aircraft-arrows layer)
+                        icon: ac.map_icon?.icon ? `ac-${ac.map_icon.icon}` : 'aircraft-arrow',
+                        icon_scale: Number(ac.map_icon?.scale ?? 1),
+                        ignored: ac.map_icon?.ignored === true,
                         bearing: Number(ac.hdg ?? 0)
                     }
                 }))
             };
 
-            const aircraftRings = {
-                type: 'FeatureCollection',
-                features: aircraftPoints.features.map(f => {
-                    const ring = createCircle(f.geometry.coordinates, 30);
-                    ring.properties = f.properties;
-                    return ring;
-                })
-            };
+            lastAircraftPoints = aircraftPoints;
+            data.forEach(ac => { if (ac.map_icon?.icon) loadAircraftIcon(ac.map_icon.icon); });
 
             map.getSource('aircraft').setData(aircraftPoints);
-            map.getSource('aircraft-rings').setData(aircraftRings);
         })
         .catch(err => console.error('Aircraft refresh failed', err));
 }
@@ -419,10 +636,9 @@ map.on('load', () => {
         const marker = new mapboxgl.Marker(el)
             .setLngLat(f.geometry.coordinates)
             .setPopup(
-                new mapboxgl.Popup({ offset: 10 }).setHTML(`
-                    <strong>${f.properties.icao} &mdash; Bay ${f.properties.display_name ?? f.properties.bay}</strong><br>
-                    Status: ${f.properties.status}
-                `)
+                new mapboxgl.Popup({ offset: 10 }).setHTML(
+                    bayPopupHtml(`Bay ${f.properties.display_name ?? f.properties.bay}`, f.properties.icao, f.properties.color, f.properties.status)
+                )
             )
             .addTo(map);
 
@@ -443,11 +659,9 @@ map.on('load', () => {
         new mapboxgl.Marker(el)
             .setLngLat(f.geometry.coordinates)
             .setPopup(
-                new mapboxgl.Popup({ offset: 20 }).setHTML(`
-                    <strong><span style="color:${f.properties.color ?? '#F54927'};">&#9679;</span> ${f.properties.title}</strong><br>
-                    ${f.properties.name} Airport<br>
-                    Tracking radius: 200NM
-                `)
+                new mapboxgl.Popup({ offset: 20 }).setHTML(
+                    bayPopupHtml(f.properties.title, `${f.properties.name} Airport`, f.properties.color ?? '#F54927', 'Tracking radius: 200NM')
+                )
             )
             .addTo(map);
     });
@@ -458,40 +672,38 @@ map.on('load', () => {
         data: { type: 'FeatureCollection', features: [] }
     });
 
-    map.addSource('aircraft-rings', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] }
-    });
-
-    map.addLayer({
-        id: 'aircraft-rings-fill',
-        type: 'fill',
-        source: 'aircraft-rings',
-        paint: { 'fill-color': ['get','colour'], 'fill-opacity': 0.25 }
-    });
-
-    map.addLayer({
-        id: 'aircraft-rings-outline',
-        type: 'line',
-        source: 'aircraft-rings',
-        paint: { 'line-color': ['get','colour'], 'line-width': 1 }
-    });
-
     addAircraftArrowIcon();
+    addAircraftRingIcons();
+
+    // Real-world bay ring around the arrow: solid (airport colour) = IRL bay fits,
+    // dashed orange = IRL bay too small for the network aircraft, no ring = no IRL data.
+    // Drawn as an icon rather than a ground circle so it stays the same size at every zoom.
+    map.addLayer({
+        id: 'aircraft-irl-rings',
+        type: 'symbol',
+        source: 'aircraft',
+        filter: ['!=', ['get', 'irl_state'], 'none'],
+        layout: {
+            'icon-image': ['match', ['get', 'irl_state'], 'too_small', 'aircraft-ring-dashed', 'aircraft-ring-solid'],
+            'icon-size': aircraftIconSize(),
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true
+        },
+        paint: {
+            'icon-color': ['match', ['get', 'irl_state'], 'too_small', IRL_TOO_SMALL_COLOUR, ['get', 'colour']]
+        }
+    });
 
     map.addLayer({
         id: 'aircraft-arrows',
         type: 'symbol',
         source: 'aircraft',
         layout: {
-            'icon-image': 'aircraft-arrow',
-            // Shrink arrows at low zoom so busy airports don't turn into a solid blob
-            'icon-size': [
-                'interpolate', ['linear'], ['zoom'],
-                3, 0.22,
-                6, 0.35,
-                10, 0.5
-            ],
+            // Aircraft type icon for its size group, or the arrow until/unless that icon is loaded
+            'icon-image': ['coalesce', ['image', ['get', 'icon']], ['image', 'aircraft-arrow']],
+            // Shrink icons at low zoom so busy airports don't turn into a solid blob,
+            // and size them by aircraft group so an A388 looks bigger than a C172
+            'icon-size': aircraftIconSize(),
             'icon-rotate': ['get','bearing'],
             'icon-rotation-alignment': 'map',
             // Always render every aircraft icon, even when overlapping - hiding
@@ -511,14 +723,7 @@ map.on('load', () => {
 
         new mapboxgl.Popup({ offset: 15 })
             .setLngLat(f.geometry.coordinates)
-            .setHTML(`
-                <strong>${p.callsign}</strong><br>
-                ${p.dep} → ${p.arr}<br>
-                ${p.alt}ft | ${p.speed}kt | ${p.ac}<br>
-                Status: ${p.status}<br>
-                ELT: ${p.elt}z | EIBT: ${p.eibt}z<br>
-                Assigned Bay: ${p.bay}<br>
-            `)
+            .setHTML(aircraftPopupHtml(p))
             .addTo(map);
     });
 
@@ -596,8 +801,11 @@ map.on('load', () => {
 
 
     /* ================== FIRST LOAD + REFRESH ================== */
-    refreshAircraft();
-    setInterval(refreshAircraft, 5000);
+    // Load every aircraft icon before the first aircraft are drawn, so they never show the arrow first
+    Promise.all(AIRCRAFT_ICONS.map(loadAircraftIcon)).then(() => {
+        refreshAircraft();
+        setInterval(refreshAircraft, 5000);
+    });
 
     refreshBayColours();
     setInterval(refreshBayColours, 15000);
@@ -610,8 +818,8 @@ function toHHMM(dt) {
     const d = new Date(dt);
     if (isNaN(d)) return null;
 
-    return String(d.getHours()).padStart(2, '0') +
-           String(d.getMinutes()).padStart(2, '0');
+    return String(d.getUTCHours()).padStart(2, '0') +
+           String(d.getUTCMinutes()).padStart(2, '0');
 }
 </script>
 
