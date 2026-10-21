@@ -1,0 +1,160 @@
+{
+    "_readme": "Hand-maintained credits for everything OzBays uses that is NOT in composer.lock or package-lock.json (CDN libraries, fonts, icons, data and services). After editing, run `php scripts/generate-credits.php` - or push to a PR and the 'Update Credits' GitHub Action does it for you. The /credits page is built from resources/credits/credits.json.",
+
+    "sections": [
+        {
+            "title": "Front-End Libraries",
+            "description": "Loaded by the website from public CDNs.",
+            "items": [
+                {
+                    "name": "Bootstrap",
+                    "version": "4.6",
+                    "license": "MIT",
+                    "license_url": "https://github.com/twbs/bootstrap/blob/v4.6.2/LICENSE",
+                    "url": "https://getbootstrap.com",
+                    "usage": "Page layout, navigation, forms and modals"
+                },
+                {
+                    "name": "jQuery",
+                    "version": "3.x",
+                    "license": "MIT",
+                    "license_url": "https://jquery.org/license/",
+                    "url": "https://jquery.com",
+                    "usage": "Page scripting used by Bootstrap and DataTables"
+                },
+                {
+                    "name": "Popper.js",
+                    "version": "1.16",
+                    "license": "MIT",
+                    "license_url": "https://github.com/popperjs/popper-core/blob/v1.16.1/LICENSE.md",
+                    "url": "https://popper.js.org",
+                    "usage": "Dropdown and tooltip positioning"
+                },
+                {
+                    "name": "DataTables",
+                    "version": "1.10",
+                    "license": "MIT",
+                    "license_url": "https://datatables.net/license/",
+                    "url": "https://datatables.net",
+                    "usage": "Sortable and searchable tables"
+                },
+                {
+                    "name": "TinyMCE",
+                    "version": "6",
+                    "license": "MIT (served by Tiny Cloud under Tiny's Terms of Service)",
+                    "license_url": "https://www.tiny.cloud/legal/",
+                    "url": "https://www.tiny.cloud",
+                    "usage": "Text editor for news articles"
+                },
+                {
+                    "name": "Mapbox GL JS",
+                    "version": "2.15",
+                    "license": "Mapbox Terms of Service",
+                    "license_url": "https://www.mapbox.com/legal/tos",
+                    "url": "https://www.mapbox.com/mapbox-gljs",
+                    "usage": "Live network map"
+                }
+            ]
+        },
+        {
+            "title": "Fonts & Icons",
+            "description": "",
+            "items": [
+                {
+                    "name": "Font Awesome Free",
+                    "version": "6.5 & 4.7",
+                    "license": "Icons CC BY 4.0, Fonts SIL OFL 1.1, Code MIT",
+                    "license_url": "https://fontawesome.com/license/free",
+                    "url": "https://fontawesome.com",
+                    "usage": "Interface icons"
+                },
+                {
+                    "name": "Inter",
+                    "version": "",
+                    "license": "SIL Open Font License 1.1",
+                    "license_url": "https://openfontlicense.org",
+                    "url": "https://fonts.google.com/specimen/Inter",
+                    "usage": "Main text font, served by Google Fonts"
+                },
+                {
+                    "name": "Sora",
+                    "version": "",
+                    "license": "SIL Open Font License 1.1",
+                    "license_url": "https://openfontlicense.org",
+                    "url": "https://fonts.google.com/specimen/Sora",
+                    "usage": "Heading font, served by Google Fonts"
+                },
+                {
+                    "name": "IBM Plex Mono",
+                    "version": "",
+                    "license": "SIL Open Font License 1.1",
+                    "license_url": "https://openfontlicense.org",
+                    "url": "https://fonts.google.com/specimen/IBM+Plex+Mono",
+                    "usage": "Monospace font for flight boards, served by Google Fonts"
+                },
+                {
+                    "name": "VATSIM Radar aircraft icons",
+                    "version": "",
+                    "license": "CC BY-NC 4.0",
+                    "license_url": "https://creativecommons.org/licenses/by-nc/4.0/",
+                    "url": "https://github.com/VATSIM-Radar/vatsim-radar",
+                    "usage": "Aircraft icons on the live map, shown as single-colour silhouettes. Non-commercial use only."
+                }
+            ]
+        },
+        {
+            "title": "Maps, Data & Services",
+            "description": "Third-party data and services OzBays relies on. Each is used under its provider's terms.",
+            "items": [
+                {
+                    "name": "Mapbox",
+                    "version": "",
+                    "license": "© Mapbox, Mapbox Terms of Service",
+                    "license_url": "https://www.mapbox.com/legal/tos",
+                    "url": "https://www.mapbox.com",
+                    "usage": "Map tiles and the dark map style"
+                },
+                {
+                    "name": "OpenStreetMap",
+                    "version": "",
+                    "license": "© OpenStreetMap contributors, ODbL",
+                    "license_url": "https://www.openstreetmap.org/copyright",
+                    "url": "https://www.openstreetmap.org",
+                    "usage": "Map data shown in the Mapbox map tiles"
+                },
+                {
+                    "name": "VATSIM",
+                    "version": "",
+                    "license": "VATSIM Data Protection & Handling Policy",
+                    "license_url": "https://vatsim.net/docs/policy/data-protection-and-handling-policy",
+                    "url": "https://vatsim.net",
+                    "usage": "Live pilot positions and flight plans from the VATSIM network"
+                },
+                {
+                    "name": "AirLabs Data API",
+                    "version": "",
+                    "license": "AirLabs Terms of Service",
+                    "license_url": "https://airlabs.co/terms-of-service",
+                    "url": "https://airlabs.co",
+                    "usage": "Real-world flight schedules and gate assignments"
+                },
+                {
+                    "name": "Hoppie's ACARS",
+                    "version": "",
+                    "license": "Hoppie ACARS service",
+                    "license_url": "https://www.hoppie.nl/acars/",
+                    "url": "https://www.hoppie.nl/acars/",
+                    "usage": "Bay assignment messages sent to pilots"
+                },
+                {
+                    "name": "Discord",
+                    "version": "",
+                    "license": "Discord Developer Terms of Service",
+                    "license_url": "https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service",
+                    "url": "https://discord.com",
+                    "usage": "Account linking, roles and notifications"
+                }
+            ]
+        }
+    ]
+}
