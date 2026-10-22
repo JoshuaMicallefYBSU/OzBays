@@ -18,4 +18,4 @@ jobs:
         username: github@ozacars.xyz
         password: ${{ secrets.FTP_PASSWORD }}
         timeout: 120000
-        server-dir: ozbays.xyz/
+        server-dir: ozbays/
