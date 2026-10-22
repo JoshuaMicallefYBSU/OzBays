@@ -48,6 +48,25 @@ class ContributorApplicationController extends Controller
         return redirect()->route('dashboard.index')->with('success', 'Application submitted! The team will be in touch.');
     }
 
+    // Rescind a pending application - kept as 'withdrawn' so the team can still see it was made
+    public function withdraw()
+    {
+        $application = ContributorApplication::pending()->where('user_id', auth()->id())->latest()->first();
+
+        if ($application === null) {
+            return redirect()->route('dashboard.index')->with('error', "You don't have an application waiting for review.");
+        }
+
+        $application->update(['status' => 'withdrawn', 'reviewed_at' => now()]);
+
+        return redirect()->route('dashboard.index')->with('success', 'Your contributor application has been rescinded.');
+    }
+
+    public static function hasPendingApplication(User $user): bool
+    {
+        return ContributorApplication::pending()->where('user_id', $user->id)->exists();
+    }
+
     ### ADMIN - Review
     public function index()
     {

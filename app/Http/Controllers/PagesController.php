@@ -5,7 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Jobs\FlightData;
+use App\Models\Airline;
+use App\Models\Airports;
+use App\Models\FlightLogs;
 use App\Models\Flights;
+use App\Support\DonutChart;
+use Illuminate\Support\Facades\Cache;
 use App\Models\NewsArticle;
 use App\Services\HoppieClient;
 use App\Jobs\AerodromeUpdates;
@@ -16,7 +21,23 @@ class PagesController extends Controller
     {
         $news = NewsArticle::latest('id')->take(3)->get();
 
-        return view('home', compact('news'));
+        // Network-wide arrival stats for the last 30 days - cached as they cover every flight log
+        $stats = Cache::remember('home:arrival-stats', now()->addMinutes(10), function () {
+            $logs = FlightLogs::where('created_at', '>=', now()->subDays(30));
+            $countBy = fn (string $column) => (clone $logs)->whereNotNull($column)
+                ->selectRaw("{$column} as label, count(*) as total")->groupBy($column)->pluck('total', 'label');
+
+            $airlines = $countBy('airline');
+            $airports = $countBy('arrival');
+
+            return [
+                'aircraft' => DonutChart::slices($countBy('aircraft')),
+                'airlines' => DonutChart::slices($airlines, Airline::whereIn('icao', $airlines->keys())->pluck('name', 'icao')),
+                'airports' => DonutChart::slices($airports, Airports::whereIn('icao', $airports->keys())->pluck('name', 'icao')),
+            ];
+        });
+
+        return view('home', compact('news', 'stats'));
     }
 
     public function AirportUpdate()
