@@ -87,6 +87,7 @@ class LiveBaysJob implements ShouldQueue
                     'operator'      =>  strtoupper($schedule['airline_icao']),
                     'flight_number' =>  $schedule['flight_number'] ?? null,
                     'arrival'       =>  $arrival,
+                    'departure'     =>  !empty($schedule['dep_icao']) ? strtoupper($schedule['dep_icao']) : null,
                     'terminal'      =>  $terminal,
                     'gate'          =>  $gate,
                 ];
@@ -113,6 +114,7 @@ class LiveBaysJob implements ShouldQueue
                     // Bay has been found! Lets add it to the database
                     FlightLiveBays::updateOrCreate(['callsign' => $flight['callsign']], [
                         'airport'       => $flight['arrival'],
+                        'departure'     => $flight['departure'],
                         'terminal'      => $flight['terminal'],
                         'gate'          => $flight['gate'],
                         'scheduled_bay' => $bay->id,

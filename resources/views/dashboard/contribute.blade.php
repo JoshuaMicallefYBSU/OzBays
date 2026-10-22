@@ -12,6 +12,11 @@
         @include('partials.message', ['type' => 'info', 'message' => "You're already part of the OzBays team - no need to apply!"])
     @elseif($pending)
         @include('partials.message', ['type' => 'info', 'message' => 'Your application submitted on '.$pending->created_at->format('d/m/Y').' is waiting for review.'])
+
+        <form action="{{route('dashboard.contribute.withdraw')}}" method="POST" onsubmit="return confirm('Rescind your contributor application?');">
+            @csrf
+            <button type="submit" class="btn oz-btn oz-btn-ghost"><i class="fa fa-undo"></i> Rescind Application</button>
+        </form>
     @else
         <form action="{{route('dashboard.contribute.store')}}" method="POST">
             @csrf

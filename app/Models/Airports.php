@@ -17,7 +17,6 @@ class Airports extends Model
         'eibt_variable',
         'taxi_time',
         'live_bays',
-        'live_type',
         'live_update_times',
         'stats_ground',
         'stats_inbound',

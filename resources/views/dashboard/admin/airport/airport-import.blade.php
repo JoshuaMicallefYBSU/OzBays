@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>Import New Airport</h1>
-    <p>Upload an airport JSON file to add an airport and all of its bays to OzBays. The file is saved privately on the OzBays server and kept in sync hourly.</p>
+    <h1>Import Airport</h1>
+    <p>Upload an airport JSON file to add a new airport, or to update an existing one. You'll see every change before anything is applied. The file is saved privately on the OzBays server and kept in sync hourly.</p>
 
     <div class="pb-3">
         <a href="{{route('dashboard.admin.airport.all')}}"> <i class="fas fa-arrow-left"></i> See All Airports</a>
@@ -14,7 +14,7 @@
         <div class="form-group">
             <label for="airport_file">Airport JSON File</label>
             <input type="file" name="airport_file" id="airport_file" class="form-control-file @error('airport_file') is-invalid @enderror" accept=".json,application/json" required>
-            <small class="form-text text-muted">One airport per file. Airports that have already been uploaded can't be uploaded again.</small>
+            <small class="form-text text-muted">One airport per file. Uploading an airport that already exists replaces its settings and bays with the ones in the file.</small>
             @if($errors->has('airport_file'))
                 <div class="invalid-feedback d-block">
                     <ul class="mb-0 pl-3">
@@ -28,7 +28,7 @@
             @endif
         </div>
 
-        <input type="submit" class="btn oz-btn oz-btn-primary" value="Import Airport">
+        <input type="submit" class="btn oz-btn oz-btn-primary" value="Review Changes">
     </form>
 
     <h4 class="mt-5">File Format</h4>
@@ -42,7 +42,6 @@
         "eibt_config": "1.4",
         "taxi_time": "10",
         "status": "testing",
-        "airport_type": "Major2",
         "update_time_utc": "0,2,4,6,8,10,12,14,20,22"
     },
     "long_name": {

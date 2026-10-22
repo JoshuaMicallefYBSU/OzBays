@@ -35,6 +35,29 @@
             <div class="oz-section-title"><i class="fa fa-plane-arrival"></i> Ground Traffic</div>
             <x id="ground-traffic"></x>
         </div>
+
+        {{-- Arrivals logged across the network (PagesController::Home, cached 10 mins) --}}
+        <div class="oz-card-dark mt-4">
+            <div class="oz-section-title">
+                <i class="fa fa-chart-pie"></i> OzBays Stats
+                <span class="oz-section-sub">Arrivals in the last 30 days</span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="oz-card-heading">Aircraft Types</h5>
+                    @include('partials.donut-chart', ['chart' => $stats['aircraft'], 'label' => 'Aircraft types flown', 'emptyText' => 'No arrivals logged yet.'])
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="oz-card-heading">Airlines Flown</h5>
+                    @include('partials.donut-chart', ['chart' => $stats['airlines'], 'label' => 'Airlines flown', 'emptyText' => 'No airline arrivals logged yet.'])
+                </div>
+                <div class="col-md-4">
+                    <h5 class="oz-card-heading">Busiest Airports</h5>
+                    @include('partials.donut-chart', ['chart' => $stats['airports'], 'label' => 'Arrivals by airport', 'emptyText' => 'No arrivals logged yet.'])
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="col-md-4">

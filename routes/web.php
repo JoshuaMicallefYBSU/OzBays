@@ -62,6 +62,8 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'can:import airports'])->group(function () {
         Route::get('airport/import', [DashboardController::class, 'airportImport'])->name('dashboard.admin.airport.import');
         Route::post('airport/import', [DashboardController::class, 'airportImportStore'])->name('dashboard.admin.airport.import.store');
+        Route::get('airport/import/{token}', [DashboardController::class, 'airportImportReview'])->name('dashboard.admin.airport.import.review');
+        Route::post('airport/import/{token}', [DashboardController::class, 'airportImportConfirm'])->name('dashboard.admin.airport.import.confirm');
     });
     Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
     Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
@@ -133,6 +135,7 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('/my-settings', [DashboardController::class, 'settingsView'])->name('dashboard.settings.index');
     Route::get('/contribute', [ContributorApplicationController::class, 'create'])->name('dashboard.contribute');
     Route::post('/contribute', [ContributorApplicationController::class, 'store'])->name('dashboard.contribute.store');
+    Route::post('/contribute/withdraw', [ContributorApplicationController::class, 'withdraw'])->name('dashboard.contribute.withdraw');
     Route::post('/my-settings/save', [DashboardController::class, 'settingsSave'])->name('dashboard.settings.save');
 
     // Discord Linking

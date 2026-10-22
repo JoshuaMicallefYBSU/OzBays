@@ -52,7 +52,9 @@
                 <tr>
                     <td>{{$application->user?->fullName('FLC') ?? $application->user_id}}</td>
                     <td>
-                        @if($application->status == 'approved') <b style="color: green">Approved</b> @else <b style="color: red">Rejected</b> @endif
+                        @if($application->status == 'approved') <b style="color: green">Approved</b>
+                        @elseif($application->status == 'withdrawn') <b class="text-muted">Withdrawn by applicant</b>
+                        @else <b style="color: red">Rejected</b> @endif
                     </td>
                     <td>{{$application->reviewer?->fullName('FL') ?? 'N/A'}}</td>
                     <td>{{$application->reviewed_at?->format('d/m/Y @ h:i A')}}</td>

@@ -47,7 +47,7 @@ class AirportImportTest extends TestCase
 
         return [
             'icao' => $icao, 'name' => "Test {$icao}", 'lat' => -34.9, 'lon' => 138.5,
-            'settings' => ['status' => 'testing', 'airport_type' => 'Major2'],
+            'settings' => ['status' => 'testing'],
             'parking' => $parking,
         ];
     }
@@ -175,15 +175,35 @@ class AirportImportTest extends TestCase
         $this->assertTrue(Airports::where('icao', 'YAAA')->exists());
     }
 
+    // Upload, check the review page, then confirm - returns the review page response
+    private function uploadAndConfirm(User $user, array $airport)
+    {
+        $upload = $this->actingAs($user)->post(route('dashboard.admin.airport.import.store'), ['airport_file' => $this->upload($airport)]);
+        $reviewUrl = $upload->headers->get('Location');
+        $this->assertStringContainsString('/airport/import/', (string) $reviewUrl);
+
+        $review = $this->actingAs($user)->get($reviewUrl)->assertOk();
+        $this->actingAs($user)->post($reviewUrl)->assertRedirect(route('dashboard.admin.airport.view', $airport['icao']));
+
+        return $review;
+    }
+
     public function test_developer_can_import_a_new_airport(): void
     {
         $user = $this->createUser(1, 'Developer');
 
-        $response = $this->actingAs($user)->post(route('dashboard.admin.airport.import.store'), [
+        $upload = $this->actingAs($user)->post(route('dashboard.admin.airport.import.store'), [
             'airport_file' => $this->upload($this->airport('YCCC', ['1' => 'B738', '2' => 'A320'])),
         ]);
 
-        $response->assertRedirect(route('dashboard.admin.airport.view', 'YCCC'));
+        // Nothing is imported until the review is confirmed
+        $this->assertFalse(Airports::where('icao', 'YCCC')->exists());
+        $this->actingAs($user)->get($upload->headers->get('Location'))
+            ->assertOk()
+            ->assertSee('is a new airport')
+            ->assertSee('Import Airport');
+
+        $this->actingAs($user)->post($upload->headers->get('Location'))->assertRedirect(route('dashboard.admin.airport.view', 'YCCC'));
         $this->assertTrue(Airports::where('icao', 'YCCC')->exists());
         $this->assertSame(2, Bays::where('airport', 'YCCC')->count());
         $this->assertFileExists($this->storagePath.'/app/airports/YCCC.json');
@@ -199,26 +219,64 @@ class AirportImportTest extends TestCase
         (new AerodromeUpdates)->handle();
         File::delete($this->storagePath.'/app/airports/YAAA.json');
 
-        $this->actingAs($user)->post(route('dashboard.admin.airport.import.store'), [
-            'airport_file' => $this->upload($this->airport('YAAA', ['1' => 'B738', '2' => 'A320'])),
-        ])->assertRedirect(route('dashboard.admin.airport.view', 'YAAA'));
+        $this->uploadAndConfirm($user, $this->airport('YAAA', ['1' => 'B738', '2' => 'A320']));
 
         $this->assertSame(2, Bays::where('airport', 'YAAA')->count());
         $this->assertFileExists($this->storagePath.'/app/airports/YAAA.json');
     }
 
-    public function test_import_rejects_an_already_uploaded_airport(): void
+    public function test_reuploading_an_airport_shows_the_changes_then_applies_them(): void
+    {
+        $user = $this->createUser(1, 'Lead Developer');
+        $this->writeAirportFile('YAAA', $this->airport('YAAA', ['1' => 'B738', '2' => 'A320', '3' => 'DH8D']));
+        (new AerodromeUpdates)->handle();
+        Bays::where('airport', 'YAAA')->where('bay', '3')->update(['callsign' => 'QLK1', 'status' => 2]);
+
+        // Bay 1 unchanged, bay 2 now takes an A321, bay 3 removed, bay 9 added, airport now active
+        $updated = $this->airport('YAAA', ['1' => 'B738', '2' => 'A321', '9' => 'B789']);
+        $updated['settings']['status'] = 'active';
+
+        $review = $this->uploadAndConfirm($user, $updated);
+
+        $review->assertSeeInOrder(['1</strong> bays added', '1</strong> bays changed', '1</strong> bays removed'], false)
+            ->assertSeeInOrder(['Airport Settings', 'Status', 'testing', 'active'])
+            ->assertSeeInOrder(['Changed Bays', '2', 'Aircraft', 'A320', 'A321'])
+            ->assertSeeInOrder(['Added Bays', '9', 'B789'])
+            ->assertSeeInOrder(['Removed Bays', '3', 'Occupied by QLK1'])
+            ->assertDontSee('Long Name</td>', false); // bay 1 had nothing to change
+
+        $this->assertEqualsCanonicalizing(['1', '2', '9'], Bays::where('airport', 'YAAA')->pluck('bay')->all());
+        $this->assertSame('A321', Bays::where('airport', 'YAAA')->where('bay', '2')->value('aircraft'));
+        $this->assertSame('active', Airports::where('icao', 'YAAA')->value('status'));
+        $this->assertArrayHasKey('9', json_decode(File::get($this->storagePath.'/app/airports/YAAA.json'), true)['parking']);
+    }
+
+    public function test_reuploading_an_identical_file_has_nothing_to_apply(): void
     {
         $user = $this->createUser(1, 'Lead Developer');
         $this->writeAirportFile('YAAA', $this->airport('YAAA'));
         (new AerodromeUpdates)->handle();
 
-        $response = $this->actingAs($user)->post(route('dashboard.admin.airport.import.store'), [
-            'airport_file' => $this->upload($this->airport('YAAA', ['1' => 'B738', '9' => 'A320'])),
-        ]);
+        $upload = $this->actingAs($user)->post(route('dashboard.admin.airport.import.store'), ['airport_file' => $this->upload($this->airport('YAAA'))]);
 
-        $response->assertSessionHasErrors('airport_file');
-        $this->assertSame(1, Bays::where('airport', 'YAAA')->count());
+        $this->actingAs($user)->get($upload->headers->get('Location'))
+            ->assertOk()
+            ->assertSee('there is nothing to change')
+            ->assertDontSee('Apply Changes');
+    }
+
+    public function test_a_pending_upload_cannot_be_used_by_someone_else(): void
+    {
+        $uploader = $this->createUser(1, 'Developer');
+        $other = $this->createUser(2, 'Developer');
+
+        $reviewUrl = $this->actingAs($uploader)->post(route('dashboard.admin.airport.import.store'), [
+            'airport_file' => $this->upload($this->airport('YCCC')),
+        ])->headers->get('Location');
+
+        $this->flushSession();
+        $this->actingAs($other)->post($reviewUrl)->assertRedirect(route('dashboard.admin.airport.import'));
+        $this->assertFalse(Airports::where('icao', 'YCCC')->exists());
     }
 
     public function test_import_rejects_an_invalid_file(): void
