@@ -12,6 +12,7 @@ class FlightLiveBays extends Model
         'id',
         'callsign',
         'airport',
+        'departure',
         'terminal',
         'gate',
         'scheduled_bay',

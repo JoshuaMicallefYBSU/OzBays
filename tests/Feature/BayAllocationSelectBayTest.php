@@ -64,12 +64,12 @@ class BayAllocationSelectBayTest extends TestCase
         ]);
 
         FlightLiveBays::create([
-            'callsign' => 'QFA1000', 'airport' => 'YBBN', 'terminal' => 'T1', 'gate' => 'Z9',
+            'callsign' => 'QFA1000', 'airport' => 'YBBN', 'departure' => 'YSSY', 'terminal' => 'T1', 'gate' => 'Z9',
             'scheduled_bay' => $liveBay->id,
         ]);
 
         $job = new BayAllocation;
-        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A321']]);
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'dep' => 'YSSY', 'arr' => 'YBBN'], [['A321']]);
 
         $this->assertNotNull($selected);
         $this->assertSame($liveBay->id, $selected->id);
@@ -96,15 +96,56 @@ class BayAllocationSelectBayTest extends TestCase
         ]);
 
         FlightLiveBays::create([
-            'callsign' => 'QFA1001', 'airport' => 'YBBN', 'terminal' => 'T1', 'gate' => 'Z9',
+            'callsign' => 'QFA1001', 'airport' => 'YBBN', 'departure' => 'YSSY', 'terminal' => 'T1', 'gate' => 'Z9',
             'scheduled_bay' => $occupiedLiveBay->id,
         ]);
 
         $job = new BayAllocation;
-        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A321']]);
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'dep' => 'YSSY', 'arr' => 'YBBN'], [['A321']]);
 
         $this->assertNotNull($selected);
         $this->assertSame($fallbackBay->id, $selected->id);
+    }
+
+    public function test_live_bay_assignment_is_ignored_when_the_irl_flight_departed_from_somewhere_else(): void
+    {
+        // Network QFA204 is a domestic ML-SY flight, IRL QFA204 arrived from overseas at an international gate
+        Flights::create([
+            'callsign' => 'QFA204', 'cid' => 1, 'dep' => 'YMML', 'arr' => 'YSSY', 'ac' => 'B738',
+            'hdg' => '0', 'type' => null, 'lat' => '-34.0', 'lon' => '151.0', 'speed' => '400',
+            'alt' => '35000', 'distance' => 100, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
+        ]);
+
+        $domesticBay = Bays::create([
+            'airport' => 'YSSY', 'bay' => '50', 'lat' => '-33.9', 'lon' => '151.1',
+            'aircraft' => 'B738', 'priority' => 1, 'operators' => null, 'pax_type' => null,
+            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        $internationalBay = Bays::create([
+            'airport' => 'YSSY', 'bay' => 'I50', 'lat' => '-33.9', 'lon' => '151.1',
+            'aircraft' => 'B738', 'priority' => 9, 'operators' => null, 'pax_type' => null,
+            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
+        ]);
+
+        $live = FlightLiveBays::create([
+            'callsign' => 'QFA204', 'airport' => 'YSSY', 'departure' => 'NZAA', 'terminal' => 'T1', 'gate' => 'I50',
+            'scheduled_bay' => $internationalBay->id,
+        ]);
+
+        $job = new BayAllocation;
+        $selected = $this->invokeSelectBay($job, ['cs' => 'QFA204', 'dep' => 'YMML', 'arr' => 'YSSY'], [['B738']]);
+        $this->assertSame($domesticBay->id, $selected?->id);
+
+        // Rows saved before departures were recorded can't be checked, so they aren't used either
+        $live->update(['departure' => null]);
+        $selected = $this->invokeSelectBay($job, ['cs' => 'QFA204', 'dep' => 'YMML', 'arr' => 'YSSY'], [['B738']]);
+        $this->assertSame($domesticBay->id, $selected?->id);
+
+        // Same route IRL - the IRL bay is used
+        $live->update(['departure' => 'YMML']);
+        $selected = $this->invokeSelectBay($job, ['cs' => 'QFA204', 'dep' => 'YMML', 'arr' => 'YSSY'], [['B738']]);
+        $this->assertSame($internationalBay->id, $selected?->id);
     }
 
     public function test_unknown_aircraft_type_is_recorded_and_reported_but_a_bay_is_still_selected(): void
@@ -122,7 +163,7 @@ class BayAllocationSelectBayTest extends TestCase
         ]);
 
         $job = new BayAllocation;
-        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A321']]);
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'dep' => 'YSSY', 'arr' => 'YBBN'], [['A321']]);
 
         $this->assertNotNull($selected);
         $this->assertSame($bay->id, $selected->id);
@@ -158,7 +199,7 @@ class BayAllocationSelectBayTest extends TestCase
         $job = new BayAllocation;
 
         // A321 is the higher-priority (earlier) group; B738 is a later, lower-priority group.
-        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'arr' => 'YBBN'], [['A321'], ['B738']]);
+        $selected = $this->invokeSelectBay($job, ['cs' => $flight->callsign, 'dep' => 'YSSY', 'arr' => 'YBBN'], [['A321'], ['B738']]);
 
         $this->assertNotNull($selected);
         $this->assertSame($b738Bay->id, $selected->id);

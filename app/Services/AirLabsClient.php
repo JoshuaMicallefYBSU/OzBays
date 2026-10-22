@@ -82,4 +82,46 @@ class AirLabsClient
 
         return $schedules;
     }
+
+    /**
+     * Look up an airport by ICAO code. Returns ['name', 'lat', 'lon'], an empty array if AirLabs doesn't know the
+     * airport, or null if the request failed.
+     */
+    public function getAirport(string $icao): ?array
+    {
+        $client = new Client([
+            'base_uri' => 'https://airlabs.co/api/v9/',
+            'timeout'  => 5,
+            'headers'  => ['Accept' => 'application/json'],
+        ]);
+
+        try {
+            $response = $client->get('airports', [
+                'query' => [
+                    'api_key'   => config('services.airlabs.key'),
+                    'icao_code' => strtoupper($icao),
+                ],
+            ]);
+        } catch (GuzzleException $e) {
+            Log::error('AirLabs airport request failed', ['icao' => $icao, 'error' => $e->getMessage()]);
+
+            return null;
+        }
+
+        $body = json_decode($response->getBody(), true);
+
+        if (isset($body['error'])) {
+            Log::error('AirLabs airport request returned an error', ['icao' => $icao, 'error' => $body['error']]);
+
+            return null;
+        }
+
+        $airport = $body['response'][0] ?? null;
+
+        if (! isset($airport['lat'], $airport['lng'])) {
+            return [];
+        }
+
+        return ['name' => $airport['name'] ?? null, 'lat' => (float) $airport['lat'], 'lon' => (float) $airport['lng']];
+    }
 }

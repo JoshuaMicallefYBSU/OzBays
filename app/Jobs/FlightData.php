@@ -9,6 +9,7 @@ use App\Models\Bays;
 use App\Models\FlightLogs;
 use App\Models\Flights;
 use App\Services\AirportFlightState;
+use App\Services\AirportLocations;
 use App\Services\VATSIMClient;
 use Carbon\Carbon;
 use Exception;
@@ -252,6 +253,7 @@ class FlightData implements ShouldQueue
                     'speed' => $ac['speed'],
                     'alt' => $ac['alt'],
                     'distance' => $ac['distance'],
+                    'route_distance' => $this->routeDistance($existing, $changedPlan, $ac, $airports[$airportIcao], $state),
                     'status' => $ac['status'],
                     'filed_etd' => $ac['filed_etd'],
                     'online' => 1,
@@ -273,16 +275,19 @@ class FlightData implements ShouldQueue
         }
 
         // Alrighty. Need to record that the aircraft arrived at the Airport of choice
-        $arrivals = Flights::whereNotNull('landed_at')->where('flight_recorded', 0)->where('online', 1)->get();
+        // The parked bay is filled in later by BayAllocation once the aircraft stops at a bay
+        $arrivals = Flights::whereNotNull('landed_at')->where('flight_recorded', 0)->where('online', 1)->with('mapBay')->get();
         foreach ($arrivals as $arr) {
             // dd($arr);
             try {
                 FlightLogs::create([
                     'callsign' => $arr->callsign,
-                    'airline' => preg_replace('/^([A-Za-z]{2,4}).*/', '$1', $arr->callsign),
+                    'airline' => FlightLogs::airlineFromCallsign($arr->callsign),
+                    'departure' => $arr->dep,
                     'arrival' => $arr->arr,
                     'type' => $arr->type,
                     'aircraft' => $arr->ac,
+                    'assigned_bay' => $arr->mapBay?->bay,
                     'user_id' => $arr->cid,
                 ]);
 
@@ -340,6 +345,22 @@ class FlightData implements ShouldQueue
         $icao = strtoupper(trim((string) $icao));
 
         return $icao === '' ? null : $icao;
+    }
+
+    // Departure -> arrival distance the dashboard progress bar measures against. Worked out from the departure
+    // airport when the flight is first detected (or its plan changes), then only ever grows if the aircraft is
+    // further out than that (e.g. a departure turning away from the arrival). If the departure airport can't be
+    // found, the furthest distance seen is used instead.
+    private function routeDistance(?Flights $existing, bool $changedPlan, array $ac, Airports $arrival, AirportFlightState $state): int
+    {
+        $known = $changedPlan ? null : $existing?->route_distance;
+
+        if ($known === null) {
+            $departure = app(AirportLocations::class)->coordinates($ac['dep']);
+            $known = $departure === null ? 0 : $state->distanceNm($departure['lat'], $departure['lon'], $arrival->lat, $arrival->lon);
+        }
+
+        return (int) round(max((float) $known, (float) $ac['distance']));
     }
 
     private function changedPlan(Flights $flight, ?string $departure, ?string $arrival): bool

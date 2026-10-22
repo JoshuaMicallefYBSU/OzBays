@@ -6,6 +6,8 @@
     @if($entries->count() > 0)
         <ul class="oz-changelog-list mt-3">
             @foreach($entries as $entry)
+                {{-- ?open=latest (the footer link) shows the newest entry already expanded --}}
+                @php($open = $loop->first && request('open') === 'latest')
                 <li class="oz-changelog-item">
                     <div class="oz-changelog-row">
                         <span class="oz-changelog-date">{{ optional($entry->merged_at)->format('d M Y') }}</span>
@@ -14,7 +16,7 @@
                         </a>
                         @if($entry->description)
                             <button type="button" class="oz-changelog-toggle" data-toggle="collapse"
-                                data-target="#changelog-desc-{{ $entry->id }}" aria-expanded="false"
+                                data-target="#changelog-desc-{{ $entry->id }}" aria-expanded="{{ $open ? 'true' : 'false' }}"
                                 aria-controls="changelog-desc-{{ $entry->id }}" aria-label="Toggle description">
                                 <i class="fa fa-chevron-right"></i>
                             </button>
@@ -28,7 +30,7 @@
                     </div>
 
                     @if($entry->description)
-                        <div class="collapse oz-changelog-desc" id="changelog-desc-{{ $entry->id }}">
+                        <div class="collapse oz-changelog-desc {{ $open ? 'show' : '' }}" id="changelog-desc-{{ $entry->id }}">
                             {!! $entry->description_html !!}
                         </div>
                     @endif

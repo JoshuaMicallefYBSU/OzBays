@@ -75,15 +75,16 @@ class APIController extends Controller
     {
         $flights = Flights::where('online', 1)->with('mapBay')->get();
 
-        // Real-world (IRL) bay for each flight, matched the same way BayAllocation does - callsign + arrival airport
+        // Real-world (IRL) bay for each flight, matched the same way BayAllocation does - callsign + departure + arrival airport
         $liveBays = FlightLiveBays::whereIn('callsign', $flights->pluck('callsign'))
             ->whereNotNull('scheduled_bay')
+            ->whereNotNull('departure')
             ->with('bayInfo')
             ->get()
-            ->keyBy(fn ($live) => $live->callsign.'|'.$live->airport);
+            ->keyBy(fn ($live) => $live->callsign.'|'.$live->departure.'|'.$live->airport);
 
         foreach ($flights as $flight) {
-            $irlBay = $liveBays->get($flight->callsign.'|'.$flight->arr)?->bayInfo;
+            $irlBay = $liveBays->get($flight->callsign.'|'.strtoupper((string) $flight->dep).'|'.$flight->arr)?->bayInfo;
 
             $flight->setAttribute('irl_bay', $irlBay === null ? null : [
                 'bay'          => $irlBay->bay,

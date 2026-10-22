@@ -554,8 +554,8 @@ footer.oz-footer .copyright * {
     color: var(--oz-amber);
 }
 
-.oz-footer-link:not(:first-child)::before {
-    content: '\2022';
+/* Separator dots sit between the links, not inside them */
+.oz-footer-sep {
     color: var(--oz-amber);
     margin: 0 0.65rem;
     font-weight: 700;
@@ -1738,4 +1738,480 @@ footer.oz-footer .copyright * {
 
 @media (prefers-reduced-motion: reduce) {
     .oz-feedback-cta { animation: none; }
+}
+
+/* ---------- Dashboard: current flight ---------- */
+.oz-flight-empty {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.oz-flight-empty i {
+    font-size: 1.6rem;
+    color: var(--oz-text-muted);
+}
+
+.oz-flight-empty-title {
+    font-weight: 700;
+    color: var(--oz-text);
+}
+
+.oz-flight-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.oz-flight-callsign {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--oz-text);
+    margin-right: 0.6rem;
+}
+
+.oz-flight-type {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-weight: 600;
+    color: var(--oz-text-muted);
+}
+
+.oz-route {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 1.5rem 0;
+}
+
+.oz-route-airport {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.oz-route-icao {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--oz-text);
+    line-height: 1.1;
+}
+
+.oz-route-track {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.oz-route-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--oz-amber-soft), var(--oz-amber));
+    transition: width .6s ease;
+}
+
+.oz-route-plane {
+    position: absolute;
+    top: 50%;
+    width: 32px;
+    height: 32px;
+    margin-left: -16px;
+    margin-top: -16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--oz-bg-alt);
+    border: 2px solid var(--oz-amber);
+    color: var(--oz-amber);
+    font-size: 0.85rem;
+    box-shadow: 0 0 0 4px rgba(255, 199, 44, 0.12);
+    transition: left .6s ease;
+}
+
+.oz-flight-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.oz-flight-stats > div,
+.oz-flight-bay {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--oz-border);
+}
+
+.oz-flight-stats small,
+.oz-flight-bay > small:first-child {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--oz-text-muted);
+}
+
+.oz-flight-stats span {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-weight: 600;
+    color: var(--oz-text);
+}
+
+.oz-flight-bays {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.oz-flight-bay.is-assigned {
+    border-color: rgba(255, 199, 44, 0.35);
+    background: rgba(255, 199, 44, 0.06);
+}
+
+.oz-flight-bay-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--oz-text);
+}
+
+@media (max-width: 575.98px) {
+    .oz-flight-stats { grid-template-columns: repeat(2, 1fr); }
+    .oz-flight-bays { grid-template-columns: 1fr; }
+}
+
+/* ---------- Dashboard: my flights ---------- */
+.oz-section-sub {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--oz-text-muted);
+}
+
+.oz-card-heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--oz-text);
+    margin-bottom: 1rem;
+}
+
+.oz-mono {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.oz-flight-log-table {
+    font-size: 0.8rem;
+}
+
+.oz-flight-log-table th {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--oz-text-muted);
+    white-space: nowrap;
+}
+
+.oz-flight-log-table td {
+    white-space: nowrap;
+}
+
+.oz-bay-mismatch {
+    color: var(--oz-amber);
+}
+
+.oz-flight-log-table + nav .pagination,
+.oz-card-dark .pagination {
+    margin-bottom: 0;
+    flex-wrap: wrap;
+}
+
+.oz-chart-empty,
+.oz-chart-note {
+    color: var(--oz-text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+.oz-chart-note {
+    margin-top: 0.75rem;
+}
+
+/* Donut charts - categorical slots stepped for the dark surface, "Other" is neutral */
+.oz-donut {
+    --oz-series-1: #3987e5;
+    --oz-series-2: #d95926;
+    --oz-series-3: #199e70;
+    --oz-series-4: #c98500;
+    --oz-series-5: #d55181;
+    --oz-series-other: #5b6478;
+}
+
+.oz-donut-svg {
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto 1.25rem;
+}
+
+.oz-donut-track {
+    stroke: rgba(255, 255, 255, 0.05);
+}
+
+.oz-donut-slice {
+    cursor: default;
+    transition: stroke-width .15s ease;
+}
+
+.oz-donut-slice:hover {
+    stroke-width: 6.5;
+}
+
+.oz-donut-total {
+    fill: var(--oz-text);
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+    text-anchor: middle;
+}
+
+.oz-donut-caption {
+    fill: var(--oz-text-muted);
+    font-size: 3px;
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.oz-donut-legend {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.oz-donut-legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--oz-border);
+    font-size: 0.85rem;
+}
+
+.oz-donut-legend li:last-child {
+    border-bottom: 0;
+}
+
+.oz-donut-key {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.oz-donut-label {
+    flex: 1;
+    color: var(--oz-text);
+    font-weight: 600;
+    min-width: 0;
+}
+
+.oz-donut-label small {
+    font-weight: 400;
+    margin-left: 0.35rem;
+}
+
+.oz-donut-count {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    color: var(--oz-text);
+    white-space: nowrap;
+}
+
+/* ---------- Home: ground traffic stats ---------- */
+.oz-stat-heading {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--oz-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.oz-stat-heading i {
+    color: var(--oz-amber);
+    margin-right: 0.35rem;
+}
+
+.oz-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 0.5rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--oz-border);
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.oz-stat-row:hover {
+    border-color: var(--oz-border-strong);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.oz-stat-rank {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--oz-text-muted);
+    border: 1px solid var(--oz-border-strong);
+}
+
+.oz-stat-rank-1 {
+    color: var(--oz-navy-text);
+    background: linear-gradient(135deg, var(--oz-amber-soft), var(--oz-amber-strong));
+    border-color: transparent;
+}
+
+.oz-stat-accent {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.oz-stat-airport {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.oz-stat-icao {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-weight: 700;
+    color: var(--oz-text);
+}
+
+.oz-stat-airport small {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.oz-stat-count {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
+}
+
+.oz-stat-count span {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--oz-text);
+}
+
+.oz-stat-count small {
+    font-size: 0.7rem;
+}
+
+.oz-route-distance {
+    margin-top: 0.2rem;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--oz-amber-soft);
+}
+
+/* Completed Flights fills the height set by the chart cards beside it (rows paged by the dashboard script) */
+.oz-flight-log-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.oz-flight-log-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 260px;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    /* Taken out of flow so the table never makes the row taller than the charts */
+    .oz-flight-log-body .oz-flight-log-table {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .oz-flight-log-body {
+        min-height: 0;
+        overflow-x: auto;
+    }
+}
+
+.oz-flight-log-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: 0.75rem;
+}
+
+.oz-flight-log-footer .pagination {
+    margin: 0;
+}
+
+.oz-flight-log-key {
+    color: var(--oz-text-muted);
+    font-size: 0.75rem;
+}
+
+/* ---------- Airport import review ---------- */
+.oz-import-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.oz-import-chip {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--oz-text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--oz-border);
+}
+
+.oz-import-chip strong { color: var(--oz-text); }
+.oz-import-chip.is-added { border-color: rgba(52, 211, 153, 0.4); }
+.oz-import-chip.is-changed { border-color: rgba(255, 199, 44, 0.4); }
+.oz-import-chip.is-removed { border-color: rgba(248, 113, 113, 0.4); }
+
+.oz-import-old {
+    color: #f87171;
+}
+
+.oz-import-new {
+    color: #34d399;
 }

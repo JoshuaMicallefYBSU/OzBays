@@ -506,6 +506,8 @@ function aircraftIconSize() {
  * Larger canvas than the arrow so, at the same icon-size, the ring sits around it.
  * -------------------------------------------------------- */
 const IRL_TOO_SMALL_COLOUR = '#ff8c00';
+// Flight statuses (from FlightData) that mean the aircraft is on the ground
+const GROUND_STATUSES = ['Arrived', 'Taxiing', 'On Ground', 'Departing another Airport'];
 
 function addAircraftRingIcons() {
     const size = 112;
@@ -562,6 +564,8 @@ function refreshAircraft() {
                         // Real-world bay: 'none' (no IRL data), 'fits', or 'too_small' for the network aircraft
                         irl_state: !ac.irl_bay ? 'none' : (ac.irl_bay.fits ? 'fits' : 'too_small'),
                         irl_bay: ac.irl_bay ? (ac.irl_bay.display_name ?? ac.irl_bay.bay) : null,
+                        // On the ground (landed, taxiing, parked or yet to depart) - the IRL ring is hidden
+                        on_ground: GROUND_STATUSES.includes(ac.status),
                         // Aircraft type icon for its size group - falls back to the arrow (see aircraft-arrows layer)
                         icon: ac.map_icon?.icon ? `ac-${ac.map_icon.icon}` : 'aircraft-arrow',
                         icon_scale: Number(ac.map_icon?.scale ?? 1),
@@ -678,13 +682,13 @@ map.on('load', () => {
     addAircraftRingIcons();
 
     // Real-world bay ring around the arrow: solid (airport colour) = IRL bay fits,
-    // dashed orange = IRL bay too small for the network aircraft, no ring = no IRL data.
+    // dashed orange = IRL bay too small for the network aircraft, no ring = no IRL data or on the ground.
     // Drawn as an icon rather than a ground circle so it stays the same size at every zoom.
     map.addLayer({
         id: 'aircraft-irl-rings',
         type: 'symbol',
         source: 'aircraft',
-        filter: ['!=', ['get', 'irl_state'], 'none'],
+        filter: ['all', ['!=', ['get', 'irl_state'], 'none'], ['!', ['get', 'on_ground']]],
         layout: {
             'icon-image': ['match', ['get', 'irl_state'], 'too_small', 'aircraft-ring-dashed', 'aircraft-ring-solid'],
             'icon-size': aircraftIconSize(),

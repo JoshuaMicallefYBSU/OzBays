@@ -42,7 +42,7 @@ class LiveFlightsIrlBayTest extends TestCase
         ]);
     }
 
-    private function irlBay(string $callsign, string $bay, string $aircraft, string $airport = 'YMML', ?string $longName = null): void
+    private function irlBay(string $callsign, string $bay, string $aircraft, string $airport = 'YMML', ?string $longName = null, ?string $departure = 'YBCS'): void
     {
         $model = Bays::create([
             'airport' => $airport, 'bay' => $bay, 'long_name' => $longName, 'lat' => '-37', 'lon' => '144',
@@ -50,7 +50,7 @@ class LiveFlightsIrlBayTest extends TestCase
         ]);
 
         FlightLiveBays::create([
-            'callsign' => $callsign, 'airport' => $airport, 'terminal' => '1', 'gate' => $bay, 'scheduled_bay' => $model->id,
+            'callsign' => $callsign, 'airport' => $airport, 'departure' => $departure, 'terminal' => '1', 'gate' => $bay, 'scheduled_bay' => $model->id,
         ]);
     }
 
@@ -90,6 +90,21 @@ class LiveFlightsIrlBayTest extends TestCase
         $this->irlBay('QFA5', 'D5', 'B738', 'YSSY');
 
         $this->assertNull($this->feed()['QFA5']['irl_bay']);
+    }
+
+    public function test_irl_bay_from_a_different_departure_is_ignored(): void
+    {
+        // Same callsign flown from YBCS on the network, but IRL it came from overseas
+        $this->flight('QFA204', 'B738');
+        $this->irlBay('QFA204', 'I50', 'B738', departure: 'NZAA');
+
+        // Rows saved before departures were recorded can't be checked
+        $this->flight('QFA205', 'B738');
+        $this->irlBay('QFA205', 'C5', 'B738', departure: null);
+
+        $feed = $this->feed();
+        $this->assertNull($feed['QFA204']['irl_bay']);
+        $this->assertNull($feed['QFA205']['irl_bay']);
     }
 
     public function test_map_icon_comes_from_the_aircraft_size_group(): void

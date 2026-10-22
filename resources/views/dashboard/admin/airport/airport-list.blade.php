@@ -6,7 +6,7 @@
 
     @can('import airports')
         <div class="pb-3">
-            <a href="{{route('dashboard.admin.airport.import')}}" class="btn oz-btn oz-btn-primary"><i class="fas fa-upload"></i> Import New Airport</a>
+            <a href="{{route('dashboard.admin.airport.import')}}" class="btn oz-btn oz-btn-primary"><i class="fas fa-upload"></i> Import Airport</a>
         </div>
     @endcan
 

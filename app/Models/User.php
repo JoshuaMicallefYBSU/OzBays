@@ -14,6 +14,12 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRoles;
 
     /**
+     * The id is the VATSIM CID, not an auto-increment. Without this, creating a user overwrites the id with
+     * MySQL's last insert id (0), so the created() hook below makes preferences for user 0 and the login fails.
+     */
+    public $incrementing = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

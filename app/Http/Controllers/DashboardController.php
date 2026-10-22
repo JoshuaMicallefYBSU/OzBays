@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Support\DonutChart;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use App\Models\Airline;
 use App\Models\Airports;
+use App\Models\FlightLogs;
 use App\Models\Bays;
 use App\Models\MissingAircraftType;
 use App\Models\User;
@@ -14,10 +18,32 @@ use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('dashboard.index');
+        $userId = $request->user()->id;
+
+        // Paged in the browser so the table can fill its card - capped so a long history doesn't bloat the page
+        $flightLogs = FlightLogs::where('user_id', $userId)
+            ->with('airlineInfo')
+            ->latest('id')
+            ->limit(500)
+            ->get();
+
+        $aircraftChart = DonutChart::slices(
+            FlightLogs::where('user_id', $userId)->whereNotNull('aircraft')
+                ->selectRaw('aircraft as label, count(*) as total')->groupBy('aircraft')->pluck('total', 'label')
+        );
+
+        $airlineCounts = FlightLogs::where('user_id', $userId)->whereNotNull('airline')
+            ->selectRaw('airline as label, count(*) as total')->groupBy('airline')->pluck('total', 'label');
+        $airlineNames = Airline::whereIn('icao', $airlineCounts->keys())->pluck('name', 'icao');
+        $airlineChart = DonutChart::slices($airlineCounts, $airlineNames);
+
+        $nonAirlineFlights = FlightLogs::where('user_id', $userId)->whereNull('airline')->count();
+
+        return view('dashboard.index', compact('flightLogs', 'aircraftChart', 'airlineChart', 'nonAirlineFlights'));
     }
+
 
     public function settingsView()
     {
@@ -67,21 +93,82 @@ class DashboardController extends Controller
             return back()->withErrors(['airport_file' => $errors]);
         }
 
-        $icao = $airport['icao'];
-        $path = AirportImporter::directory().'/'.$icao.'.json';
+        // Nothing changes yet - the upload is held until the changes have been reviewed and confirmed
+        $this->clearOldPendingImports();
+        $token = (string) Str::uuid();
+        File::ensureDirectoryExists($this->pendingImportDirectory());
+        File::put($this->pendingImportPath($token), json_encode($airport));
+        $request->session()->put("airport_import.{$token}", $airport['icao']);
 
-        // Importer is for airports without a site file yet (new airports, or ones only in the database)
-        if (File::exists($path)) {
-            return back()->withErrors(['airport_file' => [$icao.' has already been uploaded to OzBays.']]);
+        return redirect()->route('dashboard.admin.airport.import.review', $token);
+    }
+
+    public function airportImportReview(Request $request, AirportImporter $importer, string $token)
+    {
+        $airport = $this->pendingImport($request, $token);
+        if ($airport === null) {
+            return redirect()->route('dashboard.admin.airport.import')->withErrors(['airport_file' => ['That upload has expired - please upload the file again.']]);
         }
 
-        File::ensureDirectoryExists(AirportImporter::directory());
-        File::put($path, json_encode($airport, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
+        $diff = $importer->diff($airport);
+        $hasChanges = $diff['new'] || $diff['airport'] || $diff['added'] || $diff['changed'] || $diff['removed'];
 
+        return view('dashboard.admin.airport.airport-import-review', compact('airport', 'diff', 'hasChanges', 'token'));
+    }
+
+    public function airportImportConfirm(Request $request, AirportImporter $importer, string $token)
+    {
+        $airport = $this->pendingImport($request, $token);
+        if ($airport === null) {
+            return redirect()->route('dashboard.admin.airport.import')->withErrors(['airport_file' => ['That upload has expired - please upload the file again.']]);
+        }
+
+        $diff = $importer->diff($airport);
+        $icao = $airport['icao'];
+
+        // Replace the site file (kept in sync hourly by AerodromeUpdates) and apply it now
+        File::ensureDirectoryExists(AirportImporter::directory());
+        File::put(AirportImporter::directory().'/'.$icao.'.json', json_encode($airport, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
         $importer->import($airport);
 
-        return redirect()->route('dashboard.admin.airport.view', $icao)
-            ->with('success', $airport['name'].' ('.$icao.') imported with '.count($airport['parking']).' bays!');
+        File::delete($this->pendingImportPath($token));
+        $request->session()->forget("airport_import.{$token}");
+
+        $message = $diff['new']
+            ? "{$airport['name']} ({$icao}) imported with ".count($airport['parking']).' bays!'
+            : "{$airport['name']} ({$icao}) updated - ".count($diff['added']).' bays added, '.count($diff['changed']).' changed, '.count($diff['removed']).' removed.';
+
+        return redirect()->route('dashboard.admin.airport.view', $icao)->with('success', $message);
+    }
+
+    private function pendingImportDirectory(): string
+    {
+        return storage_path('app/airport-imports');
+    }
+
+    private function pendingImportPath(string $token): string
+    {
+        return $this->pendingImportDirectory().'/'.$token.'.json';
+    }
+
+    // The held upload - only for the user who uploaded it
+    private function pendingImport(Request $request, string $token): ?array
+    {
+        if (! Str::isUuid($token) || ! $request->session()->has("airport_import.{$token}") || ! File::exists($this->pendingImportPath($token))) {
+            return null;
+        }
+
+        return json_decode(File::get($this->pendingImportPath($token)), true);
+    }
+
+    // Uploads that were never confirmed
+    private function clearOldPendingImports(): void
+    {
+        foreach (File::glob($this->pendingImportDirectory().'/*.json') ?: [] as $file) {
+            if (File::lastModified($file) < now()->subDay()->getTimestamp()) {
+                File::delete($file);
+            }
+        }
     }
 
     public function airportView($icao)

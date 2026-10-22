@@ -19,6 +19,7 @@ class Flights extends Model
         'speed',
         'alt',
         'distance',
+        'route_distance',
         'elt',
         'eibt',
         'status',

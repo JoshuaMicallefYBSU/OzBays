@@ -138,4 +138,59 @@ class ContributorApplicationTest extends TestCase
 
         $this->assertFalse($pilot->fresh()->hasRole('Contributor'));
     }
+
+    public function test_dashboard_swaps_apply_for_rescind_while_an_application_is_pending(): void
+    {
+        $user = $this->createUser(1, 'Pilot');
+
+        $this->actingAs($user)->get(route('dashboard.index'))
+            ->assertSee('Apply to Contribute')
+            ->assertDontSee('Rescind Contributor Application');
+
+        ContributorApplication::create(['user_id' => $user->id, 'description' => 'YMML bays']);
+
+        $this->actingAs($user)->get(route('dashboard.index'))
+            ->assertDontSee('Apply to Contribute')
+            ->assertSee('Rescind Contributor Application');
+    }
+
+    public function test_applicant_can_rescind_their_pending_application_and_apply_again(): void
+    {
+        $user = $this->createUser(1, 'Pilot');
+        $application = ContributorApplication::create(['user_id' => $user->id, 'description' => 'YMML bays']);
+
+        $this->actingAs($user)->post(route('dashboard.contribute.withdraw'))
+            ->assertRedirect(route('dashboard.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSame('withdrawn', $application->fresh()->status);
+        $this->assertSame(0, ContributorApplication::pending()->count());
+
+        $this->actingAs($user)->get(route('dashboard.index'))->assertSee('Apply to Contribute');
+
+        // Nothing left to rescind
+        $this->actingAs($user)->post(route('dashboard.contribute.withdraw'))->assertSessionHas('error');
+    }
+
+    public function test_rescinding_only_affects_your_own_application(): void
+    {
+        $applicant = $this->createUser(1, 'Pilot');
+        $other = $this->createUser(2, 'Pilot');
+        $application = ContributorApplication::create(['user_id' => $applicant->id, 'description' => 'YMML bays']);
+
+        $this->actingAs($other)->post(route('dashboard.contribute.withdraw'))->assertSessionHas('error');
+
+        $this->assertSame('pending', $application->fresh()->status);
+    }
+
+    public function test_withdrawn_applications_show_as_withdrawn_to_reviewers(): void
+    {
+        $maintainer = $this->createUser(1, 'Maintainer');
+        $applicant = $this->createUser(2, 'Pilot');
+        ContributorApplication::create(['user_id' => $applicant->id, 'description' => 'YMML bays', 'status' => 'withdrawn', 'reviewed_at' => now()]);
+
+        $this->actingAs($maintainer)->get(route('dashboard.admin.applications.index'))
+            ->assertOk()
+            ->assertSee('Withdrawn by applicant');
+    }
 }

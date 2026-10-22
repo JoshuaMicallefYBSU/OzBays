@@ -8,6 +8,7 @@ use App\Models\BayAllocations;
 use App\Models\BayConflicts;
 use App\Models\Bays;
 use App\Models\FlightLiveBays;
+use App\Models\FlightLogs;
 use App\Models\Flights;
 use App\Models\MissingAircraftType;
 use App\Models\UserPreference;
@@ -129,6 +130,9 @@ class BayAllocation implements ShouldQueue
 
             // Aircraft must be stationary to be occupying a bay
             if ($dist['ICAO'] !== null && (float) $ac->speed < AirportFlightState::STATIONARY_SPEED_KTS) {
+                $parkedBay = null; // Closest bay to the aircraft, for the flight log
+                $parkedDistance = null;
+
                 // Search through every single bay to see if there are any presently being occupied.
                 foreach ($bays as $bay) {
 
@@ -146,6 +150,11 @@ class BayAllocation implements ShouldQueue
                     if ($distance <= 30) {
 
                         $baysInside[] = $bay->bay;
+
+                        if ($parkedDistance === null || $distance < $parkedDistance) {
+                            $parkedBay = $bay;
+                            $parkedDistance = $distance;
+                        }
 
                         $core = $this->bayCore($bay->bay);
 
@@ -182,6 +191,10 @@ class BayAllocation implements ShouldQueue
                     }
 
                 }
+
+                if ($parkedBay !== null) {
+                    $this->recordParkedBay($ac, $parkedBay, $dist['ICAO']);
+                }
             }
 
             // Does an arrival aircraft require bay assignment?
@@ -189,7 +202,7 @@ class BayAllocation implements ShouldQueue
             $isIgnoredType = in_array(strtoupper((string) $ac->ac), $this->ignoredTypes, true);
 
             if (! $isIgnoredType && (empty($ac->assignedBay) || $ac->assignedBay->isEmpty()) && $ac->speed > 80 && $ac->status == 'On Approach' && $ac->eibt !== null) {
-                $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
+                $unscheduledArrivals[] = ['cs' => $ac->callsign, 'cs_id' => $ac->id, 'dep' => $ac->dep, 'arr' => $ac->arr, 'ac' => $ac->ac, 'elt' => $ac->elt, 'eibt' => $ac->eibt, 'ac_model' => $ac];
             }
         }
 
@@ -539,8 +552,14 @@ class BayAllocation implements ShouldQueue
 
         // ## - Preferred Bay Assignment Check can go Here - Pulls data every hour from FLIGHTAWARE API
 
-        // Grab Live Bay Assignment
-        $live_bay = FlightLiveBays::where('callsign', $cs['cs'])->where('airport', $cs['arr'])->with('bayInfo')->first();
+        // Grab Live Bay Assignment - only when the IRL flight flew the same route. The same callsign can be a different
+        // flight IRL (e.g. network QFA204 ML-SY vs IRL QFA204 into the international terminal). Rows without a
+        // departure can't be checked, so they are never used.
+        $live_bay = empty($cs['dep']) ? null : FlightLiveBays::where('callsign', $cs['cs'])
+            ->where('airport', $cs['arr'])
+            ->where('departure', strtoupper($cs['dep']))
+            ->with('bayInfo')
+            ->first();
 
         if ($live_bay !== null && $live_bay->scheduled_bay !== null && $live_bay->bayInfo !== null) {
             $irlBay = $live_bay->bayInfo;
@@ -958,6 +977,31 @@ class BayAllocation implements ShouldQueue
         }
 
         return $eobt;
+    }
+
+    // Arrival has stopped at a bay - record it on the flight log FlightData made when it landed, along with the
+    // bay OzBays had assigned. Only the first bay it stops at is kept, so a later reposition doesn't overwrite it.
+    private function recordParkedBay(Flights $ac, Bays $bay, string $airport): void
+    {
+        if ($ac->landed_at === null || $ac->arr !== $airport) {
+            return;
+        }
+
+        $log = FlightLogs::where('user_id', $ac->cid)
+            ->where('callsign', $ac->callsign)
+            ->where('arrival', $airport)
+            ->whereNull('parked_bay')
+            ->where('created_at', '>=', $ac->landed_at->copy()->subMinutes(5))
+            ->latest('id')
+            ->first();
+
+        if ($log === null) {
+            return;
+        }
+
+        $log->parked_bay = $bay->bay;
+        $log->assigned_bay ??= $ac->mapBay?->bay;
+        $log->save();
     }
 
     private function bayCore(string $bay): string
