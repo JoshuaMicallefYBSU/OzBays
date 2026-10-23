@@ -226,6 +226,23 @@ class DashboardController extends Controller
     }
 
     // Disable Airport Function
+    // Permanently remove an airport - the ICAO has to be typed out to confirm
+    public function deleteAirport(Request $request, AirportImporter $importer, string $icao)
+    {
+        $airport = Airports::where('icao', $icao)->first();
+        if ($airport === null) {
+            return redirect()->route('dashboard.admin.airport.all')->with('error', $icao.' does not exist.');
+        }
+
+        if (strtoupper(trim((string) $request->input('confirm_icao'))) !== $airport->icao) {
+            return back()->with('error', 'Type '.$airport->icao.' to confirm deleting the airport.');
+        }
+
+        $importer->delete($airport->icao);
+
+        return redirect()->route('dashboard.admin.airport.all')->with('success', $airport->name.' ('.$airport->icao.') and all of its bays have been deleted.');
+    }
+
     public function disableAirport(Request $request)
     {
         $airport = Airports::where('icao', $request->icao)->first();

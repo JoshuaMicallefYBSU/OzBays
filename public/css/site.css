@@ -2215,3 +2215,22 @@ footer.oz-footer .copyright * {
 .oz-import-new {
     color: #34d399;
 }
+
+/* ---------- Admin: delete airport ---------- */
+.oz-danger-zone {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    background: rgba(248, 113, 113, 0.06);
+}
+
+.oz-danger-zone h5 {
+    color: #f87171;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.oz-danger-zone p {
+    color: var(--oz-text-muted);
+    font-size: 0.85rem;
+}

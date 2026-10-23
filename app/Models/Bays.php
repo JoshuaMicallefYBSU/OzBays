@@ -28,7 +28,31 @@ class Bays extends Model
         'clear',
         'check_exist',
         'terminal',
+        'gate',
     ];
+
+    // Gates this stand is reached from - "1,2" -> ['1', '2']
+    public function gates(): array
+    {
+        return array_values(array_filter(array_map(fn ($gate) => strtoupper(trim($gate)), explode(',', (string) $this->gate)), 'strlen'));
+    }
+
+    // Every stand at an airport reached from an IRL gate (e.g. YBSU gate "2"). A terminal only narrows the
+    // match when both the gate and the bay have one.
+    public static function atGate(string $airport, ?string $gate, ?string $terminal = null)
+    {
+        $gate = strtoupper(trim((string) $gate));
+        if ($gate === '') {
+            return collect();
+        }
+
+        return self::where('airport', $airport)
+            ->whereNotNull('gate')
+            ->when($terminal, fn ($q) => $q->where(fn ($q2) => $q2->whereNull('terminal')->orWhere('terminal', 'LIKE', '%'.$terminal.'%')))
+            ->get()
+            ->filter(fn (self $bay) => in_array($gate, $bay->gates(), true))
+            ->values();
+    }
 
     // Pilot/map friendly name - e.g. "Domestic 55A (D55A)", or just "D55A" when there is no long name
     public function getDisplayNameAttribute(): string

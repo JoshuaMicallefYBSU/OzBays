@@ -35,7 +35,7 @@ class RolePermissionsTest extends TestCase
         $this->assertNotNull($developer);
 
         // Later migrations add 'import airports' to both developer roles, and 'review applications' to Lead Developer
-        $this->assertEqualsCanonicalizing([...self::LEAD_DEVELOPER_PERMISSIONS, 'import airports', 'review applications', 'view feedback'], $leadDeveloper->getPermissionNames()->all());
+        $this->assertEqualsCanonicalizing([...self::LEAD_DEVELOPER_PERMISSIONS, 'import airports', 'review applications', 'view feedback', 'delete airports'], $leadDeveloper->getPermissionNames()->all());
         $this->assertEqualsCanonicalizing(['view users', 'manage news', 'send notifications', 'import airports', 'view feedback'], $developer->getPermissionNames()->all());
     }
 

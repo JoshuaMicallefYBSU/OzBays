@@ -66,6 +66,7 @@ Route::prefix('admin')->group(function () {
         Route::post('airport/import/{token}', [DashboardController::class, 'airportImportConfirm'])->name('dashboard.admin.airport.import.confirm');
     });
     Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
+    Route::delete('airport/{icao}', [DashboardController::class, 'deleteAirport'])->middleware(['auth', 'can:delete airports'])->name('dashboard.admin.airport.delete');
     Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
     Route::middleware(['auth', 'can:update status'])->group(function () {
         Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');

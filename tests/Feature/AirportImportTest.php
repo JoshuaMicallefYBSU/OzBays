@@ -292,6 +292,56 @@ class AirportImportTest extends TestCase
         $this->assertFileDoesNotExist($this->storagePath.'/app/airports/YDDD.json');
     }
 
+    public function test_lead_developer_can_delete_an_airport_and_everything_pointing_at_it(): void
+    {
+        $user = $this->createUser(1, 'Lead Developer');
+        $this->writeAirportFile('YAAA', $this->airport('YAAA', ['1' => 'B738', '2' => 'A320']));
+        $this->writeAirportFile('YBBB', $this->airport('YBBB'));
+        (new AerodromeUpdates)->handle();
+
+        $bay = Bays::where('airport', 'YAAA')->where('bay', '1')->first();
+        $flight = \App\Models\Flights::create([
+            'callsign' => 'QFA1', 'cid' => 1, 'dep' => 'YSSY', 'arr' => 'YAAA', 'ac' => 'B738', 'hdg' => '0', 'lat' => '0', 'lon' => '0',
+            'speed' => '0', 'alt' => '0', 'distance' => 0, 'status' => 'Arrived', 'online' => 1, 'scheduled_bay' => $bay->id,
+        ]);
+        \App\Models\BayAllocations::create(['airport' => 'YAAA', 'bay' => $bay->id, 'bay_core' => '1', 'callsign' => $flight->id, 'status' => 'OCCUPIED', 'eibt' => now(), 'eobt' => now()->addHour()]);
+        \App\Models\FlightLiveBays::create(['callsign' => 'QFA1', 'airport' => 'YAAA', 'gate' => '1', 'scheduled_bay' => $bay->id]);
+        \App\Models\FlightLogs::create(['callsign' => 'QFA1', 'arrival' => 'YAAA', 'type' => 'DOM', 'aircraft' => 'B738', 'user_id' => 1]);
+
+        $this->actingAs($user)->delete(route('dashboard.admin.airport.delete', 'YAAA'), ['confirm_icao' => 'yaaa'])
+            ->assertRedirect(route('dashboard.admin.airport.all'));
+
+        $this->assertFalse(Airports::where('icao', 'YAAA')->exists());
+        $this->assertSame(0, Bays::where('airport', 'YAAA')->count());
+        $this->assertDatabaseCount('bay_allocation', 0);
+        $this->assertDatabaseCount('flight_live_bay', 0);
+        $this->assertNull($flight->fresh()->scheduled_bay);
+        $this->assertDatabaseCount('flight_logs', 1); // history kept
+        $this->assertFileDoesNotExist($this->storagePath.'/app/airports/YAAA.json');
+
+        // Other airports untouched, and the hourly sync doesn't bring it back
+        $this->assertSame(1, Bays::where('airport', 'YBBB')->count());
+        (new AerodromeUpdates)->handle();
+        $this->assertFalse(Airports::where('icao', 'YAAA')->exists());
+    }
+
+    public function test_deleting_an_airport_needs_the_icao_typed_and_lead_developer(): void
+    {
+        $this->writeAirportFile('YAAA', $this->airport('YAAA'));
+        (new AerodromeUpdates)->handle();
+
+        $this->actingAs($this->createUser(1, 'Lead Developer'))
+            ->delete(route('dashboard.admin.airport.delete', 'YAAA'), ['confirm_icao' => 'YBBB'])
+            ->assertSessionHas('error');
+
+        $this->actingAs($this->createUser(2, 'Developer'))
+            ->delete(route('dashboard.admin.airport.delete', 'YAAA'), ['confirm_icao' => 'YAAA'])
+            ->assertForbidden();
+
+        $this->assertTrue(Airports::where('icao', 'YAAA')->exists());
+        $this->assertSame(1, Bays::where('airport', 'YAAA')->count());
+    }
+
     public function test_non_developers_cannot_access_the_importer(): void
     {
         $user = $this->createUser(1, 'Pilot');

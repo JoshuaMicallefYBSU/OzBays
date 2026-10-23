@@ -576,6 +576,19 @@ class BayAllocation implements ShouldQueue
             }
         }
 
+        // IRL gate covering several stands (e.g. YBSU gate "2") - take the best free stand behind it that fits,
+        // ranked the same way as normal allocation (priority, size, operator)
+        if ($live_bay !== null && $live_bay->isGateMatch()) {
+            $gateBays = $live_bay->gateBays()
+                ->filter(fn ($bay) => $bay->status == null && $bay->callsign == null && $this->bayFitsAircraft($bay, $allowedTypes));
+
+            if ($gateBays->isNotEmpty()) {
+                return $this->bestMatchingBays($gateBays, $allowedGroups, $operator)->random();
+            }
+
+            Log::channel('bays')->warning("No free stand behind IRL gate {$live_bay->gate} at {$live_bay->airport} fits {$cs['cs']} ({$ac}) - falling back to normal allocation");
+        }
+
         // #### - AIRCRAFT CASE EXPRESSION --- This is the super restrictive function (Always )
 
         $aircraftPriorityParts = [];
@@ -637,9 +650,10 @@ class BayAllocation implements ShouldQueue
     }
 
     // Bays tied for the best rank, using the same order as buildBayQuery():
-    //  1. Bay priority (lowest first)
-    //  2. Aircraft size - how close the bay's size group is to the aircraft's
-    //  3. Operator - listed on the bay, then open bays (no operators), then bays only open via "*"
+    //  1. Operator - the airline's own bays, then open bays (no operators), then other airlines' bays opened via "*"
+    //     (so RCL goes to its own priority 5 bays before a priority 1 VOZ bay that's only open to it via "*")
+    //  2. Bay priority (lowest first)
+    //  3. Aircraft size - how close the bay's size group is to the aircraft's
     private function bestMatchingBays($availableBays, array $allowedGroups, string $operator)
     {
         // Size group offset for each allowed type (0 = the aircraft's own group)
@@ -662,7 +676,7 @@ class BayAllocation implements ShouldQueue
             $operators = $bay->operators === null ? null : array_map('trim', explode(',', $bay->operators));
             $operatorRank = $operators === null ? 1 : (in_array($operator, $operators, true) ? 0 : 2);
 
-            return [(int) $bay->priority, $sizes ? min($sizes) : PHP_INT_MAX, $operatorRank];
+            return [$operatorRank, (int) $bay->priority, $sizes ? min($sizes) : PHP_INT_MAX];
         };
 
         $ranked = $availableBays->map(fn ($bay) => ['bay' => $bay, 'rank' => $rank($bay)]);
@@ -700,10 +714,7 @@ class BayAllocation implements ShouldQueue
                 });
             })
 
-            // Order by Bay Prioriies (1=most, 9=never?)
-            ->orderBy('priority', 'asc')
-
-            // Order bays by Aircraft Closeness to
+            // Only bays the aircraft fits
             ->where(function ($q) use ($allowedTypes) {
                 foreach ($allowedTypes as $type) {
                     $q->orWhereRaw(
@@ -722,17 +733,20 @@ class BayAllocation implements ShouldQueue
                 });
             })
 
-            ->orderByRaw($aircraftPrioritySql)
-
-            // Operator Order (QFA, QLK v QLK, QFA assignment priority)
-            // Listed operators first (in list order), then open bays, then bays only matched via "*"
+            // 1. Operator - the airline's own bays, then open bays, then other airlines' bays only open via "*"
             ->orderByRaw("
                     CASE
-                        WHEN FIND_IN_SET(?, REPLACE(operators, ' ', '')) > 0 THEN FIND_IN_SET(?, REPLACE(operators, ' ', ''))
-                        WHEN operators IS NULL THEN 4
-                        ELSE 99
+                        WHEN FIND_IN_SET(?, REPLACE(operators, ' ', '')) > 0 THEN 1
+                        WHEN operators IS NULL THEN 2
+                        ELSE 3
                     END
-                ", [$operator, $operator])
+                ", [$operator])
+
+            // 2. Bay priority (1 = most preferred)
+            ->orderBy('priority', 'asc')
+
+            // 3. Aircraft size - closest to the aircraft first
+            ->orderByRaw($aircraftPrioritySql)
 
             ->orderByRaw('RAND()');
     }

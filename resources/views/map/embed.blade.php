@@ -563,7 +563,8 @@ function refreshAircraft() {
                         bay: ac.map_bay ? (ac.map_bay.display_name ?? ac.map_bay.bay) : 'N/A',
                         // Real-world bay: 'none' (no IRL data), 'fits', or 'too_small' for the network aircraft
                         irl_state: !ac.irl_bay ? 'none' : (ac.irl_bay.fits ? 'fits' : 'too_small'),
-                        irl_bay: ac.irl_bay ? (ac.irl_bay.display_name ?? ac.irl_bay.bay) : null,
+                        // Gate groups show the stands behind the gate, e.g. "Gate 2 · 12/13/14"
+                        irl_bay: ac.irl_bay ? (ac.irl_bay.display_name ?? ac.irl_bay.bay) + (ac.irl_bay.stands?.length ? ' · ' + ac.irl_bay.stands.join('/') : '') : null,
                         // On the ground (landed, taxiing, parked or yet to depart) - the IRL ring is hidden
                         on_ground: GROUND_STATUSES.includes(ac.status),
                         // Aircraft type icon for its size group - falls back to the arrow (see aircraft-arrows layer)
