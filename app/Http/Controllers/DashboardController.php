@@ -195,7 +195,7 @@ class DashboardController extends Controller
 
     public function userList()
     {
-        $users = User::all();
+        $users = User::with('roles')->orderByDesc('last_seen')->get();
 
         return view('dashboard.admin.user.index', compact('users'));
     }

@@ -4,14 +4,14 @@
 
 <div class="oz-hero">
     @if(Auth::guest())
-        <h1>Welcome to <span class="oz-amber-text">OzBays</span> &mdash; coming in 2026</h1>
+        <h1>Welcome to <span class="oz-amber-text">OzBays</span> &mdash; live in Public Trial</h1>
     @else
-        <h1>Welcome back, {{Auth::user()->fullName('F')}} <br> <span class="oz-amber-text">OzBays</span> is coming in 2026</h1>
+        <h1>Welcome back, {{Auth::user()->fullName('F')}} <br> <span class="oz-amber-text">OzBays</span> is live in Public Trial</h1>
     @endif
 
-    <span class="oz-eyebrow"><span class="oz-dot"></span>Alpha Release</span>
+    <span class="oz-eyebrow oz-eyebrow-purple"><span class="oz-dot"></span>Public Trial</span>
 
-    <p class="lead">Automatic bay assignment for VATSIM Australia Pacific (VATPAC) controlled airports. This system is still in active development and is currently <strong>not deployed</strong> on the VATSIM network.</p>
+    <p class="lead">Automatic bay assignment for VATSIM Australia Pacific (VATPAC) controlled airports. OzBays is now in public trial, actively assigning bays and advising pilots and ATC in real time at active airports via integration with OzStrips and the Hoppie CPDLC network.</p>
 
     <div class="oz-actions">
         <a href="{{route('airportIndex')}}" class="oz-btn oz-btn-primary"><i class="fa fa-plane"></i> Explore Airports</a>
@@ -25,8 +25,15 @@
             <div class="col-12 mb-4">
                 <div class="oz-card-dark">
                     <div class="oz-section-title"><i class="fa fa-info-circle"></i> About the System</div>
-                    <p>Utilise the nav bar to access information for each airport currently supported by the system, as well as a map showing all aircraft currently being monitored by OzBays. This information is dynamic and will change frequently.</p>
-                    <p class="mb-0">The system is still in alpha development, meaning it is not yet used by OzStrips or sending messages via the Hoppies network. Over time, airports will be activated to assign bays to aircraft and advise the pilot/ATC &mdash; this will show in the status section of the <a href="{{route('airportIndex')}}">Airports</a> view.</p>
+                    <p>OzBays is an automatic bay/gate assignment system for VATSIM Australia Pacific (VATPAC), built to take the gate-matching workload off controllers and give pilots a reliable gate the moment they're inbound. Here's what it's doing behind the scenes:</p>
+
+                    <ul class="oz-about-list">
+                        <li><i class="fa fa-plane-arrival"></i> Tracks every inbound aircraft live from the VATSIM data feed and matches it to a compatible bay based on aircraft size, operator, and domestic/international status.</li>
+                        <li><i class="fa fa-check"></i> Cross-references real-world gate data for airports with Live Bay data enabled, so assignments line up with reality wherever possible.</li>
+                        <li><i class="fa fa-comment"></i> Sends the assigned gate straight to the pilot via Hoppie CPDLC, and relays it to controllers through OzStrips.</li>
+                    </ul>
+
+                    <p class="mb-0">OzBays is in public trial, with more airports continuing to be rolled in over time &mdash; check the status section of the <a href="{{route('airportIndex')}}">Airports</a> view to see which are currently active, and use the nav bar to dig into live data for any supported airport.</p>
                 </div>
             </div>
         </div>

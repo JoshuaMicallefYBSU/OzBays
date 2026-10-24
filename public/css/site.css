@@ -15,6 +15,12 @@
     --oz-amber: #ffc72c;
     --oz-amber-strong: #ffb300;
     --oz-amber-soft: #ffe08a;
+    --oz-purple: #b794f6;
+    --oz-purple-soft: #d6c3fb;
+    --oz-green: #4ade80;
+    --oz-green-soft: #86efac;
+    --oz-red: #f87171;
+    --oz-red-soft: #fca5a5;
     --oz-navy-text: #16210a;
     --oz-radius: 18px;
 }
@@ -698,6 +704,18 @@ footer.oz-footer .copyright * {
     box-shadow: 0 0 0 4px rgba(255, 199, 44, 0.18);
 }
 
+/* Light purple variant - used for the homepage "Public Trial" badge */
+.oz-eyebrow-purple {
+    color: var(--oz-purple-soft);
+    background: rgba(183, 148, 246, 0.12);
+    border-color: rgba(183, 148, 246, 0.3);
+}
+
+.oz-eyebrow-purple .oz-dot {
+    background: var(--oz-purple);
+    box-shadow: 0 0 0 4px rgba(183, 148, 246, 0.2);
+}
+
 .oz-hero h1 {
     font-size: clamp(2rem, 4vw, 2.9rem);
     font-weight: 700;
@@ -754,6 +772,28 @@ footer.oz-footer .copyright * {
 
 .oz-section-title i {
     color: var(--oz-amber);
+}
+
+/* ---------- About the System feature list ---------- */
+.oz-about-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.oz-about-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+}
+
+.oz-about-list li i {
+    color: var(--oz-amber);
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+    width: 1.1em;
+    text-align: center;
 }
 
 /* ---------- News ---------- */
@@ -867,6 +907,24 @@ footer.oz-footer .copyright * {
     border: 1px solid rgba(255, 199, 44, 0.25);
     padding: 0.3rem 0.7rem;
     border-radius: 999px;
+}
+
+.oz-status-pill--active {
+    color: var(--oz-green-soft);
+    background: rgba(74, 222, 128, 0.12);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.oz-status-pill--testing {
+    color: var(--oz-amber-soft);
+    background: rgba(255, 199, 44, 0.1);
+    border-color: rgba(255, 199, 44, 0.25);
+}
+
+.oz-status-pill--disabled {
+    color: var(--oz-red-soft);
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.3);
 }
 
 /* ---------- Airport arrivals board header ---------- */

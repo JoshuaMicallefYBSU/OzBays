@@ -19,8 +19,14 @@
                     <tr>
                         <td>{{$user->id}}</td>
                         <td>{{$user->fullName('FL')}}</td>
-                        <td>Not Recorded (Yet)</td>
-                        <td>{{$user->last_seen ? $user->last_seen->format('d/m/Y @ h:i A').'Z' : 'Never'}}</td>
+                        <td>
+                            @forelse($user->roles as $role)
+                                <span class="badge badge-primary mr-1">{{$role->name}}</span>
+                            @empty
+                                <span class="text-muted">No Role</span>
+                            @endforelse
+                        </td>
+                        <td data-order="{{$user->last_seen?->timestamp ?? 0}}">{{$user->last_seen ? $user->last_seen->format('d/m/Y @ h:i A').'Z' : 'Never'}}</td>
                         <td><a href="{{route('dashboard.admin.users.view', $user)}}">View</a></td>
                     </tr>
                 @endforeach
