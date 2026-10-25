@@ -103,13 +103,12 @@ use Carbon\Carbon;
 
           <ul class="navbar-nav ">
             <!-- VATPAC Trial: feedback system temporarily hidden, points to the VATPAC helpdesk instead -->
-            <li class="nav-item d-flex align-items-center">
+            <li class="nav-item d-flex align-items-center justify-content-center">
                 <a class="oz-feedback-cta" href="https://vatpac.org/helpdesk" target="_blank" target="_blank" rel="noopener">
                     <i class="fa fa-comment"></i> Provide your Feedback!
                 </a>
             </li>
 
-            @canany(['view data', 'view feedback', 'view assignment logs'])
             @canany(['view data', 'view feedback', 'view assignment logs', 'view page access'])
             @php($pendingApplications = auth()->user()->can('review applications') ? \App\Models\ContributorApplication::pending()->count() : 0)
             <li class="nav-item dropdown">
@@ -120,19 +119,11 @@ use Carbon\Carbon;
                 @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">Airports</a>
-                <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">Aircraft</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">View Airports</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">View Aircraft List</a>
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>
-                @endcan
-
-                @can('review applications')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item" href="{{route('dashboard.admin.applications.index')}}">
-                    Contributor Applications
-                    @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
-                  </a>
+                  <a class="dropdown-item disabled" href="#">Changes Requiring Approval (0)</a>
                 @endcan
 
                 @can('manage news')
@@ -141,19 +132,31 @@ use Carbon\Carbon;
                   <a class="dropdown-item" href="{{route('dashboard.admin.notifications.index')}}">Manage Notifications</a>
                 @endcan
 
-                @can('view users')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item" href="{{route('dashboard.admin.users.list')}}">View All Users</a>
-                @endcan
+                <div class="dropdown-divider"></div> {{-- Divider --}}
 
                 @can('view feedback')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item" href="{{route('dashboard.feedback.index')}}">View Feedback</a>
                 @endcan
 
                 @can('view assignment logs')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item" href="{{route('dashboard.logs.index')}}">Assignment Logs</a>
+                  <a class="dropdown-item" href="{{route('dashboard.logs.index')}}">View Bay Logs</a>
+                @endcan
+
+                @can('view page access')
+                  <a class="dropdown-item" href="{{route('dashboard.pageAccess.index')}}">View Page Access</a>
+                @endcan
+
+                <div class="dropdown-divider"></div> {{-- Divider --}}
+
+                @can('review applications')
+                  <a class="dropdown-item" href="{{route('dashboard.admin.applications.index')}}">
+                    Contributor Applications
+                    @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
+                  </a>
+                @endcan
+
+                @can('view users')
+                  <a class="dropdown-item" href="{{route('dashboard.admin.users.list')}}">View All Users</a>
                 @endcan
               </div>
             </li>
