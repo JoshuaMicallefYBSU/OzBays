@@ -205,6 +205,34 @@ class BayAllocationSelectBayTest extends TestCase
         $this->assertSame($b738Bay->id, $selected->id);
     }
 
+    public function test_the_airlines_own_bays_beat_a_higher_priority_bay_only_open_to_it_via_wildcard(): void
+    {
+        // RCL11 into YSSY was given D32 (VOZ, * - priority 1) instead of one of its own RCL bays (priority 5)
+        Flights::create([
+            'callsign' => 'RCL11', 'cid' => 1, 'dep' => 'YBSU', 'arr' => 'YSSY', 'ac' => 'A320',
+            'hdg' => '0', 'type' => 'DOM', 'lat' => '-33.0', 'lon' => '151.0', 'speed' => '300',
+            'alt' => '10000', 'distance' => 50, 'elt' => null, 'eibt' => now(), 'status' => 'On Approach', 'online' => 1,
+        ]);
+
+        $bay = fn (string $name, ?string $operators, int $priority) => Bays::create([
+            'airport' => 'YSSY', 'bay' => $name, 'lat' => '-33.9', 'lon' => '151.1', 'aircraft' => 'B738',
+            'priority' => $priority, 'operators' => $operators, 'pax_type' => null,
+            'status' => null, 'callsign' => null, 'clear' => null, 'check_exist' => 1,
+        ]);
+        $bay('D32', 'VOZ, *', 1);
+        $bay('D30', null, 1);
+        $own = $bay('124B', 'RCL, *', 5);
+
+        foreach (range(1, 5) as $attempt) {
+            $selected = $this->invokeSelectBay(new BayAllocation, ['cs' => 'RCL11', 'arr' => 'YSSY'], [['A320', 'B738']]);
+            $this->assertSame($own->id, $selected?->id);
+        }
+
+        // With its own bays full, an open bay comes before another airline's "*" bay
+        $own->update(['callsign' => 'RCL99', 'status' => 2]);
+        $this->assertSame('D30', $this->invokeSelectBay(new BayAllocation, ['cs' => 'RCL11', 'arr' => 'YSSY'], [['A320', 'B738']])?->bay);
+    }
+
     public function test_operator_restricted_bay_is_still_selected_when_it_is_the_only_compatible_bay(): void
     {
         // Reproduces the RCL13/YPPH bug: the only aircraft-compatible bay belongs to

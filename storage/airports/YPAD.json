@@ -8,7 +8,8 @@
         "eibt_config": "1.4",
         "taxi_time": "10",
         "status": "active",
-        "update_time_utc": "0,2,4,6,8,10,12,14,20,22"
+        "update_time_utc": "0,2,4,6,8,10,12,14,20,22",
+        "controller_prefix": "AD"
     },
     "long_name": {},
     "parking": {

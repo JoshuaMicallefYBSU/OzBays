@@ -8,21 +8,25 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * @return void
      */
-    public function up(): void
+    public function up()
     {
         Schema::table('bays', function (Blueprint $table) {
-            $table->string('long_name')->nullable()->after('bay');
+            $table->string('long_name')->nullable();
         });
     }
 
     /**
      * Reverse the migrations.
+     *
+     * @return void
      */
-    public function down(): void
+    public function down()
     {
         Schema::table('bays', function (Blueprint $table) {
-            $table->dropColumn('long_name');
+            $table->dropColumn(['long_name']);
         });
     }
 };

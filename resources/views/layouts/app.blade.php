@@ -42,7 +42,7 @@ use Carbon\Carbon;
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
         <!-- OzBays site styling -->
-        <link rel="stylesheet" href="{{ asset('css/site.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ @filemtime(public_path('css/site.css')) }}">
 
     </head>
 
@@ -102,14 +102,14 @@ use Carbon\Carbon;
           </ul>
 
           <ul class="navbar-nav ">
-            <!-- Public trial feedback (login required) -->
-            <li class="nav-item d-flex align-items-center">
-                <a class="oz-feedback-cta" href="{{ route('feedback.create') }}">
+            <!-- VATPAC Trial: feedback system temporarily hidden, points to the VATPAC helpdesk instead -->
+            <li class="nav-item d-flex align-items-center justify-content-center">
+                <a class="oz-feedback-cta" href="https://vatpac.org/helpdesk" target="_blank" target="_blank" rel="noopener">
                     <i class="fa fa-comment"></i> Provide your Feedback!
                 </a>
             </li>
 
-            @canany(['view data', 'view feedback'])
+            @canany(['view data', 'view feedback', 'view assignment logs', 'view page access'])
             @php($pendingApplications = auth()->user()->can('review applications') ? \App\Models\ContributorApplication::pending()->count() : 0)
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'admin') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -119,19 +119,11 @@ use Carbon\Carbon;
                 @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">Airports</a>
-                <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">Aircraft</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.airport.all')}}">View Airports</a>
+                <a class="dropdown-item" href="{{route('dashboard.admin.aircraft.all')}}">View Aircraft List</a>
                 @can('approve changes')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item disabled" href="#">Changes Requiring Approval</a>
-                @endcan
-
-                @can('review applications')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item" href="{{route('dashboard.admin.applications.index')}}">
-                    Contributor Applications
-                    @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
-                  </a>
+                  <a class="dropdown-item disabled" href="#">Changes Requiring Approval (0)</a>
                 @endcan
 
                 @can('manage news')
@@ -140,14 +132,31 @@ use Carbon\Carbon;
                   <a class="dropdown-item" href="{{route('dashboard.admin.notifications.index')}}">Manage Notifications</a>
                 @endcan
 
-                @can('view users')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
-                  <a class="dropdown-item" href="{{route('dashboard.admin.users.list')}}">View All Users</a>
-                @endcan
+                <div class="dropdown-divider"></div> {{-- Divider --}}
 
                 @can('view feedback')
-                  <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item" href="{{route('dashboard.feedback.index')}}">View Feedback</a>
+                @endcan
+
+                @can('view assignment logs')
+                  <a class="dropdown-item" href="{{route('dashboard.logs.index')}}">View Bay Logs</a>
+                @endcan
+
+                @can('view page access')
+                  <a class="dropdown-item" href="{{route('dashboard.pageAccess.index')}}">View Page Access</a>
+                @endcan
+
+                <div class="dropdown-divider"></div> {{-- Divider --}}
+
+                @can('review applications')
+                  <a class="dropdown-item" href="{{route('dashboard.admin.applications.index')}}">
+                    Contributor Applications
+                    @if($pendingApplications > 0)<span class="badge badge-pill badge-warning">{{$pendingApplications}}</span>@endif
+                  </a>
+                @endcan
+
+                @can('view users')
+                  <a class="dropdown-item" href="{{route('dashboard.admin.users.list')}}">View All Users</a>
                 @endcan
               </div>
             </li>
@@ -183,6 +192,8 @@ use Carbon\Carbon;
                 <div class="dropdown-divider"></div> --}}
                 <a class="dropdown-item" href="{{route('dashboard.index')}}">Dashboard</a>
                 <a class="dropdown-item" href="{{route('dashboard.settings.index')}}">My Settings</a>
+                {{-- My Feedback hidden during the VATPAC Trial - feedback goes to the VATPAC helpdesk instead, see nav CTA above --}}
+                {{-- <a class="dropdown-item" href="{{route('feedback.my.index')}}">My Feedback</a> --}}
                 {{-- <a class="dropdown-item disabled" href="#">My Data</a> --}}
                 <div class="dropdown-divider"></div> {{-- Divider --}}
                 <a class="dropdown-item" href="{{ route('auth.logout') }}"onclick="event.preventDefault();document.getElementById('logout-form').submit();">{{ __('Logout') }}</a><form id="logout-form" action="{{ route('auth.logout') }}" method="GET" class="d-none">@csrf</form>

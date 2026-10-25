@@ -80,7 +80,7 @@
             <h5 class="oz-card-heading">{{ $diff['new'] ? 'Bays' : 'Added Bays' }} ({{ count($diff['added']) }})</h5>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
-                    <thead><tr><th>Bay</th><th>Long Name</th><th>Aircraft</th><th>Type</th><th>Operators</th><th>Priority</th><th>Terminal</th></tr></thead>
+                    <thead><tr><th>Bay</th><th>Long Name</th><th>Aircraft</th><th>Type</th><th>Operators</th><th>Priority</th><th>Terminal</th><th>Gate</th></tr></thead>
                     <tbody>
                         @foreach($diff['added'] as $bayCode => $bay)
                             <tr>
@@ -91,6 +91,7 @@
                                 <td class="oz-mono">{{ $show($bay['operators']) }}</td>
                                 <td>{{ $show($bay['priority']) }}</td>
                                 <td>{{ $show($bay['terminal']) }}</td>
+                                <td>{{ $show($bay['gate']) }}</td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -23,9 +23,12 @@
         $toArrival = $onGroundAtArrival ? 0 : $flight->distance;
 
         // Real-world bay only counts when the IRL flight flew the same route (see BayAllocation::selectBay)
-        $irlBay = $flight->liveBay->departure !== null && $flight->liveBay->departure === strtoupper((string) $flight->dep)
-            ? $flight->liveBay->bayInfo
-            : null;
+        $live = $flight->liveBay;
+        $sameRoute = $live->departure !== null && $live->departure === strtoupper((string) $flight->dep) && $live->airport === $flight->arr;
+        $irlBay = $sameRoute && ! $live->isGateMatch() ? $live->bayInfo : null;
+
+        // Or a gate covering several stands (e.g. YBSU gate "2")
+        $irlGateStands = $sameRoute && $live->isGateMatch() ? $live->gateBays() : collect();
     }
 @endphp
 
@@ -93,6 +96,9 @@
                 @if($irlBay)
                     <span class="oz-flight-bay-name">{{ $irlBay->display_name }}</span>
                     <small class="text-muted">{{ $irlBay->terminal ? $irlBay->terminal.' · ' : '' }}Where the real {{ $flight->callsign }} is scheduled to park</small>
+                @elseif($irlGateStands->isNotEmpty())
+                    <span class="oz-flight-bay-name">Gate {{ $live->gate }}</span>
+                    <small class="text-muted">{{ Str::plural('Stand', $irlGateStands->count()) }} {{ $irlGateStands->pluck('bay')->implode(', ') }} · Where the real {{ $flight->callsign }} is scheduled to park</small>
                 @else
                     <span class="oz-flight-bay-name text-muted">No info</span>
                     <small class="text-muted">No real-world bay found for this flight</small>

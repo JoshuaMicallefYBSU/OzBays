@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AirportsController;
+use App\Http\Controllers\AssignmentLogController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\ContributorApplicationController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\FlightDisplayController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PageAccessController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PartialsController;
 use App\Http\Controllers\TeamController;
@@ -18,7 +20,7 @@ use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
 // New Homepage
-Route::get('/', [PagesController::class, 'Home'])->name('home');
+Route::get('/', [PagesController::class, 'Home'])->name('home')->middleware('track.pageview:home');
 
 // Error Messages
 Route::get('/404', function () {
@@ -40,10 +42,10 @@ Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog
 // Airport Arrival Ladders
 Route::get('/airports', [AirportsController::class, 'index'])->name('airportIndex');
 Route::get('/airports/{icao}/flights/{callsign}/display', [FlightDisplayController::class, 'show'])->name('airport.flight-display');
-Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder');
+Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder')->middleware('track.pageview:airport_ladder');
 
 // Maps
-Route::get('/map', [MapController::class, 'index'])->name('mapIndex');
+Route::get('/map', [MapController::class, 'index'])->name('mapIndex')->middleware('track.pageview:map');
 Route::get('/map/embed', [MapController::class, 'embed'])->name('mapEmbed');
 Route::get('/map/{icao}', [MapController::class, 'airportMap']);
 
@@ -66,6 +68,7 @@ Route::prefix('admin')->group(function () {
         Route::post('airport/import/{token}', [DashboardController::class, 'airportImportConfirm'])->name('dashboard.admin.airport.import.confirm');
     });
     Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
+    Route::delete('airport/{icao}', [DashboardController::class, 'deleteAirport'])->middleware(['auth', 'can:delete airports'])->name('dashboard.admin.airport.delete');
     Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
     Route::middleware(['auth', 'can:update status'])->group(function () {
         Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
@@ -122,16 +125,35 @@ Route::prefix('admin/notifications')->middleware(['auth', 'can:send notification
 Route::middleware('auth')->group(function () {
     Route::get('/provide-feedback', [FeedbackController::class, 'create'])->name('feedback.create');
     Route::post('/provide-feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,60')->name('feedback.store');
+
+    Route::get('/my-feedback', [FeedbackController::class, 'myIndex'])->name('feedback.my.index');
+    Route::get('/my-feedback/{feedback}', [FeedbackController::class, 'myShow'])->name('feedback.my.show');
+    Route::post('/my-feedback/{feedback}/reply', [FeedbackController::class, 'userReply'])->middleware('throttle:20,60')->name('feedback.my.reply');
 });
 
 // Feedback admin view
 Route::prefix('dashboard/feedback')->middleware(['auth', 'can:view feedback'])->group(function () {
     Route::get('/', [FeedbackController::class, 'index'])->name('dashboard.feedback.index');
     Route::get('/{feedback}', [FeedbackController::class, 'show'])->name('dashboard.feedback.show');
+    Route::post('/{feedback}/reply', [FeedbackController::class, 'reply'])->name('dashboard.feedback.reply');
+    Route::post('/{feedback}/close', [FeedbackController::class, 'close'])->name('dashboard.feedback.close');
+    Route::post('/{feedback}/reopen', [FeedbackController::class, 'reopen'])->name('dashboard.feedback.reopen');
+});
+
+// Bay assignment audit log - Developers only
+Route::prefix('dashboard/logs')->middleware(['auth', 'can:view assignment logs'])->group(function () {
+    Route::get('/', [AssignmentLogController::class, 'index'])->name('dashboard.logs.index');
+    Route::get('/{icao}', [AssignmentLogController::class, 'show'])->name('dashboard.logs.show');
+    Route::get('/{icao}/{callsign}/events', [AssignmentLogController::class, 'events'])->name('dashboard.logs.events');
+});
+
+// Page access stats - Developers only
+Route::prefix('dashboard/page-access')->middleware(['auth', 'can:view page access'])->group(function () {
+    Route::get('/', [PageAccessController::class, 'index'])->name('dashboard.pageAccess.index');
 });
 
 Route::prefix('dashboard')->middleware('auth')->group(function () {
-    Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('', [DashboardController::class, 'index'])->name('dashboard.index')->middleware('track.pageview:dashboard');
     Route::get('/my-settings', [DashboardController::class, 'settingsView'])->name('dashboard.settings.index');
     Route::get('/contribute', [ContributorApplicationController::class, 'create'])->name('dashboard.contribute');
     Route::post('/contribute', [ContributorApplicationController::class, 'store'])->name('dashboard.contribute.store');

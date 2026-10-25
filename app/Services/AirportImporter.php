@@ -3,7 +3,14 @@
 namespace App\Services;
 
 use App\Models\Airports;
+use App\Models\BayAllocations;
+use App\Models\BayConflicts;
 use App\Models\Bays;
+use App\Models\FlightLiveBays;
+use App\Models\FlightLiveMissingBays;
+use App\Models\Flights;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class AirportImporter
 {
@@ -75,15 +82,39 @@ class AirportImporter
         }
     }
 
+    /**
+     * Remove an airport from OzBays - its bays, everything pointing at them, and its site file (otherwise the hourly
+     * AerodromeUpdates sync would import it straight back). Flight logs are kept as history.
+     */
+    public function delete(string $icao): void
+    {
+        DB::transaction(function () use ($icao) {
+            $bayIds = Bays::where('airport', $icao)->pluck('id');
+
+            BayConflicts::whereIn('bay', $bayIds)->delete();
+            BayAllocations::whereIn('bay', $bayIds)->orWhere('airport', $icao)->delete();
+            Flights::whereIn('scheduled_bay', $bayIds)->update(['scheduled_bay' => null]);
+            Flights::whereIn('current_bay', $bayIds)->update(['current_bay' => null]);
+            FlightLiveBays::where('airport', $icao)->orWhereIn('scheduled_bay', $bayIds)->delete();
+            FlightLiveMissingBays::where('airport', $icao)->delete();
+
+            Bays::where('airport', $icao)->delete();
+            Airports::where('icao', $icao)->delete();
+        });
+
+        File::delete(self::directory().'/'.$icao.'.json');
+    }
+
     // Labels for the fields shown when previewing an import
     public const AIRPORT_FIELDS = [
         'name' => 'Name', 'lat' => 'Latitude', 'lon' => 'Longitude', 'color' => 'Colour', 'status' => 'Status',
         'eibt_variable' => 'EIBT Multiplier', 'taxi_time' => 'Taxi Time', 'live_update_times' => 'Live Update Times (UTC)',
+        'controller_prefix' => 'Controller Prefix',
     ];
 
     public const BAY_FIELDS = [
         'long_name' => 'Long Name', 'lat' => 'Latitude', 'lon' => 'Longitude', 'aircraft' => 'Aircraft',
-        'pax_type' => 'Type', 'operators' => 'Operators', 'priority' => 'Priority', 'terminal' => 'Terminal',
+        'pax_type' => 'Type', 'operators' => 'Operators', 'priority' => 'Priority', 'terminal' => 'Terminal', 'gate' => 'Gate',
     ];
 
     /**
@@ -144,6 +175,7 @@ class AirportImporter
             'eibt_variable' => $airport['settings']['eibt_config'] ?? 1.4,
             'taxi_time' => $airport['settings']['taxi_time'] ?? 15,
             'live_update_times' => $airport['settings']['update_time_utc'] ?? '0,2,4,6,8,10,12,14,20,22,24',
+            'controller_prefix' => $airport['settings']['controller_prefix'] ?? null,
         ];
     }
 
@@ -163,6 +195,8 @@ class AirportImporter
                 'operators' => $bay['Operator'] ?? null,
                 'priority'  => $bay['Priority'] ?? 5,
                 'terminal'  => $bay['Terminal'] ?? null,
+                // IRL gate(s) this stand is reached from - e.g. "2" or "1,2" (see LiveBaysJob gate groups)
+                'gate'      => isset($bay['Gate']) && $bay['Gate'] !== '' ? (string) $bay['Gate'] : null,
             ];
         }
 

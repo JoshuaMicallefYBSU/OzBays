@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Jobs\BayAllocation;
+use App\Models\Airports;
 use App\Models\UserPreference;
+use App\Services\HoppieClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -28,12 +30,15 @@ class BayAllocationHoppieTest extends TestCase
         return $method->invoke($job, 1, 'QFA123', $cid, 'YSSY', 'YBBN', 'DOM', 'A1', null);
     }
 
+    // Outside production the message is never actually sent, so HoppieFunction() returns the
+    // "not connected" placeholder rather than building the full CPDLC text - the point of this
+    // test is that it's a string (the function proceeded past the preference check), not null
+    // (which is what the bailout bug produced).
     public function test_uplink_is_built_for_a_user_with_no_preferences_row(): void
     {
         $uplink = $this->invokeHoppieFunction(999);
 
-        $this->assertIsString($uplink);
-        $this->assertStringContainsString('YBBN ARRIVAL INFO', $uplink);
+        $this->assertSame('Not connected to Hoppie', $uplink);
     }
 
     /**
@@ -57,8 +62,7 @@ class BayAllocationHoppieTest extends TestCase
 
         $uplink = $this->invokeHoppieFunction(1000001);
 
-        $this->assertIsString($uplink);
-        $this->assertStringContainsString('YBBN ARRIVAL INFO', $uplink);
+        $this->assertSame('Not connected to Hoppie', $uplink);
     }
 
     private function arrBayLine(?string $bayType, string $arrBay): string
@@ -92,5 +96,55 @@ class BayAllocationHoppieTest extends TestCase
         $uplink = $this->invokeHoppieFunction(1000002);
 
         $this->assertNull($uplink);
+    }
+
+    /**
+     * The CPDLC text is only worth building when it's actually going out on the wire - these
+     * pin that: a real message is built and sent when the pilot is connected and allowed to
+     * receive it, but nothing more than the generic placeholder is built when it isn't.
+     */
+    public function test_uplink_is_built_and_sent_when_connected_and_allowed(): void
+    {
+        Airports::create(['icao' => 'YBBN', 'lat' => '-27.3842', 'lon' => '153.1175', 'name' => 'Brisbane', 'color' => '#fff', 'check_exist' => 1, 'status' => 'active']);
+
+        $this->mock(HoppieClient::class, function ($mock) {
+            $mock->shouldReceive('isConnected')->once()->andReturn(true);
+            $mock->shouldReceive('sendTelex')->once()->andReturn(true);
+            $mock->shouldReceive('callsign')->andReturn('OZBAYS');
+        });
+
+        $uplink = $this->withProductionEnv(fn () => $this->invokeHoppieFunction(999));
+
+        $this->assertStringContainsString('YBBN ARRIVAL INFO', $uplink);
+    }
+
+    public function test_uplink_stays_the_placeholder_when_blocked_by_testing_mode(): void
+    {
+        Airports::create(['icao' => 'YBBN', 'lat' => '-27.3842', 'lon' => '153.1175', 'name' => 'Brisbane', 'color' => '#fff', 'check_exist' => 1, 'status' => 'testing']);
+
+        $this->mock(HoppieClient::class, function ($mock) {
+            $mock->shouldReceive('isConnected')->once()->andReturn(true);
+            $mock->shouldNotReceive('sendTelex');
+        });
+
+        // cid 999 is not in the tester list, so a connected pilot at a testing-mode airport
+        // still shouldn't get a message - and the full CPDLC text should never be built for it.
+        $uplink = $this->withProductionEnv(fn () => $this->invokeHoppieFunction(999));
+
+        $this->assertSame('Not connected to Hoppie', $uplink);
+    }
+
+    private function withProductionEnv(callable $callback)
+    {
+        $previous = $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+        putenv('APP_ENV=production');
+        $_ENV['APP_ENV'] = 'production';
+
+        try {
+            return $callback();
+        } finally {
+            putenv("APP_ENV={$previous}");
+            $_ENV['APP_ENV'] = $previous;
+        }
     }
 }

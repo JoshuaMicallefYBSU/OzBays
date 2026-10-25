@@ -55,7 +55,8 @@
             "Terminal": "T1",
             "AC": "SF34",
             "Type": null,
-            "Priority": 5
+            "Priority": 5,
+            "Gate": "2"
         }
     }
 }</code></pre>

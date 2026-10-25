@@ -14,8 +14,9 @@ Schedule::job(new BayAllocation)->everyMinute();
 
 
 ### HOURLY UPDATES
-// Check Airport.JSON for any configuration updates
-Schedule::job(new LiveBaysJob)->cron('5 * * * *');
+// Check Airport.JSON for any configuration updates - twice per scheduled hour (:05 and :35),
+// so an airport scheduled for e.g. "22" in live_update_times gets refreshed at both 22:05 and 22:35
+Schedule::job(new LiveBaysJob)->cron('5,35 * * * *');
 
 // Sync Discord roles/nicknames with website roles and news preferences
 Schedule::job(new DiscordRoleSync)->cron('10 * * * *');

@@ -15,6 +15,12 @@
     --oz-amber: #ffc72c;
     --oz-amber-strong: #ffb300;
     --oz-amber-soft: #ffe08a;
+    --oz-purple: #b794f6;
+    --oz-purple-soft: #d6c3fb;
+    --oz-green: #4ade80;
+    --oz-green-soft: #86efac;
+    --oz-red: #f87171;
+    --oz-red-soft: #fca5a5;
     --oz-navy-text: #16210a;
     --oz-radius: 18px;
 }
@@ -688,6 +694,12 @@ footer.oz-footer .copyright * {
     padding: 0.35rem 0.85rem;
     border-radius: 999px;
     margin-bottom: 1.1rem;
+    text-decoration: none;
+}
+
+a.oz-eyebrow:hover {
+    text-decoration: none;
+    filter: brightness(1.15);
 }
 
 .oz-eyebrow .oz-dot {
@@ -696,6 +708,18 @@ footer.oz-footer .copyright * {
     border-radius: 50%;
     background: var(--oz-amber);
     box-shadow: 0 0 0 4px rgba(255, 199, 44, 0.18);
+}
+
+/* Light purple variant - used for the homepage "Public Trial" badge */
+.oz-eyebrow-purple {
+    color: var(--oz-purple-soft);
+    background: rgba(183, 148, 246, 0.12);
+    border-color: rgba(183, 148, 246, 0.3);
+}
+
+.oz-eyebrow-purple .oz-dot {
+    background: var(--oz-purple);
+    box-shadow: 0 0 0 4px rgba(183, 148, 246, 0.2);
 }
 
 .oz-hero h1 {
@@ -754,6 +778,28 @@ footer.oz-footer .copyright * {
 
 .oz-section-title i {
     color: var(--oz-amber);
+}
+
+/* ---------- About the System feature list ---------- */
+.oz-about-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.oz-about-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+}
+
+.oz-about-list li i {
+    color: var(--oz-amber);
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+    width: 1.1em;
+    text-align: center;
 }
 
 /* ---------- News ---------- */
@@ -867,6 +913,69 @@ footer.oz-footer .copyright * {
     border: 1px solid rgba(255, 199, 44, 0.25);
     padding: 0.3rem 0.7rem;
     border-radius: 999px;
+}
+
+.oz-status-pill--active {
+    color: var(--oz-green-soft);
+    background: rgba(74, 222, 128, 0.12);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.oz-status-pill--testing {
+    color: var(--oz-amber-soft);
+    background: rgba(255, 199, 44, 0.1);
+    border-color: rgba(255, 199, 44, 0.25);
+}
+
+.oz-status-pill--disabled {
+    color: var(--oz-red-soft);
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* ---------- Feedback reply thread ---------- */
+.oz-reply {
+    border-left: 3px solid var(--oz-border-strong);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0 10px 10px 0;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.oz-reply--dev {
+    border-left-color: var(--oz-amber);
+    background: rgba(255, 199, 44, 0.06);
+}
+
+.oz-reply-meta {
+    font-size: 0.8rem;
+    color: var(--oz-text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.oz-reply-meta b {
+    color: var(--oz-text);
+}
+
+.oz-reply-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ---------- Assignment log raw payloads ---------- */
+.oz-log-payload {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--oz-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.5rem 0 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--oz-text-muted);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 /* ---------- Airport arrivals board header ---------- */
@@ -2214,4 +2323,91 @@ footer.oz-footer .copyright * {
 
 .oz-import-new {
     color: #34d399;
+}
+
+/* ---------- Admin: delete airport ---------- */
+.oz-danger-zone {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    background: rgba(248, 113, 113, 0.06);
+}
+
+.oz-danger-zone h5 {
+    color: #f87171;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.oz-danger-zone p {
+    color: var(--oz-text-muted);
+    font-size: 0.85rem;
+}
+
+/* ---------- Admin: page access stats ---------- */
+.oz-access-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--oz-border);
+}
+
+.oz-access-row:last-child {
+    border-bottom: none;
+}
+
+.oz-access-label {
+    color: var(--oz-text-muted);
+}
+
+.oz-access-value {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--oz-text);
+}
+
+/* Plain CSS bar chart - no JS library needed. Each column's track is a fixed
+   height so bar heights (set inline as a % of that track) scale correctly. */
+.oz-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    margin-top: 1rem;
+}
+
+.oz-bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.oz-bar-track {
+    height: 140px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.oz-bar {
+    width: 100%;
+    min-height: 2px;
+    background: var(--oz-amber);
+    border-radius: 3px 3px 0 0;
+    transition: background .15s ease;
+}
+
+.oz-bar-col:hover .oz-bar {
+    background: var(--oz-amber-strong);
+}
+
+.oz-bar-label {
+    font-size: 0.65rem;
+    color: var(--oz-text-muted);
+    margin-top: 0.35rem;
+    white-space: nowrap;
 }

@@ -41,7 +41,7 @@ class LiveBaysJob implements ShouldQueue
         $flight_data = [];
 
         // Load the Airlabs Client
-        $airlabs = new AirLabsClient();
+        $airlabs = app(AirLabsClient::class);
 
         // Find all airports that data needs to be updated in this check.
         $nowHour = Carbon::now()->hour;
@@ -101,6 +101,19 @@ class LiveBaysJob implements ShouldQueue
 
                 $bay = $this->findBay($flight);
 
+                // Not a single bay - is it a gate that walks out to several stands (e.g. YBSU gate "2")?
+                if($bay == null && $this->isGateGroup($flight)){
+                    FlightLiveBays::updateOrCreate(['callsign' => $flight['callsign']], [
+                        'airport'       => $flight['arrival'],
+                        'departure'     => $flight['departure'],
+                        'terminal'      => $flight['terminal'],
+                        'gate'          => $flight['gate'],
+                        'match'         => FlightLiveBays::MATCH_GATE,
+                        'scheduled_bay' => null,
+                    ]);
+                    continue;
+                }
+
                 if($bay == null){
                     
                     // Add to missing bay database
@@ -117,6 +130,7 @@ class LiveBaysJob implements ShouldQueue
                         'departure'     => $flight['departure'],
                         'terminal'      => $flight['terminal'],
                         'gate'          => $flight['gate'],
+                        'match'         => FlightLiveBays::MATCH_BAY,
                         'scheduled_bay' => $bay->id,
                     ]);
                 }
@@ -135,6 +149,12 @@ class LiveBaysJob implements ShouldQueue
     // Match an IRL gate to an OzBays bay. Exact match first, then a bay with the same number and an
     // optional letter prefix/suffix (gate "4" -> "C4" or "4A", but never "B24"). If that finds more
     // than one bay the gate is ambiguous, so return null and let it be recorded as a missing bay.
+    // Gate listed on one or more stands' "Gate" in the airport file
+    private function isGateGroup(array $flight): bool
+    {
+        return Bays::atGate($flight['arrival'], $flight['gate'], $flight['terminal'] ?? null)->isNotEmpty();
+    }
+
     private function findBay(array $flight): ?Bays
     {
         $gate = strtoupper(trim((string) $flight['gate']));
@@ -148,6 +168,11 @@ class LiveBaysJob implements ShouldQueue
         $exact = $bays->first(fn ($bay) => strtoupper($bay->bay) === $gate);
         if ($exact !== null) {
             return $exact;
+        }
+
+        // A gate group wins over the loose number match below - otherwise YBSU gate "2" would become bay GA2
+        if ($this->isGateGroup($flight)) {
+            return null;
         }
 
         $pattern = '/^[A-Z]*' . preg_quote($gate, '/') . '[A-Z]?$/';

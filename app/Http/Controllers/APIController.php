@@ -77,26 +77,48 @@ class APIController extends Controller
 
         // Real-world (IRL) bay for each flight, matched the same way BayAllocation does - callsign + departure + arrival airport
         $liveBays = FlightLiveBays::whereIn('callsign', $flights->pluck('callsign'))
-            ->whereNotNull('scheduled_bay')
+            ->matched()
             ->whereNotNull('departure')
             ->with('bayInfo')
             ->get()
             ->keyBy(fn ($live) => $live->callsign.'|'.$live->departure.'|'.$live->airport);
 
         foreach ($flights as $flight) {
-            $irlBay = $liveBays->get($flight->callsign.'|'.strtoupper((string) $flight->dep).'|'.$flight->arr)?->bayInfo;
+            $live = $liveBays->get($flight->callsign.'|'.strtoupper((string) $flight->dep).'|'.$flight->arr);
 
-            $flight->setAttribute('irl_bay', $irlBay === null ? null : [
-                'bay'          => $irlBay->bay,
-                'display_name' => $irlBay->display_name,
-                'fits'         => $sizes->bayFitsAircraft($irlBay->aircraft, $flight->ac),
-            ]);
+            $flight->setAttribute('irl_bay', $this->irlBayInfo($live, $flight->ac, $sizes));
 
             // Map icon for the aircraft's size group (icon, ignored, scale)
             $flight->setAttribute('map_icon', $sizes->icon($flight->ac));
         }
 
         return $flights;
+    }
+
+    // Real-world bay for the map: a single bay, or a gate group (fits when any stand behind the gate fits)
+    private function irlBayInfo(?FlightLiveBays $live, ?string $aircraft, AircraftSizes $sizes): ?array
+    {
+        if ($live === null) {
+            return null;
+        }
+
+        if ($live->isGateMatch()) {
+            $stands = $live->gateBays();
+
+            return $stands->isEmpty() ? null : [
+                'bay'          => null,
+                'gate'         => $live->gate,
+                'display_name' => 'Gate '.$live->gate,
+                'stands'       => $stands->pluck('bay')->all(),
+                'fits'         => $stands->contains(fn ($bay) => $sizes->bayFitsAircraft($bay->aircraft, $aircraft)),
+            ];
+        }
+
+        return $live->bayInfo === null ? null : [
+            'bay'          => $live->bayInfo->bay,
+            'display_name' => $live->bayInfo->display_name,
+            'fits'         => $sizes->bayFitsAircraft($live->bayInfo->aircraft, $aircraft),
+        ];
     }
 
     // Live Bays for all Airports

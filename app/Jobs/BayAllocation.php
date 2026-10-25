@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Airline;
 use App\Models\Airports;
+use App\Models\AssignmentLog;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
 use App\Models\Bays;
@@ -169,6 +170,7 @@ class BayAllocation implements ShouldQueue
                             $occupiedBays[$acb->id] = [
                                 'callsign_id' => $ac->id, // ID
                                 'callsign' => $ac->callsign, // ID
+                                'cid' => $ac->cid,
                                 'bay_id' => $acb->id,
                                 'bay_name' => $acb->bay,
                                 'bay_core' => $core,
@@ -251,6 +253,10 @@ class BayAllocation implements ShouldQueue
 
                     $bay->delete();
 
+                    AssignmentLog::record($bay->airport, $flight->callsign, 'diverted', 'Diverted/refiled away - Bay '.$bay->bay_core.' released', [
+                        'released_bay' => $bay->bay_core, 'new_arr' => $flight->arr,
+                    ], $flight->cid);
+
                     $discord = app(DiscordClient::class);
                     try {
                         $discord->sendMessageWithEmbed($discordChannel, 'Aircraft Diversion / Refile | '.$flight->callsign, 'Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay '.$bay->bay_core.' at '.$bay->airport.' has now been marked as available.', 'fc1c03');
@@ -299,6 +305,10 @@ class BayAllocation implements ShouldQueue
                 $slot->delete();
             }
 
+            AssignmentLog::record($flight->arr, $flight->callsign, 'overflight', 'Overflew '.$flight->arr.' - Bay '.$firstSlot->bay_core.' released', [
+                'released_bay' => $firstSlot->bay_core, 'distance_nm' => $flight->distance,
+            ], $flight->cid);
+
             $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessageWithEmbed($discordChannel, 'Overflight of '.$flight->arr.' | '.$flight->callsign, 'Aircraft has overflown '.$flight->arr.' and is now '.round($flight->distance).'NM away. Bay '.$firstSlot->bay_core.' at '.$firstSlot->airport.' has now been marked as available.', 'fc1c03');
@@ -312,6 +322,11 @@ class BayAllocation implements ShouldQueue
 
         // Slot Allocation - Check it exists for the aircraft at the bay
         // ## - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot any arrivals on that bay inside the alotted slot time.
+        // Bay IDs a BayAllocations row was freshly created for this tick - i.e. the aircraft just
+        // blocked this bay for the first time. Used below to log the parking event exactly once,
+        // rather than every minute the aircraft remains parked.
+        $newlyOccupiedBays = [];
+
         foreach ($occupiedBays as $bayInfo) {
 
             // Look if there is a slot for the aircraft
@@ -332,6 +347,8 @@ class BayAllocation implements ShouldQueue
                     'eibt' => Carbon::now(),
                     'eobt' => $eobt,
                 ]);
+
+                $newlyOccupiedBays[$bayInfo['bay_id']] = true;
             }
         }
 
@@ -357,12 +374,23 @@ class BayAllocation implements ShouldQueue
                 $oldSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->get();
                 if (empty($oldSlots) || $oldSlots->isEmpty()) {
                     // Don't need to do anything. They parked and do not have an arrival slot
+                    if (isset($newlyOccupiedBays[$departure['bay_id']])) {
+                        AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked', 'Parked on Bay '.$departure['bay_name'], [
+                            'bay' => $departure['bay_name'],
+                        ], $departure['cid']);
+                    }
                 } else {
                     echo ' - Checked: Aicraft has arrived and parked on incorrect bay <br>';
                     foreach ($oldSlots as $slots) {
                         $slots->delete();
                     }
                     Log::channel('allocations')->error($departure['callsign'].' has parked at an incorrect bay at '.$departure['airport']);
+
+                    if (isset($newlyOccupiedBays[$departure['bay_id']])) {
+                        AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked_wrong_bay', 'Parked on Bay '.$departure['bay_name'].' instead of its planned bay', [
+                            'bay' => $departure['bay_name'],
+                        ], $departure['cid']);
+                    }
                 }
 
             } else {
@@ -379,10 +407,27 @@ class BayAllocation implements ShouldQueue
 
                         $slot->status = 'OCCUPIED';
                         $slot->save();
+
+                        AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked', 'Parked on assigned Bay '.$departure['bay_name'], [
+                            'bay' => $departure['bay_name'],
+                        ], $departure['cid']);
                     } else {
                         echo ' - Aircraft has caused a conflict with an arrival aircraft! Add to be checked in 4 Minutes <br> ';
                         $data[] = $slot;
                         $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
+
+                        $displacedFlight = $slot->FlightInfo;
+                        if ($displacedFlight !== null) {
+                            AssignmentLog::record($departure['airport'], $displacedFlight->callsign, 'conflict_detected', 'Bay conflict - '.$departure['callsign'].' parked on planned Bay '.$departure['bay_name'], [
+                                'parked_callsign' => $departure['callsign'], 'bay' => $departure['bay_name'],
+                            ], $displacedFlight->cid);
+                        }
+
+                        if (isset($newlyOccupiedBays[$departure['bay_id']])) {
+                            AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked_bay_conflict', 'Parked on Bay '.$departure['bay_name'].', conflicting with planned arrival '.($displacedFlight->callsign ?? 'unknown'), [
+                                'bay' => $departure['bay_name'], 'displaced_callsign' => $displacedFlight->callsign ?? null,
+                            ], $departure['cid']);
+                        }
                     }
                 }
             }
@@ -527,6 +572,7 @@ class BayAllocation implements ShouldQueue
         if ($aircraftIndex === null) {
             Log::channel('aircraft')->error($info->ac.' type does not exist');
             MissingAircraftType::recordMiss($acType);
+            AssignmentLog::record($info->arr, $info->callsign, 'unknown_aircraft_type', 'Unknown aircraft type: '.$info->ac, ['ac' => $info->ac], $info->cid);
             $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
@@ -569,11 +615,38 @@ class BayAllocation implements ShouldQueue
 
                 // The network aircraft may not be the same type flown IRL - make sure it actually fits the bay
                 if ($this->bayFitsAircraft($irlBay, $allowedTypes)) {
+                    AssignmentLog::record($info->arr, $info->callsign, 'live_bay_match', 'Matched to live (FlightAware) bay '.$irlBay->bay, [
+                        'live_bay' => $live_bay->toArray(),
+                        'selected_bay' => $irlBay->toArray(),
+                    ], $info->cid);
+
                     return $irlBay;
                 }
 
                 Log::channel('bays')->warning("IRL bay {$irlBay->bay} at {$irlBay->airport} for {$cs['cs']} cannot fit a {$ac} - falling back to normal allocation");
             }
+        }
+
+        // IRL gate covering several stands (e.g. YBSU gate "2") - take the best free stand behind it that fits,
+        // ranked the same way as normal allocation (priority, size, operator)
+        if ($live_bay !== null && $live_bay->isGateMatch()) {
+            $gateBays = $live_bay->gateBays()
+                ->filter(fn ($bay) => $bay->status == null && $bay->callsign == null && $this->bayFitsAircraft($bay, $allowedTypes));
+
+            if ($gateBays->isNotEmpty()) {
+                $gateCandidates = $this->bestMatchingBays($gateBays, $allowedGroups, $operator);
+                $selectedGateBay = $gateCandidates->random();
+
+                AssignmentLog::record($info->arr, $info->callsign, 'live_bay_match', 'Matched to a stand behind live gate '.$live_bay->gate.' ('.$selectedGateBay->bay.')', [
+                    'live_bay' => $live_bay->toArray(),
+                    'candidates' => $gateCandidates->map->only(['id', 'bay', 'aircraft', 'operators', 'priority'])->all(),
+                    'selected_bay' => $selectedGateBay->only(['id', 'bay', 'aircraft', 'operators', 'priority']),
+                ], $info->cid);
+
+                return $selectedGateBay;
+            }
+
+            Log::channel('bays')->warning("No free stand behind IRL gate {$live_bay->gate} at {$live_bay->airport} fits {$cs['cs']} ({$ac}) - falling back to normal allocation");
         }
 
         // #### - AIRCRAFT CASE EXPRESSION --- This is the super restrictive function (Always )
@@ -620,6 +693,10 @@ class BayAllocation implements ShouldQueue
         if ($availableBays->isEmpty()) {
             Log::channel('bays')->error("selectBay() found no eligible bay for {$cs['cs']} ({$acType}) at {$info->arr} - no bays match even after relaxing operator/pax_type restrictions");
 
+            AssignmentLog::record($info->arr, $info->callsign, 'no_bay_available', 'No eligible bay found', [
+                'aircraft' => $acType, 'is_freight' => $isFreight, 'allowed_types' => $allowedTypes,
+            ], $info->cid);
+
             return null;
         }
 
@@ -633,13 +710,25 @@ class BayAllocation implements ShouldQueue
         $candidates = $this->bestMatchingBays($availableBays, $allowedGroups, $operator);
         $selectedBay = $candidates->random();
 
+        // The raw picture behind the pick - every eligible bay considered (SQL-ranked), the subset tied for
+        // best match the random pick was actually made from, which relaxation level it took to get a match,
+        // and which one ultimately got chosen.
+        AssignmentLog::record($info->arr, $info->callsign, 'candidates', 'Candidates considered, selected Bay '.$selectedBay->bay, [
+            'relaxed_operator' => ! $level['operator'],
+            'relaxed_pax_type' => ! $level['pax'],
+            'eligible_bays' => $availableBays->map->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority'])->all(),
+            'candidates' => $candidates->map->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority'])->all(),
+            'selected_bay' => $selectedBay->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+        ], $info->cid);
+
         return $selectedBay;
     }
 
     // Bays tied for the best rank, using the same order as buildBayQuery():
-    //  1. Bay priority (lowest first)
-    //  2. Aircraft size - how close the bay's size group is to the aircraft's
-    //  3. Operator - listed on the bay, then open bays (no operators), then bays only open via "*"
+    //  1. Operator - the airline's own bays, then open bays (no operators), then other airlines' bays opened via "*"
+    //     (so RCL goes to its own priority 5 bays before a priority 1 VOZ bay that's only open to it via "*")
+    //  2. Bay priority (lowest first)
+    //  3. Aircraft size - how close the bay's size group is to the aircraft's
     private function bestMatchingBays($availableBays, array $allowedGroups, string $operator)
     {
         // Size group offset for each allowed type (0 = the aircraft's own group)
@@ -662,7 +751,7 @@ class BayAllocation implements ShouldQueue
             $operators = $bay->operators === null ? null : array_map('trim', explode(',', $bay->operators));
             $operatorRank = $operators === null ? 1 : (in_array($operator, $operators, true) ? 0 : 2);
 
-            return [(int) $bay->priority, $sizes ? min($sizes) : PHP_INT_MAX, $operatorRank];
+            return [$operatorRank, (int) $bay->priority, $sizes ? min($sizes) : PHP_INT_MAX];
         };
 
         $ranked = $availableBays->map(fn ($bay) => ['bay' => $bay, 'rank' => $rank($bay)]);
@@ -700,10 +789,7 @@ class BayAllocation implements ShouldQueue
                 });
             })
 
-            // Order by Bay Prioriies (1=most, 9=never?)
-            ->orderBy('priority', 'asc')
-
-            // Order bays by Aircraft Closeness to
+            // Only bays the aircraft fits
             ->where(function ($q) use ($allowedTypes) {
                 foreach ($allowedTypes as $type) {
                     $q->orWhereRaw(
@@ -722,17 +808,20 @@ class BayAllocation implements ShouldQueue
                 });
             })
 
-            ->orderByRaw($aircraftPrioritySql)
-
-            // Operator Order (QFA, QLK v QLK, QFA assignment priority)
-            // Listed operators first (in list order), then open bays, then bays only matched via "*"
+            // 1. Operator - the airline's own bays, then open bays, then other airlines' bays only open via "*"
             ->orderByRaw("
                     CASE
-                        WHEN FIND_IN_SET(?, REPLACE(operators, ' ', '')) > 0 THEN FIND_IN_SET(?, REPLACE(operators, ' ', ''))
-                        WHEN operators IS NULL THEN 4
-                        ELSE 99
+                        WHEN FIND_IN_SET(?, REPLACE(operators, ' ', '')) > 0 THEN 1
+                        WHEN operators IS NULL THEN 2
+                        ELSE 3
                     END
-                ", [$operator, $operator])
+                ", [$operator])
+
+            // 2. Bay priority (1 = most preferred)
+            ->orderBy('priority', 'asc')
+
+            // 3. Aircraft size - closest to the aircraft first
+            ->orderByRaw($aircraftPrioritySql)
 
             ->orderByRaw('RAND()');
     }
@@ -819,6 +908,12 @@ class BayAllocation implements ShouldQueue
                 $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
+                AssignmentLog::record($info['arr'], $info['cs'], 'assigned', 'Assigned Bay '.$value->bay, [
+                    'bay' => $value->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+                    'eibt' => Carbon::parse($info['eibt'])->toIso8601String(),
+                    'eobt' => $eobt->toIso8601String(),
+                ], $cid);
+
             } elseif ($initial == 2) {
                 // Update scheduled_bay to the assigned bay
                 $aircraftBay = Flights::find($info['cs_id']);
@@ -843,14 +938,28 @@ class BayAllocation implements ShouldQueue
                 $bayType = $value->pax_type;
                 $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
+
+                AssignmentLog::record($info['arr'], $info['cs'], 'reassigned', 'Reassigned from Bay '.$info['OLD_BAY'].' to Bay '.$value->bay, [
+                    'old_bay' => $info['OLD_BAY'],
+                    'new_bay' => $value->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+                    'eibt' => Carbon::parse($info['eibt'])->toIso8601String(),
+                    'eobt' => $eobt->toIso8601String(),
+                ], $cid);
             }
 
             return $value;
         } catch (\Throwable $e) {
-            Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
+            $errorMessage = $e->getMessage();
+            Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$errorMessage}");
+
+            AssignmentLog::record($info['arr'] ?? 'UNKNOWN', $info['cs'] ?? 'UNKNOWN', 'assignment_failed', 'Assignment failed: '.$errorMessage, [
+                'error' => $errorMessage,
+                'initial' => $initial,
+            ], optional($info['ac_model'] ?? null)->cid);
+
             $discord = app(DiscordClient::class);
             try {
-                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
+                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$errorMessage}: \n > {$info['ac_model']}");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
@@ -886,14 +995,23 @@ class BayAllocation implements ShouldQueue
             // User preference section exists and it is set as do not do...
             echo 'Cancel Hoppie Message - User has it disabled';
 
+            AssignmentLog::record($arr, $flight, 'hoppie', 'Hoppie message skipped - user has it disabled', ['version' => $version], $cid);
+
             return null;
         }
 
         $hoppie = app(HoppieClient::class);
-        $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
 
         $send_message = false;
         $arrival = Airports::where('icao', $arr)->first();
+
+        $outcome = 'skipped_non_production';
+        $sent = null;
+
+        // Default for every path that doesn't actually send - only build the real CPDLC
+        // text below, right before it's handed to sendTelex(), so nothing gets crafted
+        // (and logged) for a message that was never going out.
+        $Uplink = 'Not connected to Hoppie';
 
         // Only run the check on Production with an Active Airport
         if (env('APP_ENV') == 'production') {
@@ -909,6 +1027,7 @@ class BayAllocation implements ShouldQueue
                         Log::channel('hoppie')->error($flight.' CID in tester list - Send it off!');
                     } else {
                         $send_message = false;
+                        $outcome = 'blocked_testing_mode';
                         Log::channel('hoppie')->error($flight.' CID not in the tester list.');
                     }
                 } else {
@@ -918,8 +1037,11 @@ class BayAllocation implements ShouldQueue
                 }
 
                 if ($send_message == true) {
+                    $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
+
                     // Uplink is sent from the OzBays Hoppie station
                     $sent = $hoppie->sendTelex($flight, $Uplink);
+                    $outcome = $sent ? 'sent' : 'send_failed';
                     Log::channel('hoppie')->error($flight.($sent ? ' message sent from ' : ' message failed from ').$hoppie->callsign());
 
                     $discord = app(DiscordClient::class);
@@ -931,11 +1053,16 @@ class BayAllocation implements ShouldQueue
                     }
                 }
             } else {
+                $outcome = 'not_connected';
                 Log::channel('hoppie')->error($flight.' not connected to Hoppie Network. Exiting.');
             }
         } else {
             echo '- Not on the Production Server: Skipping Hoppie Message';
         }
+
+        AssignmentLog::record($arr, $flight, 'hoppie', 'Hoppie message: '.$outcome, [
+            'version' => $version, 'message' => $Uplink, 'outcome' => $outcome, 'sent' => $sent,
+        ], $cid);
 
         return $Uplink;
 
@@ -946,22 +1073,22 @@ class BayAllocation implements ShouldQueue
         // Bay's Type (DOM/INTL etc) goes in front when the bay has one - e.g. "INTL, I8" or "Maroomba 1 (MB1)"
         $arrBayText = $bayType ? "{$bayType}, {$arrBay}" : $arrBay;
 
-        if ($version == 1) {
-            $messageLines = [
-                "{$arr} ARRIVAL INFO
-                {$flight}, {$dep}-{$arr}
-                ASSIGNED BAY: {$arrBayText}
-                IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
-                AUTO BAY ASSIGNMENT SENT FROM OZBAYS.ORG"
-            ];
-        } elseif ($version == 2) {
-            $messageLines = [
-                "{$arr} ARRIVAL UPDATE
-                ASSIGNED BAY: {$arrBayText}
-                IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
-                BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
-            ];
-        }
+if ($version == 1) {
+$messageLines = [
+"{$arr} ARRIVAL INFO
+{$flight}, {$dep}-{$arr}
+ASSIGNED BAY: {$arrBayText}
+IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
+AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ"
+];
+} elseif ($version == 2) {
+$messageLines = [
+"{$arr} ARRIVAL UPDATE
+ASSIGNED BAY: {$arrBayText}
+IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
+BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
+];
+}
 
         return implode("\n", $messageLines);
     }

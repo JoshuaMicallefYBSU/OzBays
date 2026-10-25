@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Feedback;
 use App\Models\User;
+use App\Notifications\SystemNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -71,9 +73,10 @@ class FeedbackTest extends TestCase
     {
         $user = $this->createUser(1234567, 'Pilot');
 
-        $this->actingAs($user)->post(route('feedback.store'), $this->payload())->assertRedirect(route('dashboard.index'));
+        $response = $this->actingAs($user)->post(route('feedback.store'), $this->payload());
 
         $feedback = Feedback::first();
+        $response->assertRedirect(route('feedback.my.show', $feedback));
         $this->assertSame($user->id, $feedback->user_id);
         $this->assertSame(8, $feedback->ratings['enjoyment']);
         $this->assertSame('QFA703 into YMML', $feedback->flight);
@@ -124,7 +127,7 @@ class FeedbackTest extends TestCase
 
         $this->actingAs($this->createUser(1, 'Pilot'))
             ->post(route('feedback.store'), $this->payload())
-            ->assertRedirect(route('dashboard.index'));
+            ->assertRedirect(route('feedback.my.show', 1));
 
         $this->assertSame(1, Feedback::count());
     }
@@ -141,5 +144,90 @@ class FeedbackTest extends TestCase
         $developer = $this->createUser(2, 'Developer');
         $this->actingAs($developer)->get(route('dashboard.feedback.index'))->assertOk()->assertSee('QFA703 into YMML');
         $this->actingAs($developer)->get(route('dashboard.feedback.show', $feedback))->assertOk()->assertSee('spot on')->assertSee('8/10');
+    }
+
+    public function test_submitter_can_view_and_reply_to_their_own_feedback(): void
+    {
+        $pilot = $this->createUser(1, 'Pilot');
+        $this->actingAs($pilot)->post(route('feedback.store'), $this->payload());
+        $feedback = Feedback::first();
+
+        $this->actingAs($pilot)->get(route('feedback.my.index'))->assertOk()->assertSee('QFA703 into YMML');
+
+        $this->actingAs($pilot)
+            ->post(route('feedback.my.reply', $feedback), ['body' => 'Following up on this.'])
+            ->assertRedirect(route('feedback.my.show', $feedback));
+
+        $this->actingAs($pilot)->get(route('feedback.my.show', $feedback))->assertOk()->assertSee('Following up on this.');
+        $this->assertSame(1, $feedback->replies()->count());
+        $this->assertSame($pilot->id, $feedback->replies()->first()->user_id);
+    }
+
+    public function test_a_user_cannot_view_or_reply_to_someone_elses_feedback(): void
+    {
+        $owner = $this->createUser(1, 'Pilot');
+        $this->actingAs($owner)->post(route('feedback.store'), $this->payload());
+        $feedback = Feedback::first();
+
+        $otherUser = $this->createUser(2, 'Pilot');
+        $this->actingAs($otherUser)->get(route('feedback.my.show', $feedback))->assertForbidden();
+        $this->actingAs($otherUser)
+            ->post(route('feedback.my.reply', $feedback), ['body' => 'Not mine to reply to.'])
+            ->assertForbidden();
+
+        $this->assertSame(0, $feedback->replies()->count());
+    }
+
+    public function test_developer_reply_notifies_the_submitter(): void
+    {
+        Notification::fake();
+
+        $pilot = $this->createUser(1, 'Pilot');
+        $this->actingAs($pilot)->post(route('feedback.store'), $this->payload());
+        $feedback = Feedback::first();
+
+        $developer = $this->createUser(2, 'Developer');
+        $this->actingAs($developer)
+            ->post(route('dashboard.feedback.reply', $feedback), ['body' => 'Thanks, looking into it.'])
+            ->assertRedirect();
+
+        $this->assertSame(1, $feedback->replies()->count());
+        $this->assertSame($developer->id, $feedback->replies()->first()->user_id);
+
+        Notification::assertSentTo($pilot, SystemNotification::class, function (SystemNotification $notification) {
+            return $notification->url === route('feedback.my.show', Feedback::first());
+        });
+    }
+
+    public function test_developer_can_close_and_reopening_happens_automatically_on_reply(): void
+    {
+        Notification::fake();
+
+        $pilot = $this->createUser(1, 'Pilot');
+        $this->actingAs($pilot)->post(route('feedback.store'), $this->payload());
+        $feedback = Feedback::first();
+
+        $developer = $this->createUser(2, 'Developer');
+        $this->actingAs($developer)->post(route('dashboard.feedback.close', $feedback))->assertRedirect();
+
+        $this->assertTrue($feedback->fresh()->isClosed());
+        Notification::assertSentTo($pilot, SystemNotification::class);
+
+        $this->actingAs($pilot)
+            ->post(route('feedback.my.reply', $feedback), ['body' => 'Still happening, please reopen.'])
+            ->assertRedirect(route('feedback.my.show', $feedback));
+
+        $this->assertFalse($feedback->fresh()->isClosed());
+    }
+
+    public function test_pilots_cannot_reply_close_or_reopen_via_the_admin_routes(): void
+    {
+        $pilot = $this->createUser(1, 'Pilot');
+        $this->actingAs($pilot)->post(route('feedback.store'), $this->payload());
+        $feedback = Feedback::first();
+
+        $this->actingAs($pilot)->post(route('dashboard.feedback.reply', $feedback), ['body' => 'x'])->assertForbidden();
+        $this->actingAs($pilot)->post(route('dashboard.feedback.close', $feedback))->assertForbidden();
+        $this->actingAs($pilot)->post(route('dashboard.feedback.reopen', $feedback))->assertForbidden();
     }
 }

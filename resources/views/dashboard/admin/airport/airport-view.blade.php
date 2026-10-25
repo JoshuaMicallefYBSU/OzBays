@@ -101,6 +101,7 @@
                             <th scope="col">Max Aircraft</th>
                             <th scope="col">Operator</th>
                             <th scope="col">Bay Type</th>
+                            <th scope="col">IRL Gate</th>
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
@@ -111,6 +112,7 @@
                                 <td>{{$bay->aircraft}}</td>
                                 <td>{{$bay->operators ?? 'all operators'}}</td>
                                 <td>{{$bay->pax_type ?? 'all types'}}</td>
+                                <td>{{$bay->gate ?? '—'}}</td>
                                 <td><a href="{{route('dashboard.admin.bay.view', [$airport->icao, $bay->bay])}}">View Info</a></td>
                             </tr>
                         @endforeach
@@ -154,9 +156,50 @@
                 src="{{ route('mapEmbed', ['lat' => $airport->lat, 'lon' => $airport->lon, 'zoom' => '12.5', 'hide_info' => true]) }}"
                 style="width:100%; height:500px; border:none;"
             ></iframe>
+
+            {{-- Delete Airport --}}
+            @can('delete airports')
+                <div class="oz-danger-zone mt-4">
+                    <h5><i class="fa fa-exclamation-triangle"></i> Delete Airport</h5>
+                    <p>Permanently removes {{$airport->icao}}, all {{$airport->allBays->count()}} of its bays, any bay assignments and its uploaded airport file. Flight history is kept.</p>
+                    <a data-target="#deleteAirportModal" data-toggle="modal" style="cursor: pointer" class="btn btn-danger">Delete {{$airport->icao}}</a>
+                </div>
+            @endcan
         </div>
 
     </div>
+
+    {{-- Delete Airport Modal --}}
+    @can('delete airports')
+    <div class="modal fade" id="deleteAirportModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete {{$airport->name}} ({{$airport->icao}})?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <form action="{{route('dashboard.admin.airport.delete', $airport->icao)}}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-body">
+                        <p>This <b>can't be undone</b>. It deletes the airport, all of its bays, any current bay assignments and its uploaded airport file. To bring it back, the airport file has to be imported again.</p>
+
+                        <label for="confirm_icao">Type <b>{{$airport->icao}}</b> to confirm</label>
+                        <input required type="text" name="confirm_icao" id="confirm_icao" class="form-control" autocomplete="off" pattern="{{$airport->icao}}" placeholder="{{$airport->icao}}">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                        <input type="submit" class="btn btn-danger" value="Delete {{$airport->icao}}">
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    @endcan
 
     {{-- Disable Airport Modal --}}
     <div class="modal fade" id="disableAirportModal" tabindex="-1" role="dialog">

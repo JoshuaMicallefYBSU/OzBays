@@ -3,8 +3,9 @@
     @foreach([
         ['title' => 'Inbound', 'icon' => 'fa-plane-arrival', 'airports' => $stats_inbound, 'field' => 'stats_inbound', 'unit' => 'inbound', 'empty' => 'No aircraft inbound to OzBays airports'],
         ['title' => 'On the Ground', 'icon' => 'fa-tower-observation', 'airports' => $stats_ground, 'field' => 'stats_ground', 'unit' => 'on the ground', 'empty' => 'No ground movements at OzBays airports'],
+        ['title' => 'Active Controllers', 'icon' => 'fa-headset', 'airports' => $stats_controllers, 'field' => 'stats_controllers', 'unit' => 'online', 'empty' => 'No controllers online at OzBays airports'],
     ] as $section)
-        <div class="col-md-6 mb-3 mb-md-0">
+        <div class="col-md-4 mb-3 mb-md-0">
             <div class="oz-stat-heading"><i class="fa {{ $section['icon'] }}"></i> {{ $section['title'] }}</div>
 
             @forelse($section['airports'] as $airport)
