@@ -170,6 +170,7 @@ class BayAllocation implements ShouldQueue
                             $occupiedBays[$acb->id] = [
                                 'callsign_id' => $ac->id, // ID
                                 'callsign' => $ac->callsign, // ID
+                                'cid' => $ac->cid,
                                 'bay_id' => $acb->id,
                                 'bay_name' => $acb->bay,
                                 'bay_core' => $core,
@@ -321,6 +322,11 @@ class BayAllocation implements ShouldQueue
 
         // Slot Allocation - Check it exists for the aircraft at the bay
         // ## - Allows for Scheduler to understand what aircraft actually are on the ground, and not slot any arrivals on that bay inside the alotted slot time.
+        // Bay IDs a BayAllocations row was freshly created for this tick - i.e. the aircraft just
+        // blocked this bay for the first time. Used below to log the parking event exactly once,
+        // rather than every minute the aircraft remains parked.
+        $newlyOccupiedBays = [];
+
         foreach ($occupiedBays as $bayInfo) {
 
             // Look if there is a slot for the aircraft
@@ -341,6 +347,8 @@ class BayAllocation implements ShouldQueue
                     'eibt' => Carbon::now(),
                     'eobt' => $eobt,
                 ]);
+
+                $newlyOccupiedBays[$bayInfo['bay_id']] = true;
             }
         }
 
@@ -366,12 +374,23 @@ class BayAllocation implements ShouldQueue
                 $oldSlots = BayAllocations::where('status', 'PLANNED')->where('callsign', $departure['callsign_id'])->get();
                 if (empty($oldSlots) || $oldSlots->isEmpty()) {
                     // Don't need to do anything. They parked and do not have an arrival slot
+                    if (isset($newlyOccupiedBays[$departure['bay_id']])) {
+                        AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked', 'Parked on Bay '.$departure['bay_name'], [
+                            'bay' => $departure['bay_name'],
+                        ], $departure['cid']);
+                    }
                 } else {
                     echo ' - Checked: Aicraft has arrived and parked on incorrect bay <br>';
                     foreach ($oldSlots as $slots) {
                         $slots->delete();
                     }
                     Log::channel('allocations')->error($departure['callsign'].' has parked at an incorrect bay at '.$departure['airport']);
+
+                    if (isset($newlyOccupiedBays[$departure['bay_id']])) {
+                        AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked_wrong_bay', 'Parked on Bay '.$departure['bay_name'].' instead of its planned bay', [
+                            'bay' => $departure['bay_name'],
+                        ], $departure['cid']);
+                    }
                 }
 
             } else {
@@ -388,6 +407,10 @@ class BayAllocation implements ShouldQueue
 
                         $slot->status = 'OCCUPIED';
                         $slot->save();
+
+                        AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked', 'Parked on assigned Bay '.$departure['bay_name'], [
+                            'bay' => $departure['bay_name'],
+                        ], $departure['cid']);
                     } else {
                         echo ' - Aircraft has caused a conflict with an arrival aircraft! Add to be checked in 4 Minutes <br> ';
                         $data[] = $slot;
@@ -398,6 +421,12 @@ class BayAllocation implements ShouldQueue
                             AssignmentLog::record($departure['airport'], $displacedFlight->callsign, 'conflict_detected', 'Bay conflict - '.$departure['callsign'].' parked on planned Bay '.$departure['bay_name'], [
                                 'parked_callsign' => $departure['callsign'], 'bay' => $departure['bay_name'],
                             ], $displacedFlight->cid);
+                        }
+
+                        if (isset($newlyOccupiedBays[$departure['bay_id']])) {
+                            AssignmentLog::record($departure['airport'], $departure['callsign'], 'parked_bay_conflict', 'Parked on Bay '.$departure['bay_name'].', conflicting with planned arrival '.($displacedFlight->callsign ?? 'unknown'), [
+                                'bay' => $departure['bay_name'], 'displaced_callsign' => $displacedFlight->callsign ?? null,
+                            ], $departure['cid']);
                         }
                     }
                 }
@@ -972,13 +1001,17 @@ class BayAllocation implements ShouldQueue
         }
 
         $hoppie = app(HoppieClient::class);
-        $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
 
         $send_message = false;
         $arrival = Airports::where('icao', $arr)->first();
 
         $outcome = 'skipped_non_production';
         $sent = null;
+
+        // Default for every path that doesn't actually send - only build the real CPDLC
+        // text below, right before it's handed to sendTelex(), so nothing gets crafted
+        // (and logged) for a message that was never going out.
+        $Uplink = 'Not connected to Hoppie';
 
         // Only run the check on Production with an Active Airport
         if (env('APP_ENV') == 'production') {
@@ -1004,6 +1037,8 @@ class BayAllocation implements ShouldQueue
                 }
 
                 if ($send_message == true) {
+                    $Uplink = $this->BuildCPDLCMessage($version, $flight, $dep, $arr, $bayType, $arrBay, $cid);
+
                     // Uplink is sent from the OzBays Hoppie station
                     $sent = $hoppie->sendTelex($flight, $Uplink);
                     $outcome = $sent ? 'sent' : 'send_failed';
