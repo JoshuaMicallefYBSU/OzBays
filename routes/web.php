@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AirportsController;
+use App\Http\Controllers\AssignmentLogController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\ContributorApplicationController;
@@ -136,6 +137,13 @@ Route::prefix('dashboard/feedback')->middleware(['auth', 'can:view feedback'])->
     Route::post('/{feedback}/reply', [FeedbackController::class, 'reply'])->name('dashboard.feedback.reply');
     Route::post('/{feedback}/close', [FeedbackController::class, 'close'])->name('dashboard.feedback.close');
     Route::post('/{feedback}/reopen', [FeedbackController::class, 'reopen'])->name('dashboard.feedback.reopen');
+});
+
+// Bay assignment audit log - Developers only
+Route::prefix('dashboard/logs')->middleware(['auth', 'can:view assignment logs'])->group(function () {
+    Route::get('/', [AssignmentLogController::class, 'index'])->name('dashboard.logs.index');
+    Route::get('/{icao}', [AssignmentLogController::class, 'show'])->name('dashboard.logs.show');
+    Route::get('/{icao}/{callsign}/events', [AssignmentLogController::class, 'events'])->name('dashboard.logs.events');
 });
 
 Route::prefix('dashboard')->middleware('auth')->group(function () {

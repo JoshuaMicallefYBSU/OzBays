@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Airline;
 use App\Models\Airports;
+use App\Models\AssignmentLog;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
 use App\Models\Bays;
@@ -251,6 +252,10 @@ class BayAllocation implements ShouldQueue
 
                     $bay->delete();
 
+                    AssignmentLog::record($bay->airport, $flight->callsign, 'diverted', 'Diverted/refiled away - Bay '.$bay->bay_core.' released', [
+                        'released_bay' => $bay->bay_core, 'new_arr' => $flight->arr,
+                    ], $flight->cid);
+
                     $discord = app(DiscordClient::class);
                     try {
                         $discord->sendMessageWithEmbed($discordChannel, 'Aircraft Diversion / Refile | '.$flight->callsign, 'Aircraft has diverted to another aerodrome, or reconnected with a different destination. Bay '.$bay->bay_core.' at '.$bay->airport.' has now been marked as available.', 'fc1c03');
@@ -298,6 +303,10 @@ class BayAllocation implements ShouldQueue
             foreach ($plannedSlots as $slot) {
                 $slot->delete();
             }
+
+            AssignmentLog::record($flight->arr, $flight->callsign, 'overflight', 'Overflew '.$flight->arr.' - Bay '.$firstSlot->bay_core.' released', [
+                'released_bay' => $firstSlot->bay_core, 'distance_nm' => $flight->distance,
+            ], $flight->cid);
 
             $discord = app(DiscordClient::class);
             try {
@@ -383,6 +392,13 @@ class BayAllocation implements ShouldQueue
                         echo ' - Aircraft has caused a conflict with an arrival aircraft! Add to be checked in 4 Minutes <br> ';
                         $data[] = $slot;
                         $bay = BayConflicts::updateorCreate(['bay' => $slot['bay'], 'callsign' => $slot['callsign']]);
+
+                        $displacedFlight = $slot->FlightInfo;
+                        if ($displacedFlight !== null) {
+                            AssignmentLog::record($departure['airport'], $displacedFlight->callsign, 'conflict_detected', 'Bay conflict - '.$departure['callsign'].' parked on planned Bay '.$departure['bay_name'], [
+                                'parked_callsign' => $departure['callsign'], 'bay' => $departure['bay_name'],
+                            ], $displacedFlight->cid);
+                        }
                     }
                 }
             }
@@ -527,6 +543,7 @@ class BayAllocation implements ShouldQueue
         if ($aircraftIndex === null) {
             Log::channel('aircraft')->error($info->ac.' type does not exist');
             MissingAircraftType::recordMiss($acType);
+            AssignmentLog::record($info->arr, $info->callsign, 'unknown_aircraft_type', 'Unknown aircraft type: '.$info->ac, ['ac' => $info->ac], $info->cid);
             $discord = app(DiscordClient::class);
             try {
                 $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.ac_errors'), "Aircraft ICAO Missing | {$info->ac} missing from Aircraft.json file");
@@ -569,6 +586,11 @@ class BayAllocation implements ShouldQueue
 
                 // The network aircraft may not be the same type flown IRL - make sure it actually fits the bay
                 if ($this->bayFitsAircraft($irlBay, $allowedTypes)) {
+                    AssignmentLog::record($info->arr, $info->callsign, 'live_bay_match', 'Matched to live (FlightAware) bay '.$irlBay->bay, [
+                        'live_bay' => $live_bay->toArray(),
+                        'selected_bay' => $irlBay->toArray(),
+                    ], $info->cid);
+
                     return $irlBay;
                 }
 
@@ -583,7 +605,16 @@ class BayAllocation implements ShouldQueue
                 ->filter(fn ($bay) => $bay->status == null && $bay->callsign == null && $this->bayFitsAircraft($bay, $allowedTypes));
 
             if ($gateBays->isNotEmpty()) {
-                return $this->bestMatchingBays($gateBays, $allowedGroups, $operator)->random();
+                $gateCandidates = $this->bestMatchingBays($gateBays, $allowedGroups, $operator);
+                $selectedGateBay = $gateCandidates->random();
+
+                AssignmentLog::record($info->arr, $info->callsign, 'live_bay_match', 'Matched to a stand behind live gate '.$live_bay->gate.' ('.$selectedGateBay->bay.')', [
+                    'live_bay' => $live_bay->toArray(),
+                    'candidates' => $gateCandidates->map->only(['id', 'bay', 'aircraft', 'operators', 'priority'])->all(),
+                    'selected_bay' => $selectedGateBay->only(['id', 'bay', 'aircraft', 'operators', 'priority']),
+                ], $info->cid);
+
+                return $selectedGateBay;
             }
 
             Log::channel('bays')->warning("No free stand behind IRL gate {$live_bay->gate} at {$live_bay->airport} fits {$cs['cs']} ({$ac}) - falling back to normal allocation");
@@ -633,6 +664,10 @@ class BayAllocation implements ShouldQueue
         if ($availableBays->isEmpty()) {
             Log::channel('bays')->error("selectBay() found no eligible bay for {$cs['cs']} ({$acType}) at {$info->arr} - no bays match even after relaxing operator/pax_type restrictions");
 
+            AssignmentLog::record($info->arr, $info->callsign, 'no_bay_available', 'No eligible bay found', [
+                'aircraft' => $acType, 'is_freight' => $isFreight, 'allowed_types' => $allowedTypes,
+            ], $info->cid);
+
             return null;
         }
 
@@ -645,6 +680,17 @@ class BayAllocation implements ShouldQueue
         // without sending aircraft to a worse bay (e.g. another airline's terminal) while better ones are free.
         $candidates = $this->bestMatchingBays($availableBays, $allowedGroups, $operator);
         $selectedBay = $candidates->random();
+
+        // The raw picture behind the pick - every eligible bay considered (SQL-ranked), the subset tied for
+        // best match the random pick was actually made from, which relaxation level it took to get a match,
+        // and which one ultimately got chosen.
+        AssignmentLog::record($info->arr, $info->callsign, 'candidates', 'Candidates considered, selected Bay '.$selectedBay->bay, [
+            'relaxed_operator' => ! $level['operator'],
+            'relaxed_pax_type' => ! $level['pax'],
+            'eligible_bays' => $availableBays->map->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority'])->all(),
+            'candidates' => $candidates->map->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority'])->all(),
+            'selected_bay' => $selectedBay->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+        ], $info->cid);
 
         return $selectedBay;
     }
@@ -833,6 +879,12 @@ class BayAllocation implements ShouldQueue
                 $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
 
+                AssignmentLog::record($info['arr'], $info['cs'], 'assigned', 'Assigned Bay '.$value->bay, [
+                    'bay' => $value->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+                    'eibt' => Carbon::parse($info['eibt'])->toIso8601String(),
+                    'eobt' => $eobt->toIso8601String(),
+                ], $cid);
+
             } elseif ($initial == 2) {
                 // Update scheduled_bay to the assigned bay
                 $aircraftBay = Flights::find($info['cs_id']);
@@ -857,14 +909,28 @@ class BayAllocation implements ShouldQueue
                 $bayType = $value->pax_type;
                 $arrBay = $value->display_name;
                 $telex = $this->HoppieFunction($version, $flight, $cid, $dep, $arr, $bayType, $arrBay, $discordChannel);
+
+                AssignmentLog::record($info['arr'], $info['cs'], 'reassigned', 'Reassigned from Bay '.$info['OLD_BAY'].' to Bay '.$value->bay, [
+                    'old_bay' => $info['OLD_BAY'],
+                    'new_bay' => $value->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+                    'eibt' => Carbon::parse($info['eibt'])->toIso8601String(),
+                    'eobt' => $eobt->toIso8601String(),
+                ], $cid);
             }
 
             return $value;
         } catch (\Throwable $e) {
-            Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$e->getMessage()}");
+            $errorMessage = $e->getMessage();
+            Log::channel('bays')->error("assignBay() failed for {$info['cs']}: {$errorMessage}");
+
+            AssignmentLog::record($info['arr'] ?? 'UNKNOWN', $info['cs'] ?? 'UNKNOWN', 'assignment_failed', 'Assignment failed: '.$errorMessage, [
+                'error' => $errorMessage,
+                'initial' => $initial,
+            ], optional($info['ac_model'] ?? null)->cid);
+
             $discord = app(DiscordClient::class);
             try {
-                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$e->getMessage()}: \n > {$info['ac_model']}");
+                $discord->sendMessage(config('services.discord.'.env('APP_ENV').'.bay_errors'), "Bay Assignment Failed | assignBay() failed for {$info['cs']} - {$errorMessage}: \n > {$info['ac_model']}");
             } catch (\Exception $e) {
                 // if discord fails, log the error, but don't kill the whole job
                 Log::channel('bays')->error("Failed to send Discord message: " . $e->getMessage());
@@ -900,6 +966,8 @@ class BayAllocation implements ShouldQueue
             // User preference section exists and it is set as do not do...
             echo 'Cancel Hoppie Message - User has it disabled';
 
+            AssignmentLog::record($arr, $flight, 'hoppie', 'Hoppie message skipped - user has it disabled', ['version' => $version], $cid);
+
             return null;
         }
 
@@ -908,6 +976,9 @@ class BayAllocation implements ShouldQueue
 
         $send_message = false;
         $arrival = Airports::where('icao', $arr)->first();
+
+        $outcome = 'skipped_non_production';
+        $sent = null;
 
         // Only run the check on Production with an Active Airport
         if (env('APP_ENV') == 'production') {
@@ -923,6 +994,7 @@ class BayAllocation implements ShouldQueue
                         Log::channel('hoppie')->error($flight.' CID in tester list - Send it off!');
                     } else {
                         $send_message = false;
+                        $outcome = 'blocked_testing_mode';
                         Log::channel('hoppie')->error($flight.' CID not in the tester list.');
                     }
                 } else {
@@ -934,6 +1006,7 @@ class BayAllocation implements ShouldQueue
                 if ($send_message == true) {
                     // Uplink is sent from the OzBays Hoppie station
                     $sent = $hoppie->sendTelex($flight, $Uplink);
+                    $outcome = $sent ? 'sent' : 'send_failed';
                     Log::channel('hoppie')->error($flight.($sent ? ' message sent from ' : ' message failed from ').$hoppie->callsign());
 
                     $discord = app(DiscordClient::class);
@@ -945,11 +1018,16 @@ class BayAllocation implements ShouldQueue
                     }
                 }
             } else {
+                $outcome = 'not_connected';
                 Log::channel('hoppie')->error($flight.' not connected to Hoppie Network. Exiting.');
             }
         } else {
             echo '- Not on the Production Server: Skipping Hoppie Message';
         }
+
+        AssignmentLog::record($arr, $flight, 'hoppie', 'Hoppie message: '.$outcome, [
+            'version' => $version, 'message' => $Uplink, 'outcome' => $outcome, 'sent' => $sent,
+        ], $cid);
 
         return $Uplink;
 

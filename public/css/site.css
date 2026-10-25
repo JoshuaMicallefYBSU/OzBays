@@ -962,6 +962,22 @@ a.oz-eyebrow:hover {
     word-break: break-word;
 }
 
+/* ---------- Assignment log raw payloads ---------- */
+.oz-log-payload {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--oz-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.5rem 0 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--oz-text-muted);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
 /* ---------- Airport arrivals board header ---------- */
 .oz-board-header {
     display: flex;
