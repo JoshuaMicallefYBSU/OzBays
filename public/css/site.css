@@ -2343,3 +2343,71 @@ a.oz-eyebrow:hover {
     color: var(--oz-text-muted);
     font-size: 0.85rem;
 }
+
+/* ---------- Admin: page access stats ---------- */
+.oz-access-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--oz-border);
+}
+
+.oz-access-row:last-child {
+    border-bottom: none;
+}
+
+.oz-access-label {
+    color: var(--oz-text-muted);
+}
+
+.oz-access-value {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--oz-text);
+}
+
+/* Plain CSS bar chart - no JS library needed. Each column's track is a fixed
+   height so bar heights (set inline as a % of that track) scale correctly. */
+.oz-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    margin-top: 1rem;
+}
+
+.oz-bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.oz-bar-track {
+    height: 140px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.oz-bar {
+    width: 100%;
+    min-height: 2px;
+    background: var(--oz-amber);
+    border-radius: 3px 3px 0 0;
+    transition: background .15s ease;
+}
+
+.oz-bar-col:hover .oz-bar {
+    background: var(--oz-amber-strong);
+}
+
+.oz-bar-label {
+    font-size: 0.65rem;
+    color: var(--oz-text-muted);
+    margin-top: 0.35rem;
+    white-space: nowrap;
+}

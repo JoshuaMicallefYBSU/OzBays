@@ -110,6 +110,7 @@ use Carbon\Carbon;
             </li>
 
             @canany(['view data', 'view feedback', 'view assignment logs'])
+            @canany(['view data', 'view feedback', 'view assignment logs', 'view page access'])
             @php($pendingApplications = auth()->user()->can('review applications') ? \App\Models\ContributorApplication::pending()->count() : 0)
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'admin') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

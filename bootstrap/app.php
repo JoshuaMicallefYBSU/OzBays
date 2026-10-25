@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\TrackPageView;
 use App\Http\Middleware\UpdateLastSeen;
 use App\Services\DiscordClient;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             UpdateLastSeen::class,
+        ]);
+        $middleware->alias([
+            'track.pageview' => TrackPageView::class,
+        ]);
+        // Set client-side via plain `document.cookie` (layouts/messages.blade.php's dismiss
+        // handler) so it can be written instantly with no server round-trip - Laravel's
+        // encrypted cookies can only be set/read through a response, so this one has to be
+        // excluded from encryption or request()->cookie() would never see it as present.
+        $middleware->encryptCookies(except: [
+            'ozbays_vatpac_trial_notification',
         ]);
         $middleware->redirectGuestsTo(fn () => route('auth.sso.login'));
     })

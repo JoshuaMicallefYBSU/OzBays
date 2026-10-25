@@ -35,9 +35,9 @@ class RolePermissionsTest extends TestCase
         $this->assertNotNull($developer);
 
         // Later migrations add 'import airports' to both developer roles, 'review applications' to Lead
-        // Developer, and 'view feedback'/'view assignment logs' to both
-        $this->assertEqualsCanonicalizing([...self::LEAD_DEVELOPER_PERMISSIONS, 'import airports', 'review applications', 'view feedback', 'delete airports', 'view assignment logs'], $leadDeveloper->getPermissionNames()->all());
-        $this->assertEqualsCanonicalizing(['view users', 'manage news', 'send notifications', 'import airports', 'view feedback', 'view assignment logs'], $developer->getPermissionNames()->all());
+        // Developer, and 'view feedback'/'view assignment logs'/'view page access' to both
+        $this->assertEqualsCanonicalizing([...self::LEAD_DEVELOPER_PERMISSIONS, 'import airports', 'review applications', 'view feedback', 'delete airports', 'view assignment logs', 'view page access'], $leadDeveloper->getPermissionNames()->all());
+        $this->assertEqualsCanonicalizing(['view users', 'manage news', 'send notifications', 'import airports', 'view feedback', 'view assignment logs', 'view page access'], $developer->getPermissionNames()->all());
     }
 
     public function test_migration_renames_an_existing_production_developer_role_and_trims_maintainer(): void

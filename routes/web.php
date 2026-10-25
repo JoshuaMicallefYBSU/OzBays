@@ -12,6 +12,7 @@ use App\Http\Controllers\FlightDisplayController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PageAccessController;
 use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PartialsController;
 use App\Http\Controllers\TeamController;
@@ -19,7 +20,7 @@ use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
 // New Homepage
-Route::get('/', [PagesController::class, 'Home'])->name('home');
+Route::get('/', [PagesController::class, 'Home'])->name('home')->middleware('track.pageview:home');
 
 // Error Messages
 Route::get('/404', function () {
@@ -41,10 +42,10 @@ Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog
 // Airport Arrival Ladders
 Route::get('/airports', [AirportsController::class, 'index'])->name('airportIndex');
 Route::get('/airports/{icao}/flights/{callsign}/display', [FlightDisplayController::class, 'show'])->name('airport.flight-display');
-Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder');
+Route::get('/airports/{icao}', [AirportsController::class, 'airportLadder'])->name('airportLadder')->middleware('track.pageview:airport_ladder');
 
 // Maps
-Route::get('/map', [MapController::class, 'index'])->name('mapIndex');
+Route::get('/map', [MapController::class, 'index'])->name('mapIndex')->middleware('track.pageview:map');
 Route::get('/map/embed', [MapController::class, 'embed'])->name('mapEmbed');
 Route::get('/map/{icao}', [MapController::class, 'airportMap']);
 
@@ -146,8 +147,13 @@ Route::prefix('dashboard/logs')->middleware(['auth', 'can:view assignment logs']
     Route::get('/{icao}/{callsign}/events', [AssignmentLogController::class, 'events'])->name('dashboard.logs.events');
 });
 
+// Page access stats - Developers only
+Route::prefix('dashboard/page-access')->middleware(['auth', 'can:view page access'])->group(function () {
+    Route::get('/', [PageAccessController::class, 'index'])->name('dashboard.pageAccess.index');
+});
+
 Route::prefix('dashboard')->middleware('auth')->group(function () {
-    Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('', [DashboardController::class, 'index'])->name('dashboard.index')->middleware('track.pageview:dashboard');
     Route::get('/my-settings', [DashboardController::class, 'settingsView'])->name('dashboard.settings.index');
     Route::get('/contribute', [ContributorApplicationController::class, 'create'])->name('dashboard.contribute');
     Route::post('/contribute', [ContributorApplicationController::class, 'store'])->name('dashboard.contribute.store');
