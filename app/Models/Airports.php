@@ -20,6 +20,8 @@ class Airports extends Model
         'live_update_times',
         'stats_ground',
         'stats_inbound',
+        'stats_controllers',
+        'controller_prefix',
     ];
 
     public function allBays()

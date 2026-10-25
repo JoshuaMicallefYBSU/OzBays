@@ -109,6 +109,7 @@ class AirportImporter
     public const AIRPORT_FIELDS = [
         'name' => 'Name', 'lat' => 'Latitude', 'lon' => 'Longitude', 'color' => 'Colour', 'status' => 'Status',
         'eibt_variable' => 'EIBT Multiplier', 'taxi_time' => 'Taxi Time', 'live_update_times' => 'Live Update Times (UTC)',
+        'controller_prefix' => 'Controller Prefix',
     ];
 
     public const BAY_FIELDS = [
@@ -174,6 +175,7 @@ class AirportImporter
             'eibt_variable' => $airport['settings']['eibt_config'] ?? 1.4,
             'taxi_time' => $airport['settings']['taxi_time'] ?? 15,
             'live_update_times' => $airport['settings']['update_time_utc'] ?? '0,2,4,6,8,10,12,14,20,22,24',
+            'controller_prefix' => $airport['settings']['controller_prefix'] ?? null,
         ];
     }
 

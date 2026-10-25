@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Airports;
+use App\Models\AssignmentLog;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
 use App\Models\Bays;
@@ -24,6 +25,11 @@ class FlightData implements ShouldQueue
     public $timeout = 55;
 
     public $tries = 1;
+
+    // VATSIM ATC position suffixes counted towards an airport's "active controllers" stat.
+    // CTR (en-route centre) and anything else (ATIS, OBS, FSS) is deliberately excluded - only
+    // positions actually working this airport's terminal area count.
+    private const CONTROLLER_POSITIONS = ['DEL', 'GND', 'TWR', 'APP', 'DEP'];
 
     /**
      * Create a new job instance.
@@ -57,7 +63,9 @@ class FlightData implements ShouldQueue
     public function update(): void
     {
         $vatsimData = $this->vatsimClient ?? app(VATSIMClient::class);
-        $pilots = $vatsimData->getPilots();
+        $data = $vatsimData->getVATSIMData();
+        $pilots = $data->pilots ?? [];
+        $controllers = $data->controllers ?? [];
         $state = app(AirportFlightState::class);
 
         // Bay Allocation Airports - Only These Flights get filtered
@@ -75,7 +83,33 @@ class FlightData implements ShouldQueue
             $stats[$airport->icao] = [
                 'ground' => 0,
                 'inbound' => 0,
+                // Unique positions currently staffed for this airport's terminal area,
+                // keyed by callsign so the same controller isn't double counted on a reconnect.
+                'controllers' => [],
             ];
+        }
+
+        // Active ATC positions at OzBays airports - matched on each airport's VATSIM facility
+        // code (e.g. "ML" for Melbourne, set per-airport via controller_prefix), not its ICAO -
+        // terminal area controllers use facility codes like "SY_GND" or "ML-S_APP", not "YSSY_GND".
+        // A callsign's facility is everything before the first "_", minus any "-SECTOR" suffix, so
+        // "ML-S_APP" resolves to "ML" while "SML_APP" stays "SML" and correctly fails to match.
+        $prefixToIcao = $airports->filter(fn (Airports $airport) => $airport->controller_prefix !== null)
+            ->mapWithKeys(fn (Airports $airport) => [strtoupper($airport->controller_prefix) => $airport->icao]);
+
+        foreach ($controllers as $controller) {
+            $segments = explode('_', $controller->callsign ?? '');
+            if (count($segments) < 2) {
+                continue;
+            }
+
+            $position = strtoupper(end($segments));
+            $facility = strtoupper(explode('-', $segments[0])[0]);
+
+            if (in_array($position, self::CONTROLLER_POSITIONS, true) && $prefixToIcao->has($facility)) {
+                $icao = $prefixToIcao->get($facility);
+                $stats[$icao]['controllers'][$controller->callsign] = true;
+            }
         }
 
         foreach ($pilots as $pilot) {
@@ -268,6 +302,16 @@ class FlightData implements ShouldQueue
                     $payload['eibt'] = null;
                     $payload['landed_at'] = $existing?->landed_at ?? Carbon::now('UTC');
                 }
+
+                // First time this callsign has ever been seen inbound to this airport -
+                // guarantees every flight shows up in the assignment log, even ones that
+                // never end up getting a bay (go offline, turn away, etc).
+                if ($existing === null) {
+                    AssignmentLog::record($ac['arr'], $ac['callsign'], 'registered', 'Registered - inbound '.$ac['arr'], [
+                        'dep' => $ac['dep'], 'ac' => $ac['ac'], 'type' => $ac['type'], 'distance' => $ac['distance'],
+                    ], $ac['cid']);
+                }
+
                 Flights::updateOrCreate(['callsign' => $ac['callsign']], $payload);
 
                 $stats[$ac['arr']]['inbound']++;
@@ -309,6 +353,13 @@ class FlightData implements ShouldQueue
 
         foreach ($offlineFlights as $flight) {
 
+            if ($flight->arr !== null) {
+                AssignmentLog::record($flight->arr, $flight->callsign, 'removed', 'Went offline - removed from tracking', [
+                    'had_scheduled_bay' => $flight->scheduled_bay !== null,
+                    'landed_at' => $flight->landed_at?->toIso8601String(),
+                ], $flight->cid);
+            }
+
             // Clear Bay Assignments
             $clearBays = BayAllocations::where('callsign', $flight->id)->get();
             foreach ($clearBays as $clearBay) {
@@ -329,6 +380,7 @@ class FlightData implements ShouldQueue
         foreach ($airports as $airport) {
             $airport->stats_ground = $stats[$airport->icao]['ground'];
             $airport->stats_inbound = $stats[$airport->icao]['inbound'];
+            $airport->stats_controllers = count($stats[$airport->icao]['controllers']);
             $airport->save();
         }
 

@@ -109,7 +109,7 @@ use Carbon\Carbon;
                 </a>
             </li>
 
-            @canany(['view data', 'view feedback'])
+            @canany(['view data', 'view feedback', 'view assignment logs'])
             @php($pendingApplications = auth()->user()->can('review applications') ? \App\Models\ContributorApplication::pending()->count() : 0)
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle {{ str_contains(request()->url(), 'admin') == true ? 'active' : '' }} " href="" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -148,6 +148,11 @@ use Carbon\Carbon;
                 @can('view feedback')
                   <div class="dropdown-divider"></div> {{-- Divider --}}
                   <a class="dropdown-item" href="{{route('dashboard.feedback.index')}}">View Feedback</a>
+                @endcan
+
+                @can('view assignment logs')
+                  <div class="dropdown-divider"></div> {{-- Divider --}}
+                  <a class="dropdown-item" href="{{route('dashboard.logs.index')}}">Assignment Logs</a>
                 @endcan
               </div>
             </li>
