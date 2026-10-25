@@ -102,9 +102,9 @@ use Carbon\Carbon;
           </ul>
 
           <ul class="navbar-nav ">
-            <!-- Public trial feedback (login required) -->
+            <!-- VATPAC Trial: feedback system temporarily hidden, points to the VATPAC helpdesk instead -->
             <li class="nav-item d-flex align-items-center">
-                <a class="oz-feedback-cta" href="{{ route('feedback.create') }}">
+                <a class="oz-feedback-cta" href="https://vatpac.org/helpdesk" target="_blank" target="_blank" rel="noopener">
                     <i class="fa fa-comment"></i> Provide your Feedback!
                 </a>
             </li>
@@ -183,6 +183,8 @@ use Carbon\Carbon;
                 <div class="dropdown-divider"></div> --}}
                 <a class="dropdown-item" href="{{route('dashboard.index')}}">Dashboard</a>
                 <a class="dropdown-item" href="{{route('dashboard.settings.index')}}">My Settings</a>
+                {{-- My Feedback hidden during the VATPAC Trial - feedback goes to the VATPAC helpdesk instead, see nav CTA above --}}
+                {{-- <a class="dropdown-item" href="{{route('feedback.my.index')}}">My Feedback</a> --}}
                 {{-- <a class="dropdown-item disabled" href="#">My Data</a> --}}
                 <div class="dropdown-divider"></div> {{-- Divider --}}
                 <a class="dropdown-item" href="{{ route('auth.logout') }}"onclick="event.preventDefault();document.getElementById('logout-form').submit();">{{ __('Logout') }}</a><form id="logout-form" action="{{ route('auth.logout') }}" method="GET" class="d-none">@csrf</form>

@@ -30,6 +30,7 @@
                 <th scope="col">User</th>
                 <th scope="col">Flight</th>
                 <th scope="col">Average</th>
+                <th scope="col">Status</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
@@ -41,6 +42,13 @@
                     <td>{{ $item->user?->fullName('FLC') ?? $item->user_id }}</td>
                     <td>{{ $item->flight ?? '-' }}</td>
                     <td>{{ $item->averageRating() }}/10</td>
+                    <td>
+                        @if($item->isClosed())
+                            <span class="oz-status-pill oz-status-pill--disabled">Closed</span>
+                        @else
+                            <span class="oz-status-pill oz-status-pill--active">Open</span>
+                        @endif
+                    </td>
                     <td><a href="{{ route('dashboard.feedback.show', $item) }}">View</a></td>
                 </tr>
             @endforeach

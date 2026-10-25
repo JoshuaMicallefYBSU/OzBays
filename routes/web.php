@@ -123,12 +123,19 @@ Route::prefix('admin/notifications')->middleware(['auth', 'can:send notification
 Route::middleware('auth')->group(function () {
     Route::get('/provide-feedback', [FeedbackController::class, 'create'])->name('feedback.create');
     Route::post('/provide-feedback', [FeedbackController::class, 'store'])->middleware('throttle:5,60')->name('feedback.store');
+
+    Route::get('/my-feedback', [FeedbackController::class, 'myIndex'])->name('feedback.my.index');
+    Route::get('/my-feedback/{feedback}', [FeedbackController::class, 'myShow'])->name('feedback.my.show');
+    Route::post('/my-feedback/{feedback}/reply', [FeedbackController::class, 'userReply'])->middleware('throttle:20,60')->name('feedback.my.reply');
 });
 
 // Feedback admin view
 Route::prefix('dashboard/feedback')->middleware(['auth', 'can:view feedback'])->group(function () {
     Route::get('/', [FeedbackController::class, 'index'])->name('dashboard.feedback.index');
     Route::get('/{feedback}', [FeedbackController::class, 'show'])->name('dashboard.feedback.show');
+    Route::post('/{feedback}/reply', [FeedbackController::class, 'reply'])->name('dashboard.feedback.reply');
+    Route::post('/{feedback}/close', [FeedbackController::class, 'close'])->name('dashboard.feedback.close');
+    Route::post('/{feedback}/reopen', [FeedbackController::class, 'reopen'])->name('dashboard.feedback.reopen');
 });
 
 Route::prefix('dashboard')->middleware('auth')->group(function () {

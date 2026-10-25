@@ -694,6 +694,12 @@ footer.oz-footer .copyright * {
     padding: 0.35rem 0.85rem;
     border-radius: 999px;
     margin-bottom: 1.1rem;
+    text-decoration: none;
+}
+
+a.oz-eyebrow:hover {
+    text-decoration: none;
+    filter: brightness(1.15);
 }
 
 .oz-eyebrow .oz-dot {
@@ -925,6 +931,35 @@ footer.oz-footer .copyright * {
     color: var(--oz-red-soft);
     background: rgba(248, 113, 113, 0.12);
     border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* ---------- Feedback reply thread ---------- */
+.oz-reply {
+    border-left: 3px solid var(--oz-border-strong);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0 10px 10px 0;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.oz-reply--dev {
+    border-left-color: var(--oz-amber);
+    background: rgba(255, 199, 44, 0.06);
+}
+
+.oz-reply-meta {
+    font-size: 0.8rem;
+    color: var(--oz-text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.oz-reply-meta b {
+    color: var(--oz-text);
+}
+
+.oz-reply-body {
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* ---------- Airport arrivals board header ---------- */

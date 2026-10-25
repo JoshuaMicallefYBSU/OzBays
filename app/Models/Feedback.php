@@ -23,6 +23,7 @@ class Feedback extends Model
         'ratings',
         'flight',
         'body',
+        'status',
     ];
 
     protected $casts = [
@@ -34,10 +35,20 @@ class Feedback extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function replies()
+    {
+        return $this->hasMany(FeedbackReply::class)->orderBy('created_at');
+    }
+
     public function averageRating(): ?float
     {
         $ratings = array_filter((array) $this->ratings, 'is_numeric');
 
         return $ratings ? round(array_sum($ratings) / count($ratings), 1) : null;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->status === 'closed';
     }
 }
