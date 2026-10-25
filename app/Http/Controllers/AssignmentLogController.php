@@ -13,7 +13,7 @@ class AssignmentLogController extends Controller
     {
         $airports = AssignmentLog::selectRaw('airport, COUNT(DISTINCT callsign) as callsign_count, MAX(created_at) as last_activity')
             ->groupBy('airport')
-            ->orderBy('airport')
+            ->orderByDesc('last_activity')
             ->get();
 
         return view('dashboard.admin.logs.index', compact('airports'));
@@ -53,12 +53,12 @@ class AssignmentLogController extends Controller
         return view('dashboard.admin.logs.show', ['icao' => $icao, 'callsigns' => $callsigns, 'search' => $search]);
     }
 
-    // AJAX partial - every event ever logged for one callsign at one airport, oldest first.
+    // AJAX partial - every event ever logged for one callsign at one airport, newest first.
     public function events(string $icao, string $callsign)
     {
         $events = AssignmentLog::where('airport', strtoupper($icao))
             ->where('callsign', $callsign)
-            ->orderBy('created_at')
+            ->orderByDesc('created_at')
             ->get();
 
         return view('dashboard.admin.logs.events', compact('events'));

@@ -9,7 +9,7 @@
             <p class="mb-0">No assignment events have been logged yet.</p>
         </div>
     @else
-        <table id="dataTable" class="table table-hover" style="text-align: center">
+        <table id="assignmentLogsAirportTable" class="table table-hover" style="text-align: center">
             <thead>
                 <tr>
                     <th scope="col">Airport</th>
@@ -30,5 +30,15 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- Own table id (not the global #dataTable) so we can default-sort by Last
+             Activity descending instead of DataTables' usual alphabetical-by-column-0 --}}
+        <script>
+            $(document).ready(function () {
+                $('#assignmentLogsAirportTable').DataTable({
+                    order: [[2, 'desc']],
+                });
+            });
+        </script>
     @endif
 @endsection

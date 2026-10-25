@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\BayAllocation;
+use App\Models\Airports;
 use App\Models\AssignmentLog;
 use App\Models\Bays;
 use App\Models\Flights;
@@ -36,6 +37,11 @@ class AssignmentLogTest extends TestCase
 
         Role::firstOrCreate(['name' => 'Pilot']);
         Role::firstOrCreate(['name' => 'Developer']);
+
+        Airports::create([
+            'icao' => 'YBBN', 'lat' => '-27.0', 'lon' => '153.0', 'name' => 'Brisbane',
+            'color' => '#fff', 'status' => 'active', 'check_exist' => 1,
+        ]);
     }
 
     private function createUser(int $id, string $roleName): User
@@ -64,10 +70,22 @@ class AssignmentLogTest extends TestCase
     {
         $log = AssignmentLog::record('ybbn', 'QFA1', 'assigned', 'Assigned Bay A1', ['bay' => 'A1'], '12345');
 
+        $this->assertNotNull($log);
         $this->assertSame('YBBN', $log->airport);
         $this->assertSame('assigned', $log->event_type);
         $this->assertSame(['bay' => 'A1'], $log->payload);
         $this->assertSame(12345, $log->cid);
+    }
+
+    public function test_record_helper_refuses_to_log_an_airport_ozbays_does_not_track(): void
+    {
+        // Reproduces the GEC8401/VTBS bug: a flight's `arr` field reflects whatever it's
+        // currently filed to, which for a departure sitting at an OzBays airport is its
+        // real-world (often overseas) destination, not an OzBays-tracked ICAO.
+        $log = AssignmentLog::record('VTBS', 'GEC8401', 'removed', 'Went offline - removed from tracking');
+
+        $this->assertNull($log);
+        $this->assertSame(0, AssignmentLog::where('callsign', 'GEC8401')->count());
     }
 
     public function test_select_bay_logs_the_candidates_considered_and_the_bay_chosen(): void
@@ -169,8 +187,7 @@ class AssignmentLogTest extends TestCase
 
         $this->actingAs($developer)->get(route('dashboard.logs.events', ['YBBN', 'QFA3000']))
             ->assertOk()
-            ->assertSee('REGISTERED')
-            ->assertSee('ASSIGNED')
+            ->assertSeeInOrder(['ASSIGNED', 'REGISTERED'])
             ->assertSee('A1');
     }
 

@@ -353,7 +353,12 @@ class FlightData implements ShouldQueue
 
         foreach ($offlineFlights as $flight) {
 
-            if ($flight->arr !== null) {
+            // $flight->arr is whatever the flight is currently filed to, which for a
+            // departure sitting at an OzBays airport is its real-world destination (e.g.
+            // an overseas ICAO) - not necessarily (or even usually) an OzBays-tracked
+            // airport. Only log here if it actually is one, so the assignment log never
+            // picks up airports the system doesn't monitor.
+            if ($flight->arr !== null && $airports->has($flight->arr)) {
                 AssignmentLog::record($flight->arr, $flight->callsign, 'removed', 'Went offline - removed from tracking', [
                     'had_scheduled_bay' => $flight->scheduled_bay !== null,
                     'landed_at' => $flight->landed_at?->toIso8601String(),
