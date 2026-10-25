@@ -1038,22 +1038,22 @@ class BayAllocation implements ShouldQueue
         // Bay's Type (DOM/INTL etc) goes in front when the bay has one - e.g. "INTL, I8" or "Maroomba 1 (MB1)"
         $arrBayText = $bayType ? "{$bayType}, {$arrBay}" : $arrBay;
 
-        if ($version == 1) {
-            $messageLines = [
-                "{$arr} ARRIVAL INFO
-                {$flight}, {$dep}-{$arr}
-                ASSIGNED BAY: {$arrBayText}
-                IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
-                AUTO BAY ASSIGNMENT SENT FROM OZBAYS.ORG"
-            ];
-        } elseif ($version == 2) {
-            $messageLines = [
-                "{$arr} ARRIVAL UPDATE
-                ASSIGNED BAY: {$arrBayText}
-                IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
-                BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
-            ];
-        }
+if ($version == 1) {
+$messageLines = [
+"{$arr} ARRIVAL INFO
+{$flight}, {$dep}-{$arr}
+ASSIGNED BAY: {$arrBayText}
+IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
+AUTO BAY ASSIGNMENT SENT FROM OZBAYS.XYZ"
+];
+} elseif ($version == 2) {
+$messageLines = [
+"{$arr} ARRIVAL UPDATE
+ASSIGNED BAY: {$arrBayText}
+IF UNABLE ADVISE GND WITH ALTN BAY REQ ON FIRST CTC
+BAY CHANGED DUE OTHER AC ON ORIG ASSIGNED BAY",
+];
+}
 
         return implode("\n", $messageLines);
     }
