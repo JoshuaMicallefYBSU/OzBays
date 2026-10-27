@@ -68,7 +68,7 @@
 <div class="row mt-4">
     <div class="col-md-12">
         <div class="oz-card-dark">
-            <div class="oz-section-title"><i class="fa fa-plane-arrival"></i> Ground Traffic</div>
+            <div class="oz-section-title"><i class="fa fa-plane-arrival"></i> Live Statistics</div>
             <x id="ground-traffic"></x>
         </div>
     </div>
@@ -79,7 +79,7 @@
     <div class="col-md-12">
         <div class="oz-card-dark">
             <div class="oz-section-title">
-                <i class="fa fa-chart-pie"></i> OzBays Stats
+                <i class="fa fa-chart-pie"></i> OzBays Historical Stats
                 <span class="oz-section-sub">Arrivals in the last 30 days</span>
             </div>
 

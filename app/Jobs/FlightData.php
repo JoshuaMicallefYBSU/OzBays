@@ -82,10 +82,18 @@ class FlightData implements ShouldQueue
         foreach ($airports as $airport) {
             $stats[$airport->icao] = [
                 'ground' => 0,
+                // stats_ground split into arrived here vs everything else (departing, or no
+                // flight plan at all - lumped together since neither is "an arrival").
+                'ground_arrivals' => 0,
+                'ground_departures' => 0,
                 'inbound' => 0,
+                // Of 'inbound', how many are within 200NM and already have a bay assigned.
+                'inbound_bay_assigned' => 0,
                 // Unique positions currently staffed for this airport's terminal area,
                 // keyed by callsign so the same controller isn't double counted on a reconnect.
                 'controllers' => [],
+                // Raw position (DEL/GND/TWR/APP/DEP) => online, for the homepage badges.
+                'positions' => [],
             ];
         }
 
@@ -109,6 +117,7 @@ class FlightData implements ShouldQueue
             if (in_array($position, self::CONTROLLER_POSITIONS, true) && $prefixToIcao->has($facility)) {
                 $icao = $prefixToIcao->get($facility);
                 $stats[$icao]['controllers'][$controller->callsign] = true;
+                $stats[$icao]['positions'][$position] = true;
             }
         }
 
@@ -266,6 +275,14 @@ class FlightData implements ShouldQueue
             Flights::updateOrCreate(['callsign' => $aa['callsign']], $payload);
 
             $stats[$aa['at_airport']]['ground']++;
+
+            // Arrivals win the local/circuit edge case (dep === arr === this airport).
+            // Everything else - departing, or no flight plan at all - counts as "departures".
+            if ($aa['arr'] === $aa['at_airport']) {
+                $stats[$aa['at_airport']]['ground_arrivals']++;
+            } else {
+                $stats[$aa['at_airport']]['ground_departures']++;
+            }
         }
 
         // Update the Entries in the Database
@@ -315,6 +332,13 @@ class FlightData implements ShouldQueue
                 Flights::updateOrCreate(['callsign' => $ac['callsign']], $payload);
 
                 $stats[$ac['arr']]['inbound']++;
+
+                // $existing reflects whatever BayAllocation (a separate job) had already
+                // assigned as of its last run - a minute's staleness is fine here, same as
+                // the ETA/EIBT figures already shown elsewhere on this flight.
+                if ($ac['distance'] <= 200 && $existing?->scheduled_bay !== null) {
+                    $stats[$ac['arr']]['inbound_bay_assigned']++;
+                }
             }
         }
 
@@ -384,8 +408,14 @@ class FlightData implements ShouldQueue
         // Statistics Updates
         foreach ($airports as $airport) {
             $airport->stats_ground = $stats[$airport->icao]['ground'];
+            $airport->stats_ground_breakdown = [
+                'arrivals' => $stats[$airport->icao]['ground_arrivals'],
+                'departures' => $stats[$airport->icao]['ground_departures'],
+            ];
             $airport->stats_inbound = $stats[$airport->icao]['inbound'];
+            $airport->stats_inbound_bay_assigned = $stats[$airport->icao]['inbound_bay_assigned'];
             $airport->stats_controllers = count($stats[$airport->icao]['controllers']);
+            $airport->stats_controller_positions = $this->controllerPositionBadges($stats[$airport->icao]['positions']);
             $airport->save();
         }
 
@@ -395,6 +425,19 @@ class FlightData implements ShouldQueue
         // dd($landingCalcs);
         // dd($stats);
 
+    }
+
+    // Homepage badge breakdown - DEL/GND/TWR each get their own badge, APP and DEP share one
+    // "APP/DEP" badge (online if either is staffed) since smaller fields commonly run them
+    // on the same frequency/sector.
+    private function controllerPositionBadges(array $positions): array
+    {
+        return [
+            'DEL' => $positions['DEL'] ?? false,
+            'GND' => $positions['GND'] ?? false,
+            'TWR' => $positions['TWR'] ?? false,
+            'APP_DEP' => ($positions['APP'] ?? false) || ($positions['DEP'] ?? false),
+        ];
     }
 
     private function normaliseIcao(?string $icao): ?string

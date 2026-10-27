@@ -132,11 +132,15 @@ class PartialsController extends Controller
 
     public function updateAirportStats()
     {
-        $stats_ground = Airports::whereIn('status', ['testing', 'active'])->where('stats_ground', '>', 0)->orderBy('stats_ground', 'desc')->limit(3)->get();
-        $stats_inbound = Airports::whereIn('status', ['testing', 'active'])->where('stats_inbound', '>', 0)->orderBy('stats_inbound', 'desc')->limit(3)->get();
+        $stats_ground = Airports::whereIn('status', ['testing', 'active'])->where('stats_ground', '>', 0)->orderBy('stats_ground', 'desc')->limit(4)->get();
+        $stats_inbound = Airports::whereIn('status', ['testing', 'active'])->where('stats_inbound', '>', 0)->orderBy('stats_inbound', 'desc')->limit(4)->get();
         $stats_controllers = Airports::whereIn('status', ['testing', 'active'])->where('stats_controllers', '>', 0)->orderBy('stats_controllers', 'desc')->limit(3)->get();
 
-        return view('partials.airport-stats', compact('stats_ground', 'stats_inbound', 'stats_controllers'))->render();
+        // When FlightData last wrote these stats - every active/testing airport gets touched
+        // on every run, so the latest updated_at across them all is the figures' actual age.
+        $lastUpdated = Airports::whereIn('status', ['testing', 'active'])->max('updated_at');
+
+        return view('partials.airport-stats', compact('stats_ground', 'stats_inbound', 'stats_controllers', 'lastUpdated'))->render();
     }
 
     // Render Notification Bell for logged in users

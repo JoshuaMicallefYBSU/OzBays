@@ -206,12 +206,20 @@ class DashboardFlightLogsTest extends TestCase
 
     public function test_home_page_stats_list_the_busiest_airports(): void
     {
-        Airports::create(['icao' => 'YSSY', 'lat' => '0', 'lon' => '0', 'name' => 'Sydney', 'color' => '#ff0000', 'check_exist' => 1, 'status' => 'active', 'stats_inbound' => 12, 'stats_ground' => 0]);
-        Airports::create(['icao' => 'YMML', 'lat' => '0', 'lon' => '0', 'name' => 'Melbourne', 'color' => '#00ff00', 'check_exist' => 1, 'status' => 'testing', 'stats_inbound' => 3, 'stats_ground' => 5]);
+        Airports::create([
+            'icao' => 'YSSY', 'lat' => '0', 'lon' => '0', 'name' => 'Sydney', 'color' => '#ff0000', 'check_exist' => 1,
+            'status' => 'active', 'stats_inbound' => 12, 'stats_inbound_bay_assigned' => 9, 'stats_ground' => 0,
+        ]);
+        Airports::create([
+            'icao' => 'YMML', 'lat' => '0', 'lon' => '0', 'name' => 'Melbourne', 'color' => '#00ff00', 'check_exist' => 1,
+            'status' => 'testing', 'stats_inbound' => 3, 'stats_ground' => 5,
+            'stats_ground_breakdown' => ['arrivals' => 4, 'departures' => 1],
+        ]);
 
         $this->get('/partial/home/airport-stats')
             ->assertOk()
-            ->assertSeeInOrder(['Inbound', 'YSSY', '12', 'YMML', '3', 'On the Ground', 'YMML', '5'])
+            // Inbound now splits into "tracked" (the old total) and "bay assigned"
+            ->assertSeeInOrder(['Inbound', 'YSSY', '12', '9', 'YMML', '3', 'On the Ground', 'YMML', '4', '1'])
             ->assertDontSee('No aircraft inbound');
     }
 }
