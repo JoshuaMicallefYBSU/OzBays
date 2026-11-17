@@ -60,6 +60,12 @@ class User extends Authenticatable
     {
         static::created(function ($user) {
             $user->userPreferences()->create();
+
+            // Everyone starts as a Pilot - previously this was only given the first time the dashboard was opened,
+            // so anyone who only used the map/airports never had a role
+            if (\Spatie\Permission\Models\Role::where('name', 'Pilot')->exists()) {
+                $user->assignRole('Pilot');
+            }
         });
     }
 

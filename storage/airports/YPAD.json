@@ -67,15 +67,6 @@
             "Type": "DOM",
             "Priority": 1
         },
-        "16R": {
-            "lat": -34.9382327,
-            "lon": 138.53950578,
-            "Operator": null,
-            "Terminal": "T1",
-            "AC": "B747/B767",
-            "Type": null,
-            "Priority": 1
-        },
         "16L": {
             "lat": -34.93855978,
             "lon": 138.53955969,
@@ -83,6 +74,15 @@
             "Terminal": "T1",
             "AC": "A320/B738",
             "Type": "DOM",
+            "Priority": 1
+        },
+        "16R": {
+            "lat": -34.9382327,
+            "lon": 138.53950578,
+            "Operator": null,
+            "Terminal": "T1",
+            "AC": "B747/B767",
+            "Type": null,
             "Priority": 1
         },
         "18R": {

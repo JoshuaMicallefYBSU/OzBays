@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -r '$j=json_decode\\(file_get_contents\\(\"storage/airports/YSSY.json\"\\),true\\); $k=array_map\\(\"strval\",array_keys\\($j[\"parking\"]\\)\\); echo count\\($k\\).\" bays. First 25 as stored: \".implode\\(\" \",array_slice\\($k,0,25\\)\\).\"\\\\n\";')"
+    ]
+  }
+}
