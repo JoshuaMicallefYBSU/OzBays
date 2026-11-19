@@ -64,7 +64,16 @@ class FlightData implements ShouldQueue
     {
         $vatsimData = $this->vatsimClient ?? app(VATSIMClient::class);
         $data = $vatsimData->getVATSIMData();
-        $pilots = $data->pilots ?? [];
+
+        // A failed or malformed feed would mark every flight offline, and 6 minutes later delete them and release
+        // their bays. Skip this update instead and try again on the next one.
+        if (! is_object($data) || ! isset($data->pilots) || ! is_array($data->pilots)) {
+            Log::warning('FlightData: VATSIM feed missing or malformed - skipping this update');
+
+            return;
+        }
+
+        $pilots = $data->pilots;
         $controllers = $data->controllers ?? [];
         $state = app(AirportFlightState::class);
 
@@ -82,10 +91,18 @@ class FlightData implements ShouldQueue
         foreach ($airports as $airport) {
             $stats[$airport->icao] = [
                 'ground' => 0,
+                // stats_ground split into arrived here vs everything else (departing, or no
+                // flight plan at all - lumped together since neither is "an arrival").
+                'ground_arrivals' => 0,
+                'ground_departures' => 0,
                 'inbound' => 0,
+                // Of 'inbound', how many are within 200NM and already have a bay assigned.
+                'inbound_bay_assigned' => 0,
                 // Unique positions currently staffed for this airport's terminal area,
                 // keyed by callsign so the same controller isn't double counted on a reconnect.
                 'controllers' => [],
+                // Raw position (DEL/GND/TWR/APP/DEP) => online, for the homepage badges.
+                'positions' => [],
             ];
         }
 
@@ -109,12 +126,11 @@ class FlightData implements ShouldQueue
             if (in_array($position, self::CONTROLLER_POSITIONS, true) && $prefixToIcao->has($facility)) {
                 $icao = $prefixToIcao->get($facility);
                 $stats[$icao]['controllers'][$controller->callsign] = true;
+                $stats[$icao]['positions'][$position] = true;
             }
         }
 
         foreach ($pilots as $pilot) {
-
-            $aircraft = Flights::where('callsign', $pilot->callsign)->first();
 
             $airportMatch = null;
             foreach ($airports as $icao => $airport) {
@@ -232,15 +248,15 @@ class FlightData implements ShouldQueue
             }
         }
 
-        // Set all flights to offline (gets reupdated below)
-        $all_flights = Flights::where('online', 1)->get();
-        foreach ($all_flights as $fl) {
-            $fl->online = null;
-            $fl->save();
-        }
+        // Callsigns seen in this feed - everything else is marked offline once the updates below are done.
+        // (Marking every flight offline first left a window where BayAllocation saw no aircraft at all.)
+        $seenCallsigns = [];
 
         // Update the Entries in the Database
         foreach ($OnGround as $aa) {
+            $this->removeStaleCallsign($aa['cid'], $aa['callsign']);
+            $seenCallsigns[] = $aa['callsign'];
+
             $existing = Flights::where('callsign', $aa['callsign'])->first();
             $changedPlan = $existing && $this->changedPlan($existing, $aa['dep'], $aa['arr']);
             $payload = [
@@ -260,17 +276,28 @@ class FlightData implements ShouldQueue
             ];
             if ($changedPlan) {
                 $payload += $this->resetLifecyclePayload();
-            } elseif ($aa['phase'] === 'taxiing' && $existing && in_array($existing->status, ['Arrived', 'On Ground'], true)) {
+            } elseif ($aa['phase'] === 'taxiing' && $existing && $this->isDepartingFrom($existing, $aa)) {
                 $payload['departed_at'] = $existing->departed_at ?? Carbon::now('UTC');
             }
             Flights::updateOrCreate(['callsign' => $aa['callsign']], $payload);
 
             $stats[$aa['at_airport']]['ground']++;
+
+            // Arrivals win the local/circuit edge case (dep === arr === this airport).
+            // Everything else - departing, or no flight plan at all - counts as "departures".
+            if ($aa['arr'] === $aa['at_airport']) {
+                $stats[$aa['at_airport']]['ground_arrivals']++;
+            } else {
+                $stats[$aa['at_airport']]['ground_departures']++;
+            }
         }
 
         // Update the Entries in the Database
         foreach ($arrivalAircraft as $airportIcao => $aircraftList) {
             foreach ($aircraftList as $ac) {
+
+                $this->removeStaleCallsign($ac['cid'], $ac['callsign']);
+                $seenCallsigns[] = $ac['callsign'];
 
                 $existing = Flights::where('callsign', $ac['callsign'])->first();
                 $changedPlan = $existing && $this->changedPlan($existing, $ac['dep'], $ac['arr']);
@@ -297,7 +324,9 @@ class FlightData implements ShouldQueue
                 } elseif ($ac['elt'] !== null) {
                     $payload['elt'] = $ac['elt'];
                     $payload['eibt'] = $ac['eibt'];
-                } elseif ($ac['landed']) {
+                } elseif ($ac['landed'] && ($existing?->landed_at !== null || $existing?->elt !== null)) {
+                    // Only a flight that was seen airborne (it had an ELT) has landed - a pilot who connects at
+                    // the gate of their destination hasn't flown anything, so it isn't logged as a completed flight
                     $payload['elt'] = null;
                     $payload['eibt'] = null;
                     $payload['landed_at'] = $existing?->landed_at ?? Carbon::now('UTC');
@@ -315,8 +344,18 @@ class FlightData implements ShouldQueue
                 Flights::updateOrCreate(['callsign' => $ac['callsign']], $payload);
 
                 $stats[$ac['arr']]['inbound']++;
+
+                // $existing reflects whatever BayAllocation (a separate job) had already
+                // assigned as of its last run - a minute's staleness is fine here, same as
+                // the ETA/EIBT figures already shown elsewhere on this flight.
+                if ($ac['distance'] <= 200 && $existing?->scheduled_bay !== null) {
+                    $stats[$ac['arr']]['inbound_bay_assigned']++;
+                }
             }
         }
+
+        // Anything not in this feed is now offline (deleted below once it's been gone for 6 minutes)
+        Flights::where('online', 1)->whereNotIn('callsign', array_unique($seenCallsigns))->update(['online' => null]);
 
         // Alrighty. Need to record that the aircraft arrived at the Airport of choice
         // The parked bay is filled in later by BayAllocation once the aircraft stops at a bay
@@ -384,8 +423,14 @@ class FlightData implements ShouldQueue
         // Statistics Updates
         foreach ($airports as $airport) {
             $airport->stats_ground = $stats[$airport->icao]['ground'];
+            $airport->stats_ground_breakdown = [
+                'arrivals' => $stats[$airport->icao]['ground_arrivals'],
+                'departures' => $stats[$airport->icao]['ground_departures'],
+            ];
             $airport->stats_inbound = $stats[$airport->icao]['inbound'];
+            $airport->stats_inbound_bay_assigned = $stats[$airport->icao]['inbound_bay_assigned'];
             $airport->stats_controllers = count($stats[$airport->icao]['controllers']);
+            $airport->stats_controller_positions = $this->controllerPositionBadges($stats[$airport->icao]['positions']);
             $airport->save();
         }
 
@@ -395,6 +440,19 @@ class FlightData implements ShouldQueue
         // dd($landingCalcs);
         // dd($stats);
 
+    }
+
+    // Homepage badge breakdown - DEL/GND/TWR each get their own badge, APP and DEP share one
+    // "APP/DEP" badge (online if either is staffed) since smaller fields commonly run them
+    // on the same frequency/sector.
+    private function controllerPositionBadges(array $positions): array
+    {
+        return [
+            'DEL' => $positions['DEL'] ?? false,
+            'GND' => $positions['GND'] ?? false,
+            'TWR' => $positions['TWR'] ?? false,
+            'APP_DEP' => ($positions['APP'] ?? false) || ($positions['DEP'] ?? false),
+        ];
     }
 
     private function normaliseIcao(?string $icao): ?string
@@ -418,6 +476,32 @@ class FlightData implements ShouldQueue
         }
 
         return (int) round(max((float) $known, (float) $ac['distance']));
+    }
+
+    // A pilot can only be connected once, so a row for the same CID under another callsign is from before they
+    // reconnected. Drop it (and release its bay) straight away rather than leaving it to hold the bay - and show
+    // on their dashboard - for the 6 minutes until the offline cleanup.
+    private function removeStaleCallsign($cid, string $callsign): void
+    {
+        $stale = Flights::where('cid', $cid)->where('callsign', '!=', $callsign)->get();
+
+        foreach ($stale as $flight) {
+            BayAllocations::where('callsign', $flight->id)->delete();
+            BayConflicts::where('callsign', $flight->id)->delete();
+            $flight->delete();
+        }
+    }
+
+    // Taxiing away from the airport it's departing (or, with no flight plan, from a stand it was sitting on).
+    // The arrival loop stores "Departing another Airport" for flights between two OzBays airports, so the status
+    // alone missed them.
+    private function isDepartingFrom(Flights $existing, array $onGround): bool
+    {
+        if ($onGround['dep'] !== null) {
+            return $onGround['dep'] === $onGround['at_airport'] && $onGround['arr'] !== $onGround['at_airport'];
+        }
+
+        return in_array($existing->status, ['Arrived', 'On Ground'], true);
     }
 
     private function changedPlan(Flights $flight, ?string $departure, ?string $arrival): bool

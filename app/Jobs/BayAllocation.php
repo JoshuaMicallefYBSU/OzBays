@@ -116,11 +116,8 @@ class BayAllocation implements ShouldQueue
         $recomputeAircraft = []; // All Aircraft requiring Bay Recompute
 
         // # BAY OCCUPANCY CHECKER - This needs to be done first everytime.
-        // Set all bays as clear (will be propogated through shortly)
-        foreach ($bays as $bay) {
-            $bay->clear = 1;
-            $bay->save();
-        }
+        // Set all bays as clear (will be propogated through shortly) - one query rather than saving every bay
+        Bays::query()->update(['clear' => 1]);
 
         // dd($flights);
 
@@ -364,7 +361,13 @@ class BayAllocation implements ShouldQueue
 
             // dd($occupiedBays);
 
-            $futureSlots = BayAllocations::where('status', 'PLANNED')->where('bay_core', $departure['bay_core'])->with('BayInfo')->get();
+            // Bay names repeat between airports (YMML/YSSY both have D1-D9, YBBN/YPAD/YPPH all have 15-23), so
+            // only planned slots at the airport this aircraft is parked at can conflict with it
+            $futureSlots = BayAllocations::where('status', 'PLANNED')
+                ->where('airport', $departure['airport'])
+                ->where('bay_core', $departure['bay_core'])
+                ->with('BayInfo')
+                ->get();
             if (empty($futureSlots) || $futureSlots->isEmpty()) {
 
                 // Aircraft has parked at bay that is either their scheduled, or a unscheduled bay
@@ -472,6 +475,7 @@ class BayAllocation implements ShouldQueue
                 $info2[$conflict_bay->FlightInfo->callsign] = [
                     'cs' => $conflict_bay->FlightInfo->callsign,
                     'cs_id' => $conflict_bay->FlightInfo->id,
+                    'dep' => $conflict_bay->FlightInfo->dep, // so the real-world bay is still considered on reassignment
                     'arr' => $conflict_bay->FlightInfo->arr,
                     'ac' => $conflict_bay->FlightInfo->ac,
                     'elt' => $conflict_bay->FlightInfo->elt,

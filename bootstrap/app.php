@@ -6,7 +6,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\TrackPageView;
 use App\Http\Middleware\UpdateLastSeen;
 use App\Services\DiscordClient;
+use Illuminate\Database\LostConnectionDetector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,6 +36,31 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->report(function (Throwable $e) {
             try {
+            // MySQL briefly unavailable (host restarts) - every per-minute job fails, so only alert once it has been
+            // down for a few minutes, and at most every 30 minutes. Tracked in the file cache as the normal cache
+            // lives in MySQL. Short blips just recover on the next run.
+            if (app(LostConnectionDetector::class)->causedByLostConnection($e)) {
+                $cache = Cache::store('file');
+                $downSince = $cache->get('db-outage:since', now()->getTimestamp());
+                $cache->put('db-outage:since', $downSince, now()->addMinutes(10)); // resets after 10 quiet minutes
+
+                $minutesDown = (int) floor((now()->getTimestamp() - $downSince) / 60);
+                if ($minutesDown < 3 || $cache->has('db-outage:alerted')) {
+                    return;
+                }
+                $cache->put('db-outage:alerted', true, now()->addMinutes(30));
+
+                (new DiscordClient())->sendMessageWithEmbed(
+                    config('services.discord.' . config('app.env') . '.error_logs'),
+                    'Database Unavailable',
+                    "MySQL has been unreachable for {$minutesDown} minutes - jobs and pages that use the database are failing.\n"
+                        . "Message: {$e->getMessage()}",
+                    'fc0303',
+                );
+
+                return;
+            }
+
             $authUser = Auth::check() ? Auth::user() : null;
 
             $authText = $authUser

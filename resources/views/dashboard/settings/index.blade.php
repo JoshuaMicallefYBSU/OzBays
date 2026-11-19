@@ -12,7 +12,6 @@
     @csrf
 
     {{-- Hidden Items --}}
-    <input required type="hidden" value={{Auth::user()->id}} name="id" maxlength="10" id="id" class="form-control">
 
     {{-- General Sections --}}
     <h2><u>General</u></h2>

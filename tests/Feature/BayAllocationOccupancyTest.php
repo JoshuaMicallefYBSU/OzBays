@@ -191,7 +191,7 @@ class BayAllocationOccupancyTest extends TestCase
         $flight = Flights::create([
             'callsign' => 'QFA401', 'cid' => 1, 'dep' => 'YSSY', 'arr' => 'YBBN', 'ac' => 'A321',
             'hdg' => '0', 'type' => null, 'lat' => '-29.0', 'lon' => '153.0', 'speed' => '450',
-            'alt' => '35000', 'distance' => 220, 'elt' => null, 'eibt' => now(), 'status' => 'Inbound', 'online' => 1,
+            'alt' => '35000', 'distance' => 270, 'elt' => null, 'eibt' => now(), 'status' => 'Inbound', 'online' => 1,
         ]);
 
         BayAllocations::create([

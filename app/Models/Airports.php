@@ -21,7 +21,15 @@ class Airports extends Model
         'stats_ground',
         'stats_inbound',
         'stats_controllers',
+        'stats_controller_positions',
+        'stats_inbound_bay_assigned',
+        'stats_ground_breakdown',
         'controller_prefix',
+    ];
+
+    protected $casts = [
+        'stats_controller_positions' => 'array',
+        'stats_ground_breakdown' => 'array',
     ];
 
     public function allBays()

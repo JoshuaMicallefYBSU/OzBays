@@ -87,7 +87,7 @@ class AuthController extends Controller
             [
                 'email' => $response->data->personal->email ?? 'no-reply@ganderoceanic.ca',
                 'fname' => isset($response->data->personal->name_first)
-                    ? utf8_decode($response->data->personal->name_first)
+                    ? $response->data->personal->name_first
                     : $response->data->cid,
                 'lname' => $response->data->personal->name_last ?? $response->data->cid,
             ]

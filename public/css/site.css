@@ -2240,6 +2240,76 @@ a.oz-eyebrow:hover {
     font-size: 0.7rem;
 }
 
+/* Multiple smaller figures side by side (Inbound's tracked/bay assigned, Ground's
+   arrivals/departures/no FP) in place of the single big .oz-stat-count number. */
+.oz-stat-count-split {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.6rem;
+}
+
+.oz-stat-count-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+}
+
+.oz-stat-count-item span {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--oz-text);
+}
+
+.oz-stat-count-item small {
+    font-size: 0.6rem;
+    color: var(--oz-text-muted);
+    white-space: nowrap;
+}
+
+/* ---------- Homepage: "last updated" line above Ground Traffic ---------- */
+.oz-stat-updated {
+    font-size: 0.75rem;
+    color: var(--oz-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.oz-stat-updated i {
+    color: var(--oz-amber);
+    margin-right: 0.3rem;
+}
+
+/* ---------- Homepage: controller position badges ---------- */
+.oz-controller-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+}
+
+.oz-badge-position {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    line-height: 1.4;
+}
+
+.oz-badge-online {
+    color: var(--oz-green-soft);
+    background: rgba(74, 222, 128, 0.14);
+    border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.oz-badge-offline {
+    color: var(--oz-red-soft);
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
 .oz-route-distance {
     margin-top: 0.2rem;
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
