@@ -52,16 +52,17 @@ class DashboardController extends Controller
 
     public function settingsSave(Request $request)
     {
-        // return $request->all();
+        // Always the logged-in user's own settings - never trust an id from the form
+        $data = $request->validate([
+            'name_format' => 'required|integer|between:0,3',
+            'hoppie_usage' => 'required|boolean',
+            'email_feedback' => 'nullable|boolean',
+            'news_notifications' => 'nullable|boolean',
+            'news_general' => 'nullable|boolean',
+            'ozbays_updates' => 'nullable|boolean',
+        ]);
 
-        $user = UserPreference::where('user_id', $request->id)->first();
-        $user->name_format = $request->name_format;
-        $user->hoppie_usage = $request->hoppie_usage;
-        $user->email_feedback = $request->email_feedback;
-        $user->news_notifications = $request->news_notifications;
-        $user->news_general = $request->news_general;
-        $user->ozbays_updates = $request->ozbays_updates;
-        $user->save();
+        $request->user()->getUserPreferencesOrCreate()->fill($data)->save();
 
         return back()->with('success', 'Success!!! Your settings where updated!');
     }

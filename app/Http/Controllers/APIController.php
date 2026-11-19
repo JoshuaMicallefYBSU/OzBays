@@ -31,12 +31,10 @@ class APIController extends Controller
             ->orderBy('distance', 'asc')
             ->get()
             ->map(function ($flight) {
+                // Full bay name - cutting it to 4 characters sent e.g. YPPH SA15A to OzStrips as SA15
                 $flight->scheduled_bay = $flight->mapBay->bay ?? null;
                 unset($flight->mapBay);
 
-                if ($flight->scheduled_bay !== null) {
-                    $flight->scheduled_bay = Str::substr($flight->scheduled_bay, 0, 4);
-                }
                 return $flight;
             });
 

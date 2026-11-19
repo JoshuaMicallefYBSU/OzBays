@@ -12,6 +12,7 @@ class UserPreference extends Model
         'user_id',
         'name_format',
         'hoppie_usage',
+        'email_feedback',
         'news_notifications',
         'news_general',
         'ozbays_updates',

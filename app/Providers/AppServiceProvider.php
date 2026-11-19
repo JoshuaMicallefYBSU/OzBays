@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Read-only admin pages (airports, bays, aircraft list) - anyone who sees the Administration menu
+        Gate::define('view admin', fn ($user) => $user->canAny([
+            'view data', 'import airports', 'view feedback', 'view assignment logs', 'view page access',
+        ]));
+
         if (DB::connection()->getDriverName() !== 'sqlite') {
             return;
         }

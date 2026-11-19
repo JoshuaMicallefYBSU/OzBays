@@ -59,17 +59,17 @@ Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
 // Administration Actions
 Route::prefix('admin')->group(function () {
 
-    // Airport Information
-    Route::get('airport', [DashboardController::class, 'airportList'])->name('dashboard.admin.airport.all');
+    // Airport Information - read-only admin pages, for anyone with an admin role
+    Route::get('airport', [DashboardController::class, 'airportList'])->middleware(['auth', 'can:view admin'])->name('dashboard.admin.airport.all');
     Route::middleware(['auth', 'can:import airports'])->group(function () {
         Route::get('airport/import', [DashboardController::class, 'airportImport'])->name('dashboard.admin.airport.import');
         Route::post('airport/import', [DashboardController::class, 'airportImportStore'])->name('dashboard.admin.airport.import.store');
         Route::get('airport/import/{token}', [DashboardController::class, 'airportImportReview'])->name('dashboard.admin.airport.import.review');
         Route::post('airport/import/{token}', [DashboardController::class, 'airportImportConfirm'])->name('dashboard.admin.airport.import.confirm');
     });
-    Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->name('dashboard.admin.airport.view');
+    Route::get('airport/{icao}', [DashboardController::class, 'airportView'])->middleware(['auth', 'can:view admin'])->name('dashboard.admin.airport.view');
     Route::delete('airport/{icao}', [DashboardController::class, 'deleteAirport'])->middleware(['auth', 'can:delete airports'])->name('dashboard.admin.airport.delete');
-    Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->name('dashboard.admin.bay.view');
+    Route::get('airport/{icao}/{bay}', [DashboardController::class, 'bayView'])->middleware(['auth', 'can:view admin'])->name('dashboard.admin.bay.view');
     Route::middleware(['auth', 'can:update status'])->group(function () {
         Route::post('airport/live-disable', [DashboardController::class, 'disableLiveAirport'])->name('dashboard.admin.airport.live-disable');
         Route::post('airport/live-activate', [DashboardController::class, 'activateLiveAirport'])->name('dashboard.admin.airport.live-activate');
@@ -92,7 +92,7 @@ Route::prefix('admin')->group(function () {
     });
 
     // Aircraft Information
-    Route::get('aircraft', [DashboardController::class, 'aircraftList'])->name('dashboard.admin.aircraft.all');
+    Route::get('aircraft', [DashboardController::class, 'aircraftList'])->middleware(['auth', 'can:view admin'])->name('dashboard.admin.aircraft.all');
 });
 
 // News Administration
@@ -178,8 +178,13 @@ Route::prefix('notifications')->middleware('auth')->group(function () {
 });
 
 // Updates
-Route::get('/update/airports', [PagesController::class, 'AirportUpdate'])->name('airportsupdate');
-Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi'); // Local Running Only
+// Re-imports every airport file (resets each airport's status to its file) - airport importers only
+Route::get('/update/airports', [PagesController::class, 'AirportUpdate'])->middleware(['auth', 'can:import airports'])->name('airportsupdate');
+
+// Runs every job in the request - local development only, never registered on the live site
+if (app()->environment('local')) {
+    Route::get('/test/vatsim-api', [TestController::class, 'Job'])->name('vatsimapi');
+}
 
 // ## Authentication Section - VATSIM SSO :)
 // Authentication
@@ -194,7 +199,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('partial')->group(function () {
     Route::get('/airport/ladder/{icao}', [PartialsController::class, 'updateLadder'])->name('airportLadderPartial');
     Route::get('/airports/{icao}/flights/{callsign}/display', [FlightDisplayController::class, 'partial'])->name('airport.flight-display.partial');
-    Route::get('/dashboard/flight-info', [PartialsController::class, 'updateFlights']);
+    Route::get('/dashboard/flight-info', [PartialsController::class, 'updateFlights'])->middleware('auth');
     Route::get('/home/airport-stats', [PartialsController::class, 'updateAirportStats']);
     Route::get('/notifications', [PartialsController::class, 'updateNotifications'])->middleware('auth');
 

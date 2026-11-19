@@ -16,7 +16,9 @@ class AirportFlightState
 
     public const AIRBORNE_SPEED_KTS = 80.0;
 
-    public const OVERFLIGHT_RELEASE_RADIUS_NM = 200.0;
+    // Bays are assigned inside 200NM - releasing at 250NM (not 200) stops a flight hovering around 200NM from being
+    // assigned, released and reassigned (with a new Hoppie message) over and over
+    public const OVERFLIGHT_RELEASE_RADIUS_NM = 250.0;
 
     public function distanceNm(float|int|string $lat1, float|int|string $lon1, float|int|string $lat2, float|int|string $lon2): float
     {

@@ -64,7 +64,16 @@ class FlightData implements ShouldQueue
     {
         $vatsimData = $this->vatsimClient ?? app(VATSIMClient::class);
         $data = $vatsimData->getVATSIMData();
-        $pilots = $data->pilots ?? [];
+
+        // A failed or malformed feed would mark every flight offline, and 6 minutes later delete them and release
+        // their bays. Skip this update instead and try again on the next one.
+        if (! is_object($data) || ! isset($data->pilots) || ! is_array($data->pilots)) {
+            Log::warning('FlightData: VATSIM feed missing or malformed - skipping this update');
+
+            return;
+        }
+
+        $pilots = $data->pilots;
         $controllers = $data->controllers ?? [];
         $state = app(AirportFlightState::class);
 
@@ -122,8 +131,6 @@ class FlightData implements ShouldQueue
         }
 
         foreach ($pilots as $pilot) {
-
-            $aircraft = Flights::where('callsign', $pilot->callsign)->first();
 
             $airportMatch = null;
             foreach ($airports as $icao => $airport) {
@@ -241,15 +248,15 @@ class FlightData implements ShouldQueue
             }
         }
 
-        // Set all flights to offline (gets reupdated below)
-        $all_flights = Flights::where('online', 1)->get();
-        foreach ($all_flights as $fl) {
-            $fl->online = null;
-            $fl->save();
-        }
+        // Callsigns seen in this feed - everything else is marked offline once the updates below are done.
+        // (Marking every flight offline first left a window where BayAllocation saw no aircraft at all.)
+        $seenCallsigns = [];
 
         // Update the Entries in the Database
         foreach ($OnGround as $aa) {
+            $this->removeStaleCallsign($aa['cid'], $aa['callsign']);
+            $seenCallsigns[] = $aa['callsign'];
+
             $existing = Flights::where('callsign', $aa['callsign'])->first();
             $changedPlan = $existing && $this->changedPlan($existing, $aa['dep'], $aa['arr']);
             $payload = [
@@ -269,7 +276,7 @@ class FlightData implements ShouldQueue
             ];
             if ($changedPlan) {
                 $payload += $this->resetLifecyclePayload();
-            } elseif ($aa['phase'] === 'taxiing' && $existing && in_array($existing->status, ['Arrived', 'On Ground'], true)) {
+            } elseif ($aa['phase'] === 'taxiing' && $existing && $this->isDepartingFrom($existing, $aa)) {
                 $payload['departed_at'] = $existing->departed_at ?? Carbon::now('UTC');
             }
             Flights::updateOrCreate(['callsign' => $aa['callsign']], $payload);
@@ -288,6 +295,9 @@ class FlightData implements ShouldQueue
         // Update the Entries in the Database
         foreach ($arrivalAircraft as $airportIcao => $aircraftList) {
             foreach ($aircraftList as $ac) {
+
+                $this->removeStaleCallsign($ac['cid'], $ac['callsign']);
+                $seenCallsigns[] = $ac['callsign'];
 
                 $existing = Flights::where('callsign', $ac['callsign'])->first();
                 $changedPlan = $existing && $this->changedPlan($existing, $ac['dep'], $ac['arr']);
@@ -314,7 +324,9 @@ class FlightData implements ShouldQueue
                 } elseif ($ac['elt'] !== null) {
                     $payload['elt'] = $ac['elt'];
                     $payload['eibt'] = $ac['eibt'];
-                } elseif ($ac['landed']) {
+                } elseif ($ac['landed'] && ($existing?->landed_at !== null || $existing?->elt !== null)) {
+                    // Only a flight that was seen airborne (it had an ELT) has landed - a pilot who connects at
+                    // the gate of their destination hasn't flown anything, so it isn't logged as a completed flight
                     $payload['elt'] = null;
                     $payload['eibt'] = null;
                     $payload['landed_at'] = $existing?->landed_at ?? Carbon::now('UTC');
@@ -341,6 +353,9 @@ class FlightData implements ShouldQueue
                 }
             }
         }
+
+        // Anything not in this feed is now offline (deleted below once it's been gone for 6 minutes)
+        Flights::where('online', 1)->whereNotIn('callsign', array_unique($seenCallsigns))->update(['online' => null]);
 
         // Alrighty. Need to record that the aircraft arrived at the Airport of choice
         // The parked bay is filled in later by BayAllocation once the aircraft stops at a bay
@@ -461,6 +476,32 @@ class FlightData implements ShouldQueue
         }
 
         return (int) round(max((float) $known, (float) $ac['distance']));
+    }
+
+    // A pilot can only be connected once, so a row for the same CID under another callsign is from before they
+    // reconnected. Drop it (and release its bay) straight away rather than leaving it to hold the bay - and show
+    // on their dashboard - for the 6 minutes until the offline cleanup.
+    private function removeStaleCallsign($cid, string $callsign): void
+    {
+        $stale = Flights::where('cid', $cid)->where('callsign', '!=', $callsign)->get();
+
+        foreach ($stale as $flight) {
+            BayAllocations::where('callsign', $flight->id)->delete();
+            BayConflicts::where('callsign', $flight->id)->delete();
+            $flight->delete();
+        }
+    }
+
+    // Taxiing away from the airport it's departing (or, with no flight plan, from a stand it was sitting on).
+    // The arrival loop stores "Departing another Airport" for flights between two OzBays airports, so the status
+    // alone missed them.
+    private function isDepartingFrom(Flights $existing, array $onGround): bool
+    {
+        if ($onGround['dep'] !== null) {
+            return $onGround['dep'] === $onGround['at_airport'] && $onGround['arr'] !== $onGround['at_airport'];
+        }
+
+        return in_array($existing->status, ['Arrived', 'On Ground'], true);
     }
 
     private function changedPlan(Flights $flight, ?string $departure, ?string $arrival): bool
