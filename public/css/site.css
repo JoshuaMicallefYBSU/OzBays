@@ -2481,3 +2481,312 @@ a.oz-eyebrow:hover {
     margin-top: 0.35rem;
     white-space: nowrap;
 }
+
+/* ---------- Dashboard: Request a Bay ---------- */
+.oz-bayreq .oz-section-title { flex-wrap: wrap; }
+
+.oz-bayreq-intro {
+    font-size: 0.85rem;
+    color: var(--oz-text-muted);
+    margin-bottom: 1rem;
+}
+
+.oz-bayreq-lock {
+    padding: 0.65rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 199, 44, 0.35);
+    background: rgba(255, 199, 44, 0.06);
+    color: var(--oz-amber-soft);
+    font-weight: 600;
+}
+
+.oz-bayreq-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.oz-bayreq-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--oz-border);
+}
+
+.oz-bayreq-item[draggable="true"] { cursor: grab; }
+.oz-bayreq-item.is-dragging { opacity: 0.45; border-style: dashed; border-color: var(--oz-amber); }
+
+.oz-bayreq-handle { color: var(--oz-text-muted); }
+
+.oz-bayreq-rank {
+    flex: 0 0 auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--oz-amber);
+    color: var(--oz-navy-text);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.oz-bayreq-main { flex: 1 1 auto; min-width: 0; }
+
+.oz-bayreq-name {
+    display: block;
+    font-weight: 700;
+    color: var(--oz-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.oz-bayreq-meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.2rem; }
+
+.oz-bayreq-chip {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid var(--oz-border-strong);
+    color: var(--oz-text-muted);
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.oz-bayreq-chip.is-other { color: var(--oz-purple-soft); border-color: rgba(183, 148, 246, 0.4); font-family: inherit; }
+
+.oz-bayreq-status {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+}
+
+.oz-bayreq-status.is-available { color: var(--oz-green); }
+.oz-bayreq-status.is-assigned  { color: var(--oz-amber); }
+.oz-bayreq-status.is-reserved  { color: var(--oz-amber-soft); opacity: 0.85; }
+.oz-bayreq-status.is-occupied  { color: var(--oz-red); }
+
+.oz-bayreq-actions { display: flex; gap: 0.25rem; }
+
+.oz-bayreq-action {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--oz-border);
+    background: transparent;
+    color: var(--oz-text-muted);
+}
+
+.oz-bayreq-action:hover:not(:disabled) { color: var(--oz-text); border-color: var(--oz-border-strong); }
+.oz-bayreq-action:disabled { opacity: 0.3; }
+
+.oz-bayreq-empty { color: var(--oz-text-muted); font-size: 0.9rem; }
+
+.oz-bayreq-add { display: flex; gap: 0.5rem; }
+
+.oz-bayreq-add .custom-select {
+    background-color: var(--oz-bg-alt);
+    color: var(--oz-text);
+    border-color: var(--oz-border-strong);
+}
+
+.oz-bayreq-add-btn {
+    flex: 0 0 auto;
+    background: var(--oz-amber);
+    color: var(--oz-navy-text);
+    font-weight: 700;
+}
+
+.oz-bayreq-add-btn:hover:not(:disabled) { background: var(--oz-amber-strong); }
+
+.oz-bayreq-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--oz-text-muted);
+}
+
+.oz-bayreq-saved { color: var(--oz-green-soft); }
+.oz-bayreq-saved.is-error { color: var(--oz-red-soft); }
+
+@media (max-width: 575.98px) {
+    .oz-bayreq-item { flex-wrap: wrap; }
+    .oz-bayreq-handle { display: none; }
+}
+
+/* ---------- Dashboard: Request a Bay - map picker ---------- */
+.oz-bayreq-map-btn {
+    flex: 0 0 auto;
+    border: 1px solid rgba(255, 199, 44, 0.5);
+    color: var(--oz-amber-soft);
+    background: transparent;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.oz-bayreq-map-btn:hover { background: rgba(255, 199, 44, 0.08); color: var(--oz-amber); }
+
+body.oz-baymap-open { overflow: hidden; }
+
+.oz-baymap {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(5, 8, 14, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+.oz-baymap.d-none { display: none !important; }
+
+.oz-baymap-panel {
+    width: min(1200px, 100%);
+    height: min(820px, 100%);
+    display: flex;
+    flex-direction: column;
+    background: var(--oz-surface);
+    border: 1px solid var(--oz-border-strong);
+    border-radius: var(--oz-radius);
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.oz-baymap-head,
+.oz-baymap-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.9rem 1.25rem;
+}
+
+.oz-baymap-head { border-bottom: 1px solid var(--oz-border); }
+.oz-baymap-foot { border-top: 1px solid var(--oz-border); }
+
+.oz-baymap-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--oz-text); }
+
+.oz-baymap-tools { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--oz-text-muted); }
+
+.oz-baymap-body { position: relative; flex: 1 1 auto; min-height: 0; }
+/* Mapbox's own CSS sets .mapboxgl-map to position: relative (loaded after this file), which collapsed the map to 0px high */
+.oz-baymap-body .oz-baymap-canvas,
+.oz-baymap-body .oz-baymap-canvas.mapboxgl-map { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
+
+.oz-baymap-error { padding: 2rem; color: var(--oz-red-soft); }
+
+.oz-baymap-legend {
+    position: absolute;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(10, 14, 24, 0.85);
+    border: 1px solid var(--oz-border);
+    font-size: 0.75rem;
+    color: var(--oz-text);
+    pointer-events: none;
+}
+
+.oz-baymap-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+.oz-baymap-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #0a0e18; }
+.oz-baymap-dot.is-available { background: #4ade80; }
+.oz-baymap-dot.is-reserved  { background: #f59e0b; }
+.oz-baymap-dot.is-occupied  { background: #f87171; }
+.oz-baymap-dot.is-selected  { background: #ffc72c; width: 14px; height: 14px; }
+.oz-baymap-dot.is-other     { background: rgba(151, 162, 184, 0.6); border-color: #d6c3fb; }
+
+.oz-baymap-choices { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.oz-baymap-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.4rem 0.3rem 0.35rem;
+    border-radius: 999px;
+    border: 1px solid var(--oz-border-strong);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.oz-baymap-choice.is-empty { border-style: dashed; padding-right: 0.9rem; }
+.oz-baymap-choice.is-empty .oz-bayreq-rank { background: transparent; color: var(--oz-text-muted); border: 1px dashed var(--oz-border-strong); }
+
+.oz-baymap-choice-name {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: var(--oz-text);
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.oz-baymap-choice-name.text-muted { font-family: inherit; font-weight: 400; font-size: 0.85rem; }
+button.oz-baymap-choice-name:hover { color: var(--oz-amber); }
+
+.oz-baymap-foot-right { display: flex; align-items: center; gap: 0.9rem; }
+
+/* Mapbox popup restyled to match the site */
+.oz-baymap-popup .mapboxgl-popup-content {
+    background: var(--oz-surface);
+    color: var(--oz-text);
+    border: 1px solid var(--oz-border-strong);
+    border-radius: 12px;
+    padding: 0.8rem 0.9rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.oz-baymap-popup .mapboxgl-popup-close-button { color: var(--oz-text-muted); font-size: 1.1rem; padding: 0 0.4rem; }
+.oz-baymap-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.oz-baymap-popup.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.oz-baymap-popup.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip { border-top-color: var(--oz-surface); }
+.oz-baymap-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.oz-baymap-popup.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.oz-baymap-popup.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip { border-bottom-color: var(--oz-surface); }
+.oz-baymap-popup.mapboxgl-popup-anchor-left .mapboxgl-popup-tip { border-right-color: var(--oz-surface); }
+.oz-baymap-popup.mapboxgl-popup-anchor-right .mapboxgl-popup-tip { border-left-color: var(--oz-surface); }
+
+.oz-baymap-pop { display: flex; flex-direction: column; align-items: flex-start; gap: 0.45rem; min-width: 200px; }
+.oz-baymap-pop-name { font-weight: 700; padding-right: 1.2rem; }
+.oz-baymap-pop .btn { margin-top: 0.2rem; }
+
+.oz-baymap-remove {
+    border: 1px solid rgba(248, 113, 113, 0.5);
+    color: var(--oz-red-soft);
+    background: transparent;
+    font-weight: 600;
+}
+
+.oz-baymap-remove:hover { background: rgba(248, 113, 113, 0.1); color: var(--oz-red-soft); }
+
+@media (max-width: 767.98px) {
+    .oz-baymap { padding: 0; }
+    .oz-baymap-panel { height: 100%; border-radius: 0; }
+    .oz-bayreq-add { flex-wrap: wrap; }
+    .oz-bayreq-add .custom-select { flex: 1 1 100%; }
+}

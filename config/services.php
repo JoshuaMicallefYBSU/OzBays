@@ -104,6 +104,11 @@ return [
             200426385863344129,  // Server owner
         ],
 
-    ]
+    ],
+
+    // Public (pk.) Mapbox token for the live map and the dashboard bay picker
+    'mapbox' => [
+        'token' => env('MAPBOX_TOKEN', 'pk.eyJ1Ijoiam9zaHVhbWljYWxsZWZ5YnN1IiwiYSI6ImNsb241cndobzB6Y2oyam5ya3JvdzVndGMifQ.EEFitNQf_9gmMdnQO4ywXw'),
+    ],
 
 ];

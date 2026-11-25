@@ -6,6 +6,7 @@ use App\Models\Airports;
 use App\Models\AssignmentLog;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
+use App\Models\BayRequest;
 use App\Models\Bays;
 use App\Models\FlightLogs;
 use App\Models\Flights;
@@ -415,6 +416,9 @@ class FlightData implements ShouldQueue
             foreach ($slotConflicts as $conflict) {
                 $conflict->delete();
             }
+
+            // Clear the pilot's dashboard bay requests for this flight
+            BayRequest::where('user_id', (int) $flight->cid)->where('callsign', $flight->callsign)->delete();
 
             // Delete the flight
             $flight->delete();

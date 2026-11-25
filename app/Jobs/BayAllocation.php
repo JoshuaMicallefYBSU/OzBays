@@ -7,6 +7,7 @@ use App\Models\Airports;
 use App\Models\AssignmentLog;
 use App\Models\BayAllocations;
 use App\Models\BayConflicts;
+use App\Models\BayRequest;
 use App\Models\Bays;
 use App\Models\FlightLiveBays;
 use App\Models\FlightLogs;
@@ -600,6 +601,12 @@ class BayAllocation implements ShouldQueue
         $allowedGroups = array_slice($aircraftJSON, $aircraftIndex ?? 0);
         $allowedTypes = array_values(array_unique(array_merge(...$allowedGroups)));
 
+        // Pilot requested bays (dashboard) - tried in the pilot's order, ahead of the real-world bay
+        $requestedBay = $this->requestedBay($info, $allowedTypes);
+        if ($requestedBay !== null) {
+            return $requestedBay;
+        }
+
         // ## - Preferred Bay Assignment Check can go Here - Pulls data every hour from FLIGHTAWARE API
 
         // Grab Live Bay Assignment - only when the IRL flight flew the same route. The same callsign can be a different
@@ -726,6 +733,52 @@ class BayAllocation implements ShouldQueue
         ], $info->cid);
 
         return $selectedBay;
+    }
+
+    // First bay the pilot requested on their dashboard that is free and fits the aircraft, or null to carry on
+    // with normal allocation. Bays requested for a different callsign/arrival (refile, new flight) are never used.
+    private function requestedBay(Flights $info, array $allowedTypes): ?Bays
+    {
+        $requests = BayRequest::forFlight($info)->with('bay')->get();
+
+        if ($requests->isEmpty()) {
+            return null;
+        }
+
+        $skipped = [];
+        foreach ($requests as $request) {
+            $bay = $request->bay;
+
+            if ($bay === null || $bay->airport !== $info->arr) {
+                continue;
+            }
+
+            if ($bay->status !== null || $bay->callsign !== null) {
+                $skipped[] = ['position' => $request->position, 'bay' => $bay->bay, 'reason' => $bay->status === 2 ? 'occupied' : 'reserved'];
+
+                continue;
+            }
+
+            if (! $this->bayFitsAircraft($bay, $allowedTypes)) {
+                $skipped[] = ['position' => $request->position, 'bay' => $bay->bay, 'reason' => 'does_not_fit'];
+
+                continue;
+            }
+
+            AssignmentLog::record($info->arr, $info->callsign, 'requested_bay_match', 'Matched to pilot requested bay '.$bay->bay.' (choice '.$request->position.')', [
+                'position' => $request->position,
+                'skipped' => $skipped,
+                'selected_bay' => $bay->only(['id', 'bay', 'aircraft', 'operators', 'pax_type', 'priority']),
+            ], $info->cid);
+
+            return $bay;
+        }
+
+        AssignmentLog::record($info->arr, $info->callsign, 'requested_bay_unavailable', 'None of the pilot requested bays are available - using normal allocation', [
+            'skipped' => $skipped,
+        ], $info->cid);
+
+        return null;
     }
 
     // Bays tied for the best rank, using the same order as buildBayQuery():

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AirportsController;
 use App\Http\Controllers\AssignmentLogController;
+use App\Http\Controllers\BayRequestController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\ContributorApplicationController;
@@ -159,6 +160,10 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::post('/contribute', [ContributorApplicationController::class, 'store'])->name('dashboard.contribute.store');
     Route::post('/contribute/withdraw', [ContributorApplicationController::class, 'withdraw'])->name('dashboard.contribute.withdraw');
     Route::post('/my-settings/save', [DashboardController::class, 'settingsSave'])->name('dashboard.settings.save');
+
+    // Bay Requests - pilot picks up to 3 bays, in order, for the flight they're flying
+    Route::get('/bay-requests', [BayRequestController::class, 'show'])->name('dashboard.bayRequests.show');
+    Route::post('/bay-requests', [BayRequestController::class, 'save'])->middleware('throttle:60,1')->name('dashboard.bayRequests.save');
 
     // Discord Linking
     Route::get('/discord/unlink', [DiscordController::class, 'unlinkDiscord'])->name('dashboard.discord.unlink');

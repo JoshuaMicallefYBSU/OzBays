@@ -46,6 +46,14 @@ class AircraftSizes
         return $this->groups;
     }
 
+    // Freighter-only types (aircraft.json "FreightOnly") - always sent to freight bays
+    public function isFreightOnly(?string $aircraft): bool
+    {
+        $freight = $this->raw()['FreightOnly'] ?? [];
+
+        return is_array($freight) && in_array(strtoupper((string) $aircraft), array_map('strtoupper', $freight), true);
+    }
+
     public function isIgnored(?string $aircraft): bool
     {
         $ignored = $this->raw()['Ignored'] ?? [];
@@ -110,10 +118,34 @@ class AircraftSizes
     // Every type in the aircraft's own size group and larger - the bays it can use list one of these
     public function allowedTypes(?string $aircraft): array
     {
-        $groups = $this->groups();
+        return array_values(array_unique(array_merge(...$this->allowedGroups($aircraft) ?: [[]])));
+    }
+
+    // The aircraft's own size group and every larger one, smallest first
+    public function allowedGroups(?string $aircraft): array
+    {
         $index = $this->groupIndex(strtoupper((string) $aircraft)) ?? $this->groupIndex(self::UNKNOWN_TYPE_FALLBACK) ?? 0;
 
-        return array_values(array_unique(array_merge(...array_slice($groups, $index) ?: [[]])));
+        return array_values(array_slice($this->groups(), $index));
+    }
+
+    // Largest aircraft a bay takes - the type in its list (e.g. "A320/B738/A333") from the biggest size group.
+    // Types missing from aircraft.json are only used when none of the listed types are known.
+    public function largestType(?string $bayAircraft): ?string
+    {
+        $types = array_values(array_filter(array_map(fn ($type) => strtoupper(trim($type)), explode('/', (string) $bayAircraft)), 'strlen'));
+
+        $largest = null;
+        $largestIndex = -1;
+        foreach ($types as $type) {
+            $index = $this->groupIndex($type);
+            if ($index !== null && $index > $largestIndex) {
+                $largest = $type;
+                $largestIndex = $index;
+            }
+        }
+
+        return $largest ?? ($types[0] ?? null);
     }
 
     public function bayFitsAircraft(?string $bayAircraft, ?string $aircraft): bool

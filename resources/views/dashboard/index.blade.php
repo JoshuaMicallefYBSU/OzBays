@@ -14,6 +14,74 @@
                 <x id="flight-info"></x>
             </div>
 
+            {{-- Bay Requests - only shown while flying into an OzBays airport. Rendered by the script below. --}}
+            <div class="oz-card-dark mt-4 oz-bayreq d-none" id="bay-requests" data-url="{{ route('dashboard.bayRequests.show') }}" data-save-url="{{ route('dashboard.bayRequests.save') }}">
+                <div class="oz-section-title">
+                    <i class="fa-solid fa-square-parking"></i> Request a Bay
+                    <span class="oz-section-sub" id="bay-req-sub"></span>
+                </div>
+
+                <p class="oz-bayreq-intro" id="bay-req-intro"></p>
+
+                <div class="oz-bayreq-lock d-none" id="bay-req-lock"></div>
+
+                <ol class="oz-bayreq-list" id="bay-req-list" aria-label="Requested bays, first choice first"></ol>
+                <p class="oz-bayreq-empty d-none" id="bay-req-empty">No bays requested yet. OzBays will choose one for you.</p>
+
+                <div class="oz-bayreq-controls" id="bay-req-controls">
+                    <div class="oz-bayreq-add">
+                        <select class="custom-select" id="bay-req-select" aria-label="Bay to request"></select>
+                        <button type="button" class="btn oz-bayreq-add-btn" id="bay-req-add"><i class="fa-solid fa-plus"></i> Add</button>
+                        <button type="button" class="btn oz-bayreq-map-btn" id="bay-req-map-open"><i class="fa-solid fa-map-location-dot"></i> Select from map</button>
+                    </div>
+                    <div class="oz-bayreq-footer">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="bay-req-all">
+                            <label class="custom-control-label" for="bay-req-all">Show every bay my aircraft fits</label>
+                        </div>
+                        <small class="oz-bayreq-saved" id="bay-req-saved" aria-live="polite"></small>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bay Requests map picker - ground view of the arrival airport, bays the aircraft fits only --}}
+            <div class="oz-baymap d-none" id="bay-map" role="dialog" aria-modal="true" aria-labelledby="bay-map-title" data-token="{{ config('services.mapbox.token') }}">
+                <div class="oz-baymap-panel">
+                    <div class="oz-baymap-head">
+                        <div>
+                            <div class="oz-baymap-title" id="bay-map-title">Select bays from the map</div>
+                            <small class="text-muted" id="bay-map-sub"></small>
+                        </div>
+                        <div class="oz-baymap-tools">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="bay-map-all">
+                                <label class="custom-control-label" for="bay-map-all">Show every bay my aircraft fits</label>
+                            </div>
+                            <button type="button" class="oz-bayreq-action" id="bay-map-close" title="Close" aria-label="Close map"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="oz-baymap-body">
+                        <div class="oz-baymap-canvas" id="bay-map-canvas"></div>
+                        <div class="oz-baymap-legend">
+                            <span><i class="oz-baymap-dot is-available"></i> Available</span>
+                            <span><i class="oz-baymap-dot is-reserved"></i> Reserved</span>
+                            <span><i class="oz-baymap-dot is-occupied"></i> Occupied</span>
+                            <span><i class="oz-baymap-dot is-selected"></i> Your choice</span>
+                            <span class="oz-baymap-legend-other"><i class="oz-baymap-dot is-other"></i> Outside normal allocation</span>
+                        </div>
+                    </div>
+
+                    <div class="oz-baymap-foot">
+                        <div class="oz-baymap-choices" id="bay-map-choices"></div>
+                        <div class="oz-baymap-foot-right">
+                            <small class="oz-bayreq-saved" id="bay-map-saved" aria-live="polite"></small>
+                            <button type="button" class="btn oz-bayreq-add-btn" id="bay-map-done">Done</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div class="col-md-4">
@@ -260,6 +328,559 @@
         window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(layout, 100); });
         window.addEventListener('load', layout); // fonts and charts change the card height once loaded
         layout();
+    })();
+</script>
+
+<script>
+    // Bay Requests - up to 3 bays in order of preference, drag (or the arrows) to reorder. Every change saves straight away.
+    (function () {
+        const card = document.getElementById('bay-requests');
+        if (!card) return;
+
+        const list = document.getElementById('bay-req-list');
+        const select = document.getElementById('bay-req-select');
+        const addBtn = document.getElementById('bay-req-add');
+        const showAll = document.getElementById('bay-req-all');
+        const savedNote = document.getElementById('bay-req-saved');
+        const SHOW_ALL_KEY = 'ozbays.bayRequests.showAll';
+        const POLL_MS = 30000;
+
+        let state = null;
+        let order = [];       // requested bay ids, first choice first
+        let saving = false;
+        let dragging = null;
+
+        showAll.checked = localStorage.getItem(SHOW_ALL_KEY) === '1';
+
+        function el(tag, className, text) {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined && text !== null) node.textContent = text;
+            return node;
+        }
+
+        function optionById(id) {
+            return state.options.find(o => o.id === id);
+        }
+
+        function groupLabel(group) {
+            return {
+                own: state.flight.operator + ' bays',
+                open: 'Open bays',
+                shared: 'Shared bays (open to all operators)',
+                other: 'Other bays (outside normal allocation)',
+            }[group];
+        }
+
+        function render() {
+            if (!state || !state.available) {
+                card.classList.add('d-none');
+                return;
+            }
+            card.classList.remove('d-none');
+
+            const f = state.flight;
+            document.getElementById('bay-req-sub').textContent = f.callsign + (f.aircraft ? ' · ' + f.aircraft : '') + ' into ' + f.arrival;
+            document.getElementById('bay-req-intro').textContent =
+                'Pick up to ' + state.max + ' bays at ' + (f.airport_name || f.arrival) + ' and drag them into your order of preference. ' +
+                'When OzBays assigns your bay it tries your first choice first, then your second and third. ' +
+                'If none of them are free, it assigns a bay the normal way.';
+
+            const lock = document.getElementById('bay-req-lock');
+            if (state.locked) {
+                let text = state.lock_reason;
+                if (state.assigned_bay) {
+                    text = 'Assigned bay: ' + state.assigned_bay.name + (state.assigned_bay.requested_position
+                        ? ' (your choice ' + state.assigned_bay.requested_position + ')'
+                        : (order.length ? ' (none of your requested bays were free)' : ''));
+                }
+                lock.textContent = text;
+                lock.classList.remove('d-none');
+            } else {
+                lock.classList.add('d-none');
+            }
+
+            renderList();
+            renderSelect();
+            document.getElementById('bay-req-controls').classList.toggle('d-none', state.locked);
+        }
+
+        function renderList() {
+            list.replaceChildren();
+            document.getElementById('bay-req-empty').classList.toggle('d-none', order.length > 0 || state.locked);
+
+            order.forEach((id, index) => {
+                const bay = optionById(id);
+                if (!bay) return;
+
+                const li = el('li', 'oz-bayreq-item');
+                li.dataset.id = id;
+                li.draggable = !state.locked;
+
+                if (!state.locked) {
+                    const handle = el('span', 'oz-bayreq-handle');
+                    handle.innerHTML = '<i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>';
+                    handle.title = 'Drag to reorder';
+                    li.appendChild(handle);
+                }
+
+                li.appendChild(el('span', 'oz-bayreq-rank', String(index + 1)));
+
+                const main = el('div', 'oz-bayreq-main');
+                main.appendChild(el('span', 'oz-bayreq-name', bay.name));
+                const meta = el('div', 'oz-bayreq-meta');
+                const size = el('span', 'oz-bayreq-chip', 'Max ' + (bay.max_size || '?'));
+                size.title = 'Fits: ' + (bay.aircraft || 'unknown');
+                meta.appendChild(size);
+                if (bay.terminal) meta.appendChild(el('span', 'oz-bayreq-chip', bay.terminal));
+                if (bay.pax_type) meta.appendChild(el('span', 'oz-bayreq-chip', bay.pax_type));
+                if (!bay.recommended) meta.appendChild(el('span', 'oz-bayreq-chip is-other', 'Outside normal allocation'));
+                main.appendChild(meta);
+                li.appendChild(main);
+
+                li.appendChild(el('span', 'oz-bayreq-status is-' + bay.status, bay.status_label));
+
+                if (!state.locked) {
+                    const actions = el('div', 'oz-bayreq-actions');
+                    actions.appendChild(actionButton('fa-chevron-up', 'Move up', index === 0, () => move(index, index - 1)));
+                    actions.appendChild(actionButton('fa-chevron-down', 'Move down', index === order.length - 1, () => move(index, index + 1)));
+                    actions.appendChild(actionButton('fa-xmark', 'Remove ' + bay.bay, false, () => { order.splice(index, 1); changed(); }));
+                    li.appendChild(actions);
+                }
+
+                list.appendChild(li);
+            });
+        }
+
+        function actionButton(icon, label, disabled, onClick) {
+            const btn = el('button', 'oz-bayreq-action');
+            btn.type = 'button';
+            btn.disabled = disabled;
+            btn.title = label;
+            btn.setAttribute('aria-label', label);
+            btn.innerHTML = '<i class="fa-solid ' + icon + '" aria-hidden="true"></i>';
+            btn.addEventListener('click', onClick);
+            return btn;
+        }
+
+        function renderSelect() {
+            const previous = select.value;
+            select.replaceChildren();
+
+            const full = order.length >= state.max;
+            const placeholder = el('option', null, full ? 'You have requested ' + state.max + ' bays - remove one to add another' : 'Choose a bay to add…');
+            placeholder.value = '';
+            select.appendChild(placeholder);
+
+            const groups = {};
+            state.options
+                .filter(o => !order.includes(o.id) && (o.recommended || showAll.checked))
+                .forEach(o => {
+                    if (!groups[o.group]) {
+                        groups[o.group] = el('optgroup');
+                        groups[o.group].label = groupLabel(o.group);
+                    }
+                    const opt = el('option', null, o.name + '  ·  Max ' + (o.max_size || '?') + '  ·  ' + o.status_label);
+                    opt.value = o.id;
+                    groups[o.group].appendChild(opt);
+                });
+
+            ['own', 'open', 'shared', 'other'].forEach(g => groups[g] && select.appendChild(groups[g]));
+
+            if (select.querySelector('option[value="' + previous + '"]')) select.value = previous;
+            select.disabled = full;
+            addBtn.disabled = full || select.value === '';
+        }
+
+        function move(from, to) {
+            if (to < 0 || to >= order.length) return;
+            order.splice(to, 0, order.splice(from, 1)[0]);
+            changed();
+        }
+
+        function changed() {
+            renderList();
+            renderSelect();
+            refreshMap();
+            save();
+        }
+
+        // Save status is shown on the card and in the map picker footer
+        function setSaved(text, isError) {
+            [savedNote, document.getElementById('bay-map-saved')].forEach(note => {
+                note.textContent = text;
+                note.classList.toggle('is-error', !!isError);
+            });
+        }
+
+        function save() {
+            saving = true;
+            setSaved('Saving…', false);
+
+            fetch(card.dataset.saveUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({ bays: order }),
+            })
+                .then(res => res.json().then(body => ({ ok: res.ok, body })))
+                .then(({ ok, body }) => {
+                    if (body && 'available' in body) apply(body);
+                    setSaved(ok ? 'Saved' : (body.message || 'Could not save your bays'), !ok);
+                })
+                .catch(() => {
+                    setSaved('Could not save your bays - check your connection', true);
+                })
+                .finally(() => { saving = false; });
+        }
+
+        function apply(data) {
+            state = data;
+            order = data.available ? data.requests.slice() : [];
+            render();
+
+            // Bays can't be picked once the flight is locked (bay assigned / landed) or gone
+            if (!data.available || data.locked) closeMap();
+            else refreshMap();
+        }
+
+        function load() {
+            // Don't pull the list out from under someone mid-drag or mid-save
+            if (saving || dragging) return;
+            fetch(card.dataset.url, { headers: { 'Accept': 'application/json' } })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => { if (data && !saving && !dragging) apply(data); })
+                .catch(() => {});
+        }
+
+        // Drag and drop reordering
+        list.addEventListener('dragstart', e => {
+            const item = e.target.closest('.oz-bayreq-item');
+            if (!item) return;
+            dragging = item;
+            item.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', item.dataset.id);
+        });
+
+        list.addEventListener('dragover', e => {
+            if (!dragging) return;
+            e.preventDefault();
+            const after = Array.from(list.querySelectorAll('.oz-bayreq-item:not(.is-dragging)'))
+                .find(item => e.clientY < item.getBoundingClientRect().top + item.offsetHeight / 2);
+            after ? list.insertBefore(dragging, after) : list.appendChild(dragging);
+        });
+
+        list.addEventListener('drop', e => e.preventDefault());
+
+        list.addEventListener('dragend', () => {
+            if (!dragging) return;
+            dragging.classList.remove('is-dragging');
+            dragging = null;
+            const newOrder = Array.from(list.querySelectorAll('.oz-bayreq-item')).map(item => Number(item.dataset.id));
+            if (newOrder.join() !== order.join()) {
+                order = newOrder;
+                changed();
+            } else {
+                renderList();
+            }
+        });
+
+        select.addEventListener('change', () => { addBtn.disabled = select.value === ''; });
+
+        addBtn.addEventListener('click', () => {
+            const id = Number(select.value);
+            if (!id || order.length >= state.max || order.includes(id)) return;
+            order.push(id);
+            select.value = '';
+            changed();
+        });
+
+        function setShowAll(checked) {
+            showAll.checked = checked;
+            document.getElementById('bay-map-all').checked = checked;
+            localStorage.setItem(SHOW_ALL_KEY, checked ? '1' : '0');
+            if (state && state.available) renderSelect();
+            refreshMap();
+        }
+
+        showAll.addEventListener('change', () => setShowAll(showAll.checked));
+
+        // ---------- Map picker - ground view of the arrival airport, click a bay to add/remove it ----------
+        const mapModal = document.getElementById('bay-map');
+        const mapAll = document.getElementById('bay-map-all');
+        const MAPBOX_VERSION = 'v2.15.0'; // same as the live map
+        const MAP_STYLE = 'mapbox://styles/mapbox/dark-v11'; // same as the live map
+        const STATUS_COLOURS = { available: '#4ade80', assigned: '#ffc72c', reserved: '#f59e0b', occupied: '#f87171' };
+
+        let map = null;
+        let mapPopup = null;
+        let popupBayId = null;
+        let mapboxLoading = null;
+
+        mapAll.checked = showAll.checked;
+
+        function mapOpen() {
+            return !mapModal.classList.contains('d-none');
+        }
+
+        // Mapbox is only needed once someone opens the picker
+        function loadMapbox() {
+            if (window.mapboxgl) return Promise.resolve();
+            if (mapboxLoading) return mapboxLoading;
+
+            // Wait for the stylesheet as well as the script - the map measures its container when it's created
+            const load = (tag, attrs) => new Promise((resolve, reject) => {
+                const node = Object.assign(document.createElement(tag), attrs);
+                node.onload = resolve;
+                node.onerror = reject;
+                document.head.appendChild(node);
+            });
+
+            mapboxLoading = Promise.all([
+                load('link', { rel: 'stylesheet', href: 'https://api.mapbox.com/mapbox-gl-js/' + MAPBOX_VERSION + '/mapbox-gl.css' }),
+                load('script', { src: 'https://api.mapbox.com/mapbox-gl-js/' + MAPBOX_VERSION + '/mapbox-gl.js' }),
+            ]).catch(err => { mapboxLoading = null; throw err; });
+
+            return mapboxLoading;
+        }
+
+        function mappable(option) {
+            return option.lat !== null && option.lon !== null;
+        }
+
+        function bayFeatures() {
+            return {
+                type: 'FeatureCollection',
+                features: state.options.filter(mappable).map(o => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [o.lon, o.lat] },
+                    properties: { id: o.id, bay: o.bay, status: o.status, recommended: o.recommended, rank: order.indexOf(o.id) + 1 },
+                })),
+            };
+        }
+
+        // Without "show every bay" only the bays normal allocation would use - plus any already chosen
+        function applyMapFilter() {
+            const filter = mapAll.checked ? null : ['any', ['get', 'recommended'], ['>', ['get', 'rank'], 0]];
+            ['req-bays-dot', 'req-bays-label'].forEach(layer => map.getLayer(layer) && map.setFilter(layer, filter));
+            mapModal.querySelector('.oz-baymap-legend-other').classList.toggle('d-none', !mapAll.checked);
+        }
+
+        function addBayLayers() {
+            if (map.getSource('req-bays')) return;
+
+            map.addSource('req-bays', { type: 'geojson', data: bayFeatures() });
+
+            map.addLayer({
+                id: 'req-bays-dot', type: 'circle', source: 'req-bays',
+                paint: {
+                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 3, 16, 7, 18, 11],
+                    'circle-color': ['match', ['get', 'status'],
+                        'available', STATUS_COLOURS.available, 'assigned', STATUS_COLOURS.assigned,
+                        'reserved', STATUS_COLOURS.reserved, 'occupied', STATUS_COLOURS.occupied, '#97a2b8'],
+                    'circle-opacity': ['case', ['get', 'recommended'], 0.95, 0.6],
+                    'circle-stroke-width': ['case', ['get', 'recommended'], 1.5, 2],
+                    'circle-stroke-color': ['case', ['get', 'recommended'], '#0a0e18', '#d6c3fb'],
+                },
+            });
+
+            map.addLayer({
+                id: 'req-bays-label', type: 'symbol', source: 'req-bays', minzoom: 15,
+                layout: { 'text-field': ['get', 'bay'], 'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top' },
+                paint: { 'text-color': '#ffffff', 'text-halo-color': '#0a0e18', 'text-halo-width': 1.4 },
+            });
+
+            // Chosen bays - a numbered amber marker on top, always shown
+            map.addLayer({
+                id: 'req-bays-selected', type: 'circle', source: 'req-bays', filter: ['>', ['get', 'rank'], 0],
+                paint: {
+                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 8, 16, 11, 18, 15],
+                    'circle-color': '#ffc72c', 'circle-stroke-color': '#0a0e18', 'circle-stroke-width': 2,
+                },
+            });
+
+            map.addLayer({
+                id: 'req-bays-rank', type: 'symbol', source: 'req-bays', filter: ['>', ['get', 'rank'], 0],
+                layout: { 'text-field': ['to-string', ['get', 'rank']], 'text-size': 13, 'text-allow-overlap': true, 'text-ignore-placement': true },
+                paint: { 'text-color': '#16210a' },
+            });
+
+            applyMapFilter();
+        }
+
+        function popupContent(bay) {
+            const wrap = el('div', 'oz-baymap-pop');
+            wrap.appendChild(el('div', 'oz-baymap-pop-name', bay.name));
+
+            const meta = el('div', 'oz-bayreq-meta');
+            const size = el('span', 'oz-bayreq-chip', 'Max ' + (bay.max_size || '?'));
+            size.title = 'Fits: ' + (bay.aircraft || 'unknown');
+            meta.appendChild(size);
+            if (bay.terminal) meta.appendChild(el('span', 'oz-bayreq-chip', bay.terminal));
+            if (bay.pax_type) meta.appendChild(el('span', 'oz-bayreq-chip', bay.pax_type));
+            if (!bay.recommended) meta.appendChild(el('span', 'oz-bayreq-chip is-other', 'Outside normal allocation'));
+            wrap.appendChild(meta);
+
+            wrap.appendChild(el('span', 'oz-bayreq-status is-' + bay.status, bay.status_label));
+
+            const rank = order.indexOf(bay.id) + 1;
+            const btn = el('button', 'btn btn-sm btn-block ' + (rank ? 'oz-baymap-remove' : 'oz-bayreq-add-btn'));
+            btn.type = 'button';
+
+            if (rank) {
+                btn.textContent = 'Remove (choice ' + rank + ')';
+                btn.addEventListener('click', () => { order.splice(rank - 1, 1); changed(); });
+            } else if (order.length >= state.max) {
+                btn.textContent = 'You have ' + state.max + ' bays - remove one first';
+                btn.disabled = true;
+            } else {
+                btn.textContent = 'Add as choice ' + (order.length + 1);
+                btn.addEventListener('click', () => { order.push(bay.id); changed(); });
+            }
+            wrap.appendChild(btn);
+
+            return wrap;
+        }
+
+        function openPopup(id) {
+            const bay = optionById(id);
+            if (!bay || !mappable(bay)) return;
+
+            if (!mapPopup) {
+                mapPopup = new mapboxgl.Popup({ offset: 14, maxWidth: '280px', className: 'oz-baymap-popup' });
+                mapPopup.on('close', () => { popupBayId = null; });
+            }
+
+            popupBayId = id;
+            mapPopup.setLngLat([bay.lon, bay.lat]).setDOMContent(popupContent(bay)).addTo(map);
+        }
+
+        // Choice 1-3 strip along the bottom of the picker
+        function renderMapChoices() {
+            const strip = document.getElementById('bay-map-choices');
+            strip.replaceChildren();
+
+            for (let i = 0; i < state.max; i++) {
+                const bay = order[i] !== undefined ? optionById(order[i]) : null;
+                const chip = el('div', 'oz-baymap-choice' + (bay ? '' : ' is-empty'));
+                chip.appendChild(el('span', 'oz-bayreq-rank', String(i + 1)));
+
+                if (bay) {
+                    const name = el('button', 'oz-baymap-choice-name', bay.bay);
+                    name.type = 'button';
+                    name.title = 'Show ' + bay.name + ' on the map';
+                    name.addEventListener('click', () => {
+                        if (!map || !mappable(bay)) return;
+                        map.flyTo({ center: [bay.lon, bay.lat], zoom: Math.max(map.getZoom(), 16.5) });
+                        openPopup(bay.id);
+                    });
+                    chip.appendChild(name);
+                    chip.appendChild(actionButton('fa-xmark', 'Remove ' + bay.bay, false, () => { order.splice(i, 1); changed(); }));
+                } else {
+                    chip.appendChild(el('span', 'oz-baymap-choice-name text-muted', 'Click a bay'));
+                }
+
+                strip.appendChild(chip);
+            }
+        }
+
+        function refreshMap() {
+            if (!mapOpen() || !state || !state.available) return;
+
+            renderMapChoices();
+            if (!map) return;
+
+            const source = map.getSource('req-bays');
+            if (source) source.setData(bayFeatures());
+            applyMapFilter();
+
+            if (popupBayId !== null) openPopup(popupBayId);
+        }
+
+        function fitToBays() {
+            const bays = state.options.filter(o => mappable(o) && (o.recommended || mapAll.checked || order.includes(o.id)));
+            if (bays.length === 0) {
+                if (state.flight.airport_lon !== null) map.jumpTo({ center: [state.flight.airport_lon, state.flight.airport_lat], zoom: 14 });
+                return;
+            }
+
+            const bounds = new mapboxgl.LngLatBounds();
+            bays.forEach(o => bounds.extend([o.lon, o.lat]));
+            map.fitBounds(bounds, { padding: 60, maxZoom: 17, duration: 0 });
+        }
+
+        function createMap() {
+            mapboxgl.accessToken = mapModal.dataset.token;
+            map = new mapboxgl.Map({
+                container: 'bay-map-canvas',
+                style: MAP_STYLE,
+                center: [state.flight.airport_lon ?? 151.18, state.flight.airport_lat ?? -33.94],
+                zoom: 14,
+                projection: 'mercator',
+            });
+
+            map.dragRotate.disable();
+            map.touchZoomRotate.disableRotation();
+            map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+
+            map.on('style.load', addBayLayers);
+            map.once('load', () => { map.resize(); fitToBays(); });
+
+            ['req-bays-dot', 'req-bays-selected'].forEach(layer => {
+                map.on('click', layer, e => openPopup(e.features[0].properties.id));
+                map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+                map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
+            });
+        }
+
+        function openMap() {
+            if (!state || !state.available || state.locked) return;
+
+            const f = state.flight;
+            document.getElementById('bay-map-sub').textContent =
+                f.callsign + (f.aircraft ? ' · ' + f.aircraft : '') + ' into ' + (f.airport_name || f.arrival) +
+                ' - click a bay to add it, up to ' + state.max + '. Only bays your aircraft fits are shown.';
+
+            mapModal.classList.remove('d-none');
+            document.body.classList.add('oz-baymap-open');
+            renderMapChoices();
+
+            loadMapbox()
+                .then(() => {
+                    if (!map) {
+                        createMap();
+                    } else {
+                        map.resize();
+                        refreshMap();
+                        fitToBays();
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('bay-map-canvas').replaceChildren(el('p', 'oz-baymap-error', 'The map could not be loaded. You can still choose bays from the list.'));
+                });
+        }
+
+        function closeMap() {
+            if (!mapOpen()) return;
+            if (mapPopup) mapPopup.remove();
+            mapModal.classList.add('d-none');
+            document.body.classList.remove('oz-baymap-open');
+        }
+
+        document.getElementById('bay-req-map-open').addEventListener('click', openMap);
+        document.getElementById('bay-map-close').addEventListener('click', closeMap);
+        document.getElementById('bay-map-done').addEventListener('click', closeMap);
+        mapModal.addEventListener('click', e => { if (e.target === mapModal) closeMap(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMap(); });
+        mapAll.addEventListener('change', () => setShowAll(mapAll.checked));
+
+
+        load();
+        setInterval(load, POLL_MS);
     })();
 </script>
 

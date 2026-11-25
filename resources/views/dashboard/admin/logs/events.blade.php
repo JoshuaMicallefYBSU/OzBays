@@ -1,5 +1,5 @@
 @forelse($events as $event)
-    <div class="oz-reply {{ in_array($event->event_type, ['assigned', 'reassigned', 'live_bay_match']) ? 'oz-reply--dev' : '' }} mb-2">
+    <div class="oz-reply {{ in_array($event->event_type, ['assigned', 'reassigned', 'live_bay_match', 'requested_bay_match']) ? 'oz-reply--dev' : '' }} mb-2">
         <div class="oz-reply-meta">
             <b>{{ strtoupper(str_replace('_', ' ', $event->event_type)) }}</b>
             @if($event->status) &middot; {{ $event->status }} @endif

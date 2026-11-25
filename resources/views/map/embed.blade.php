@@ -176,7 +176,7 @@
 /* ----------------------------------------------------------
  * Map setup
  * -------------------------------------------------------- */
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaHVhbWljYWxsZWZ5YnN1IiwiYSI6ImNsb241cndobzB6Y2oyam5ya3JvdzVndGMifQ.EEFitNQf_9gmMdnQO4ywXw';
+mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
 const qs = new URLSearchParams(window.location.search);
 
